@@ -1,0 +1,21 @@
+{
+  "name": "@atlas/map-importer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GIS/map package validation and import tooling (techspec.md §17 Epic B, §9.3 publication workflow).",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "bin": {
+    "map-importer": "src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@atlas/spatial-model": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^20.0.0"
+  }
+}

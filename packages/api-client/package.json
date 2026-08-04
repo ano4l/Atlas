@@ -1,0 +1,18 @@
+{
+  "name": "@atlas/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generated TypeScript client for the platform API. Generate from services/platform-api OpenAPI spec (techspec.md §10) via `pnpm generate`.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "generate": "echo \"TODO: wire openapi-typescript against services/platform-api OpenAPI spec\" && exit 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@atlas/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

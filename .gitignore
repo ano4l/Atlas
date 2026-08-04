@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+.next/
+out/
+.expo/
+.expo-shared/
+
+# Gradle / Kotlin
+.gradle/
+**/build/
+!apps/**/build.gradle.kts
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Test/coverage
+coverage/
+
+# Data (never commit production or raw movement data)
+infrastructure/local/data/
+*.dump

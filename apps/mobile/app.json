@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Indoor Navigation",
+    "slug": "indoor-navigation-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "indoornav",
+    "ios": {
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Used to detect which venue you are in and to navigate indoors.",
+        "NSMotionUsageDescription": "Used to estimate your movement while navigating indoors.",
+        "NSBluetoothAlwaysUsageDescription": "Used to detect indoor beacons for accurate positioning.",
+        "NSCameraUsageDescription": "Optional: used to improve indoor positioning accuracy."
+      }
+    },
+    "android": {
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "BLUETOOTH_SCAN",
+        "BLUETOOTH_CONNECT",
+        "CAMERA"
+      ]
+    }
+  }
+}

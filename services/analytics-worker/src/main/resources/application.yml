@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: analytics-worker
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/indoor_navigation}
+    username: ${DATABASE_USERNAME:atlas}
+    password: ${DATABASE_PASSWORD:atlas}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false

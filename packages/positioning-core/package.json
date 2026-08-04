@@ -1,0 +1,18 @@
+{
+  "name": "@atlas/positioning-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pure positioning algorithms and models: step detection, heading fusion, PDR, map matching, confidence (techspec.md §6). Must not depend on React Native UI code.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"no tests yet\" && exit 0"
+  },
+  "dependencies": {
+    "@atlas/spatial-model": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

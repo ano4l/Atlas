@@ -1,0 +1,18 @@
+{
+  "name": "@atlas/fixture-generator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generates synthetic venues and movement sessions for development and tests (techspec.md §17 Phase 0/1).",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "generate:synthetic-venue": "echo \"TODO: implement synthetic two-floor venue generator\" && exit 0"
+  },
+  "dependencies": {
+    "@atlas/spatial-model": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

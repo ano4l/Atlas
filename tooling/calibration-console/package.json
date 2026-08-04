@@ -1,0 +1,17 @@
+{
+  "name": "@atlas/calibration-console",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Field-log inspection and positioning-model tuning tools (techspec.md §17 Epic E, §14.2 replay tests).",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@atlas/positioning-core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

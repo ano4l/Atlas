@@ -1,0 +1,28 @@
+{
+  "name": "venue-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Venue and advertising operator dashboard (techspec.md §9).",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@atlas/api-client": "workspace:*",
+    "@atlas/map-rendering": "workspace:*",
+    "@atlas/shared-types": "workspace:*",
+    "@atlas/spatial-model": "workspace:*",
+    "next": "^14.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.5.0"
+  }
+}
