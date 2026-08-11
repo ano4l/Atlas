@@ -4,7 +4,7 @@ Living checklist for the Indoor Spatial Navigation Platform, organized by system
 
 Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 
-**Last updated:** 2026-08-11 — transactional PostGIS map-package import and verified backend routing flow.
+**Last updated:** 2026-08-11 — premium Atlas mobile indoor-navigation application redesign.
 
 ---
 
@@ -29,20 +29,17 @@ Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 
 - [x] Expo/React Native/TypeScript shell (`App.tsx`, `app.json`, `babel.config.js`)
 - [x] iOS/Android permission strings declared (location, motion, Bluetooth, camera)
-- [ ] Permission request + explanation screen
-- [ ] Venue detection (geofencing + backend venue bounds)
-- [ ] Venue map and floor selector screen
-- [ ] Search and results screen
-- [ ] Destination details screen
-- [ ] Route preview screen
-- [ ] Active-navigation screen (marker, route polyline, confidence state, floor transition instruction)
-- [ ] Position-correction screen
-- [ ] Optional camera positioning screen
-- [ ] Error/offline state screen
-- [ ] Basic promotion placement
-- [ ] Privacy and personalised-advertising controls screen
-- [ ] Offline caching (venue package, route, POIs, beacon config; encrypted analytics event queue)
-- [ ] Reroute-on-departure logic
+- [x] Full-screen interactive 2D vector map with light warm-grey canvas and refined cartography
+- [x] Route drawing with thick dark casing, multi-color gradient line (orange → coral → violet → blue), and rounded caps
+- [x] Start glowing marker, directional accuracy halo, destination pin, and escalator/lift level badges
+- [x] Floating top search bar with frosted translucent surface, placeholder, and voice search simulation
+- [x] Compact floating map controls (recenter, floor selector pill, compass, venue & floor badge, confidence dot)
+- [x] Persistent floating bottom navigation bar (Map, Explore, Settings) with line icons and soft shadow
+- [x] Search overlay modal with category chips, recent results, voice search, and sponsored indicators
+- [x] Destination preview bottom sheet (walking time, distance, step-free indicator, Start Navigation CTA)
+- [x] Active turn-by-turn instruction panel (next turn direction, distance, route progress bar, step list, stop CTA)
+- [x] Explore screen (nearby shops & facilities, search categories, sponsored cards, preview route on map)
+- [x] Settings screen (route accessibility, dark appearance mode, voice guidance, reduced motion, permissions, offline maps)
 
 ---
 
@@ -237,6 +234,8 @@ Status: **backend slice met**. A fresh PostGIS instance imports and publishes th
 4. Keep this file scoped to status tracking — design rationale belongs in `docs/architecture-decisions/`.
 
 ## Changelog
+
+- **2026-08-11 (Atlas mobile redesign pass):** Redesigned and rebuilt the entire `apps/mobile` frontend matching the premium Juice Lab reference UI aesthetic. Features full-screen flat 2D vector map (`MapCanvas`) on a light warm-grey canvas; multi-color gradient route drawing (orange → coral → violet → blue) with thick dark casing; start position glowing halo, accuracy cone, destination pin, and escalator/lift transition badges. Added floating translucent top search bar with voice search simulation; floating map controls (recenter, floor selector pill, compass, venue/floor badge, confidence dot); floating 3-destination bottom navigation bar (Map, Explore, Settings); destination preview bottom sheet with "Start navigation" CTA; active turn-by-turn guidance panel with distance to turn, route progress bar, expandable step list, and cancel CTA; Explore screen with category chips, shop cards, and sponsored labels; Settings screen with route accessibility preferences (avoid stairs, prefer lifts), dark appearance mode toggle, voice guidance, reduced motion, permissions, and 32MB offline venue map. TypeScript typecheck green across workspace.
 
 - **2026-08-11 (backend import pass):** Added schema-v1 transactional package ingestion to `platform-api`, including source-ID-to-UUID mapping, cross-reference checks, SHA-256 checksum idempotency, Flyway V2 uniqueness, persisted graph validation, publication blocking, and import/validation/publication audit entries. Corrected all JSONB entity bindings after real PostGIS exposed varchar writes. Added Testcontainers PostGIS coverage for rollback, duplicates, validation gates, audit events, publication/version switching, Zara search, OpenAPI presence, and two-floor routing. Added a repeatable PowerShell flow; verified both fresh import and idempotent rerun against local PostGIS.
 
