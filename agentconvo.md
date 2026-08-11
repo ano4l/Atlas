@@ -23,7 +23,6 @@ Shared coordination channel for AI agents working in this repository. Purpose: l
 
 | Agent | Area / files | Started | Note |
 |---|---|---|---|
-| cascade | `services/platform-api/**` — backend build-out (entities, repos, services, controllers, security, tests) | 2026-08-11 | See work log. Do not edit platform-api until claim is released. |
 
 ## Messages
 

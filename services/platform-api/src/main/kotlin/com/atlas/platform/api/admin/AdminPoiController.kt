@@ -6,6 +6,8 @@ import com.atlas.platform.domain.PoiStatus
 import com.atlas.platform.errors.BadRequestException
 import com.atlas.platform.errors.NotFoundException
 import com.atlas.platform.repo.MapVersionRepository
+import com.atlas.platform.repo.FloorRepository
+import com.atlas.platform.repo.NavigationNodeRepository
 import com.atlas.platform.repo.PointOfInterestRepository
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.swagger.v3.oas.annotations.Operation
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
@@ -29,6 +32,8 @@ import java.util.UUID
 @RequestMapping("/v1/admin/pois")
 class AdminPoiController(
     private val mapVersionRepository: MapVersionRepository,
+    private val floorRepository: FloorRepository,
+    private val nodeRepository: NavigationNodeRepository,
     private val poiRepository: PointOfInterestRepository,
 ) {
 
@@ -51,7 +56,7 @@ class AdminPoiController(
     @Operation(summary = "List POIs for a map version")
     @GetMapping
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','MAPPING_OPERATOR','VENUE_ADMIN')")
-    fun listPois(mapVersionId: UUID): List<PointOfInterest> =
+    fun listPois(@RequestParam mapVersionId: UUID): List<PointOfInterest> =
         poiRepository.findByMapVersionId(mapVersionId)
 
     @Operation(summary = "Create a POI in a draft map version")
@@ -66,6 +71,18 @@ class AdminPoiController(
             .orElseThrow { NotFoundException("Map version not found") }
         if (mapVersion.status != MapVersionStatus.draft) {
             throw BadRequestException("POIs can only be added to draft map versions")
+        }
+        val floor = floorRepository.findById(request.floorId)
+            .orElseThrow { NotFoundException("Floor not found") }
+        if (floor.mapVersionId != mapVersionId) {
+            throw BadRequestException("Floor does not belong to this map version")
+        }
+        request.entryPointNodeId?.let { nodeId ->
+            val node = nodeRepository.findById(nodeId)
+                .orElseThrow { NotFoundException("Entry point node not found") }
+            if (node.mapVersionId != mapVersionId || node.floorId != request.floorId) {
+                throw BadRequestException("Entry point node must belong to this map version and floor")
+            }
         }
         return poiRepository.save(
             PointOfInterest(
