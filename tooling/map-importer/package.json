@@ -3,19 +3,27 @@
   "version": "0.1.0",
   "private": true,
   "description": "GIS/map package validation and import tooling (techspec.md §17 Epic B, §9.3 publication workflow).",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "bin": {
-    "map-importer": "src/cli.ts"
+    "map-importer": "dist/cli.js"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "validate": "pnpm run build && node dist/cli.js validate",
+    "inspect": "pnpm run build && node dist/cli.js inspect",
+    "canonicalize": "pnpm run build && node dist/cli.js canonicalize"
   },
   "dependencies": {
-    "@atlas/spatial-model": "workspace:*"
+    "@atlas/spatial-model": "workspace:*",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "typescript": "^5.5.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "typescript": "^5.5.0"
   }
 }

@@ -1,0 +1,22 @@
+{
+  "name": "@atlas/contract-tests",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Contract tests: map-package validation, API client sync, event-ingestion idempotency (techspec.md §14.3).",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "generate-fixtures": "tsc && node dist/fixtures.js",
+    "test": "tsc && node dist/map-package.contract.test.js"
+  },
+  "dependencies": {
+    "@atlas/fixture-generator": "workspace:*",
+    "@atlas/map-importer": "workspace:*",
+    "@atlas/spatial-model": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.5.0"
+  }
+}

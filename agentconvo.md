@@ -23,6 +23,8 @@ Shared coordination channel for AI agents working in this repository. Purpose: l
 
 | Agent | Area / files | Started | Note |
 |---|---|---|---|
+| — | cascade claim released 2026-08-11 | — | — |
+| codex | `services/platform-api/**`, `infrastructure/local/**`, `tests/end-to-end/**` — transactional map import and real PostGIS vertical slice | 2026-08-11 | Bulk import, publication validation, integration tests, local flow. |
 
 ## Messages
 
@@ -30,12 +32,16 @@ Shared coordination channel for AI agents working in this repository. Purpose: l
 
 ## Work log
 
+- **2026-08-11 codex:** Claimed the platform import vertical slice: transactional source-ID mapping, checksum idempotency, publication gates, PostGIS integration coverage, and reproducible local flow.
+
 - **2026-08-11 codex:** Claimed the non-overlapping synthetic venue fixture generator after detecting cascade's live backend build. Target is a deterministic JSON package aligned with the platform admin import DTOs and routing invariants.
 
 - **2026-08-04 cascade:** Initial scaffold pass complete. Monorepo structure, app/service shells, spatial/routing/positioning packages (BLE trilateration, fingerprint k-NN, visual contract), analytics-worker job skeleton, ADRs 0001–0002, `progress.md` created. Pushed to `origin/main`. Known blocker: `pnpm install` fails (nvm permissions) — TS packages can't typecheck until resolved.
 - **2026-08-11 cascade:** Started backend build-out (claim above). Done so far: Flyway `V1__initial_schema.sql` (venues, map_versions, floors, POIs, nodes, edges, beacons, events_raw, audit_log); JPA entities + Spring Data repos; standard error contract + `@RestControllerAdvice`; `RouteService` (Kotlin A* with closure/restriction/one-way/validity filtering, floor segmentation, transitions); `SearchService` (ranking per techspec §11); `EventIngestionService` (idempotent via `eventId`, quarantine for bad schema/unknown venue/future timestamps); `MapPackageService` (single-version consistent package); public controllers (venues, floors, search, routes, map-package, positioning-config, events batch); admin venue controller (create venue, create/publish/rollback map version, audit logging). springdoc + flyway deps added to build.gradle.kts.
 
 ## Handoffs
+
+- **2026-08-11 cascade (released):** MapPackageV1 validation tooling complete. `packages/spatial-model` now exports `MapPackageV1`/`MapPackageChecksum`/`MAP_PACKAGE_SCHEMA_VERSION` and uses explicit `geojson` typed imports (global namespace gone, also cleaned in fixture-generator). `tooling/map-importer` does Zod structural validation + ~25 semantic rules (refs, bounds, transition groups, connectivity, geometry) with stable error codes, canonical JSON + SHA-256 checksum, and a `validate`/`inspect`/`canonicalize` CLI with proper exit codes. `tests/contract` is a workspace package: generated fixtures (valid + 5 malformed) and a 32-check suite, all green; fixture-generator output validates with zero warnings. Contract doc: `docs/mapping/map-package-contract.md`. **Build-config changes outside my claim (noting for visibility):** fixture-generator `package.json` now points `main`/`types` at `dist/` and its scripts avoid nested `pnpm` (was failing without a global pnpm shim); `pnpm-workspace.yaml` now includes `tests/contract`. **For codex (platform-api import slice):** the checksum (`checksumPackage`, sha256 over canonical JSON) is the natural idempotency key for transactional import; `validateMapPackage()` gives you the full structured report if you want to gate backend import on it.
 
 - **2026-08-11 codex (released):** Implemented `tooling/fixture-generator` as a deterministic schema-v1 two-floor venue package with stable IDs, local-metre geometry, routable Zara and information POIs, lift/escalator alternatives, admin-import DTO payload, CLI JSON output, and invariant tests. `pnpm --filter @atlas/fixture-generator typecheck` and `test` pass; CLI smoke output contained 2 floors, 10 nodes, 10 edges, and 2 POIs. Next: make `tooling/map-importer` validate this package and/or add a backend bulk-package import orchestrator.
 

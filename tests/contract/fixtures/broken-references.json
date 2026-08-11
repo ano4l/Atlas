@@ -1,0 +1,783 @@
+{
+  "schemaVersion": 1,
+  "venue": {
+    "id": "10000000-0000-4000-8000-000000000001",
+    "slug": "atlas-synthetic-mall",
+    "name": "Atlas Synthetic Mall",
+    "status": "active",
+    "timezone": "Africa/Johannesburg",
+    "geographicBoundary": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            28.052,
+            -26.108
+          ],
+          [
+            28.053,
+            -26.108
+          ],
+          [
+            28.053,
+            -26.107
+          ],
+          [
+            28.052,
+            -26.107
+          ],
+          [
+            28.052,
+            -26.108
+          ]
+        ]
+      ]
+    },
+    "defaultMapVersionId": "10000000-0000-4000-8000-000000000003",
+    "createdAt": "2026-08-11T00:00:00.000Z",
+    "updatedAt": "2026-08-11T00:00:00.000Z"
+  },
+  "mapVersion": {
+    "id": "10000000-0000-4000-8000-000000000003",
+    "venueId": "10000000-0000-4000-8000-000000000001",
+    "version": 1,
+    "status": "validated",
+    "schemaVersion": 1,
+    "contentHash": "synthetic-two-floor-v1",
+    "publishedAt": null,
+    "minimumAppVersion": "0.1.0"
+  },
+  "floors": [
+    {
+      "id": "20000000-0000-4000-8000-000000000001",
+      "venueId": "10000000-0000-4000-8000-000000000001",
+      "buildingId": "10000000-0000-4000-8000-000000000002",
+      "name": "Ground floor",
+      "ordinal": 0,
+      "publicLabel": "G",
+      "elevationM": 0,
+      "localBounds": [
+        0,
+        0,
+        100,
+        60
+      ],
+      "sourceScale": 1
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000002",
+      "venueId": "10000000-0000-4000-8000-000000000001",
+      "buildingId": "10000000-0000-4000-8000-000000000002",
+      "name": "Level one",
+      "ordinal": 1,
+      "publicLabel": "L1",
+      "elevationM": 4.5,
+      "localBounds": [
+        0,
+        0,
+        100,
+        60
+      ],
+      "sourceScale": 1
+    }
+  ],
+  "nodes": [
+    {
+      "id": "30000000-0000-4000-8000-000000000001",
+      "floorId": "20000000-0000-4000-8000-000000000001",
+      "x": 8,
+      "y": 30,
+      "nodeType": "entrance",
+      "transitionGroupId": null
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000002",
+      "floorId": "20000000-0000-4000-8000-000000000001",
+      "x": 35,
+      "y": 30,
+      "nodeType": "walkway",
+      "transitionGroupId": null
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000003",
+      "floorId": "20000000-0000-4000-8000-000000000001",
+      "x": 65,
+      "y": 30,
+      "nodeType": "walkway",
+      "transitionGroupId": null
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000004",
+      "floorId": "20000000-0000-4000-8000-000000000001",
+      "x": 38,
+      "y": 34,
+      "nodeType": "transition",
+      "transitionGroupId": "40000000-0000-4000-8000-000000000001"
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000005",
+      "floorId": "20000000-0000-4000-8000-000000000001",
+      "x": 32,
+      "y": 34,
+      "nodeType": "transition",
+      "transitionGroupId": "40000000-0000-4000-8000-000000000002"
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000006",
+      "floorId": "20000000-0000-4000-8000-000000000002",
+      "x": 35,
+      "y": 30,
+      "nodeType": "walkway",
+      "transitionGroupId": null
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000007",
+      "floorId": "20000000-0000-4000-8000-000000000002",
+      "x": 65,
+      "y": 30,
+      "nodeType": "walkway",
+      "transitionGroupId": null
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000008",
+      "floorId": "20000000-0000-4000-8000-000000000002",
+      "x": 38,
+      "y": 34,
+      "nodeType": "transition",
+      "transitionGroupId": "40000000-0000-4000-8000-000000000001"
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000009",
+      "floorId": "20000000-0000-4000-8000-000000000002",
+      "x": 32,
+      "y": 34,
+      "nodeType": "transition",
+      "transitionGroupId": "40000000-0000-4000-8000-000000000002"
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000010",
+      "floorId": "20000000-0000-4000-8000-000000000002",
+      "x": 78,
+      "y": 30,
+      "nodeType": "entrance",
+      "transitionGroupId": null
+    }
+  ],
+  "edges": [
+    {
+      "id": "60000000-0000-4000-8000-000000000001",
+      "fromNodeId": "30000000-0000-4000-8000-000000000001",
+      "toNodeId": "99999999-9999-4999-8999-999999999999",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            8,
+            30
+          ],
+          [
+            35,
+            30
+          ]
+        ]
+      },
+      "distanceM": 27,
+      "estimatedTimeS": 23,
+      "directionality": "bidirectional",
+      "edgeType": "corridor",
+      "isAccessible": true,
+      "isRestricted": false,
+      "validFrom": null,
+      "validUntil": null
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000002",
+      "fromNodeId": "30000000-0000-4000-8000-000000000002",
+      "toNodeId": "30000000-0000-4000-8000-000000000003",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            35,
+            30
+          ],
+          [
+            65,
+            30
+          ]
+        ]
+      },
+      "distanceM": 30,
+      "estimatedTimeS": 25,
+      "directionality": "bidirectional",
+      "edgeType": "corridor",
+      "isAccessible": true,
+      "isRestricted": false,
+      "validFrom": null,
+      "validUntil": null
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000003",
+      "fromNodeId": "30000000-0000-4000-8000-000000000002",
+      "toNodeId": "30000000-0000-4000-8000-000000000004",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            35,
+            30
+          ],
+          [
+            38,
+            34
+          ]
+        ]
+      },
+      "distanceM": 5,
+      "estimatedTimeS": 5,
+      "directionality": "bidirectional",
+      "edgeType": "corridor",
+      "isAccessible": true,
+      "isRestricted": false,
+      "validFrom": null,
+      "validUntil": null
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000004",
+      "fromNodeId": "30000000-0000-4000-8000-000000000002",
+      "toNodeId": "30000000-0000-4000-8000-000000000005",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            35,
+            30
+          ],
+          [
+            32,
+            34
+          ]
+        ]
+      },
+      "distanceM": 5,
+      "estimatedTimeS": 5,
+      "directionality": "bidirectional",
+      "edgeType": "corridor",
+      "isAccessible": true,
+      "isRestricted": false,
+      "validFrom": null,
+      "validUntil": null
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000005",
+      "fromNodeId": "30000000-0000-4000-8000-000000000006",
+      "toNodeId": "30000000-0000-4000-8000-000000000007",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            35,
+            30
+          ],
+          [
+            65,
+            30
+          ]
+        ]
+      },
+      "distanceM": 30,
+      "estimatedTimeS": 25,
+      "directionality": "bidirectional",
+      "edgeType": "corridor",
+      "isAccessible": true,
+      "isRestricted": false,
+      "validFrom": null,
+      "validUntil": null
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000006",
+      "fromNodeId": "30000000-0000-4000-8000-000000000006",
+      "toNodeId": "30000000-0000-4000-8000-000000000008",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            35,
+            30
+          ],
+          [
+            38,
+            34
+          ]
+        ]
+      },
+      "distanceM": 5,
+      "estimatedTimeS": 5,
+      "directionality": "bidirectional",
+      "edgeType": "corridor",
+      "isAccessible": true,
+      "isRestricted": false,
+      "validFrom": null,
+      "validUntil": null
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000007",
+      "fromNodeId": "30000000-0000-4000-8000-000000000006",
+      "toNodeId": "30000000-0000-4000-8000-000000000009",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            35,
+            30
+          ],
+          [
+            32,
+            34
+          ]
+        ]
+      },
+      "distanceM": 5,
+      "estimatedTimeS": 5,
+      "directionality": "bidirectional",
+      "edgeType": "corridor",
+      "isAccessible": true,
+      "isRestricted": false,
+      "validFrom": null,
+      "validUntil": null
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000008",
+      "fromNodeId": "30000000-0000-4000-8000-000000000007",
+      "toNodeId": "30000000-0000-4000-8000-000000000010",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            65,
+            30
+          ],
+          [
+            78,
+            30
+          ]
+        ]
+      },
+      "distanceM": 13,
+      "estimatedTimeS": 11,
+      "directionality": "bidirectional",
+      "edgeType": "corridor",
+      "isAccessible": true,
+      "isRestricted": false,
+      "validFrom": null,
+      "validUntil": null
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000009",
+      "fromNodeId": "30000000-0000-4000-8000-000000000004",
+      "toNodeId": "30000000-0000-4000-8000-000000000008",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            38,
+            34
+          ],
+          [
+            38,
+            34
+          ]
+        ]
+      },
+      "distanceM": 8,
+      "estimatedTimeS": 7,
+      "directionality": "bidirectional",
+      "edgeType": "escalator",
+      "isAccessible": false,
+      "isRestricted": false,
+      "validFrom": null,
+      "validUntil": null
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000010",
+      "fromNodeId": "30000000-0000-4000-8000-000000000005",
+      "toNodeId": "30000000-0000-4000-8000-000000000009",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            32,
+            34
+          ],
+          [
+            32,
+            34
+          ]
+        ]
+      },
+      "distanceM": 6,
+      "estimatedTimeS": 5,
+      "directionality": "bidirectional",
+      "edgeType": "lift",
+      "isAccessible": true,
+      "isRestricted": false,
+      "validFrom": null,
+      "validUntil": null
+    }
+  ],
+  "pois": [
+    {
+      "id": "50000000-0000-4000-8000-000000000001",
+      "venueId": "10000000-0000-4000-8000-000000000001",
+      "floorId": "88888888-8888-4888-8888-888888888888",
+      "name": "Zara",
+      "aliases": [
+        "ZARA",
+        "Zara clothing"
+      ],
+      "type": "destination",
+      "categories": [
+        "retail"
+      ],
+      "keywords": [
+        "fashion",
+        "clothes",
+        "women",
+        "men"
+      ],
+      "spaceGeometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76,
+              22
+            ],
+            [
+              88,
+              22
+            ],
+            [
+              88,
+              29
+            ],
+            [
+              76,
+              29
+            ],
+            [
+              76,
+              22
+            ]
+          ]
+        ]
+      },
+      "entranceNodeIds": [
+        "30000000-0000-4000-8000-000000000010"
+      ],
+      "openingStatus": "open",
+      "searchableMetadata": {},
+      "accessibilityMetadata": {}
+    },
+    {
+      "id": "50000000-0000-4000-8000-000000000002",
+      "venueId": "10000000-0000-4000-8000-000000000001",
+      "floorId": "20000000-0000-4000-8000-000000000001",
+      "name": "Information desk",
+      "aliases": [
+        "Help desk",
+        "Guest services"
+      ],
+      "type": "destination",
+      "categories": [
+        "retail"
+      ],
+      "keywords": [
+        "information",
+        "help"
+      ],
+      "spaceGeometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              31,
+              25
+            ],
+            [
+              39,
+              25
+            ],
+            [
+              39,
+              29
+            ],
+            [
+              31,
+              29
+            ],
+            [
+              31,
+              25
+            ]
+          ]
+        ]
+      },
+      "entranceNodeIds": [
+        "30000000-0000-4000-8000-000000000002"
+      ],
+      "openingStatus": "open",
+      "searchableMetadata": {},
+      "accessibilityMetadata": {}
+    }
+  ],
+  "adminImport": {
+    "venue": {
+      "slug": "atlas-synthetic-mall",
+      "name": "Atlas Synthetic Mall",
+      "displayName": "Atlas Synthetic Mall",
+      "category": "shopping_centre",
+      "description": "Deterministic two-floor development fixture"
+    },
+    "floors": [
+      {
+        "sourceId": "20000000-0000-4000-8000-000000000001",
+        "name": "Ground floor",
+        "ordinal": 0,
+        "publicLabel": "G",
+        "localBounds": "[0,0,100,60]",
+        "sourceScale": 1
+      },
+      {
+        "sourceId": "20000000-0000-4000-8000-000000000002",
+        "name": "Level one",
+        "ordinal": 1,
+        "publicLabel": "L1",
+        "localBounds": "[0,0,100,60]",
+        "sourceScale": 1
+      }
+    ],
+    "nodes": [
+      {
+        "sourceId": "30000000-0000-4000-8000-000000000001",
+        "floorSourceId": "20000000-0000-4000-8000-000000000001",
+        "x": 8,
+        "y": 30,
+        "nodeType": "entrance",
+        "transitionGroupId": null
+      },
+      {
+        "sourceId": "30000000-0000-4000-8000-000000000002",
+        "floorSourceId": "20000000-0000-4000-8000-000000000001",
+        "x": 35,
+        "y": 30,
+        "nodeType": "walkway",
+        "transitionGroupId": null
+      },
+      {
+        "sourceId": "30000000-0000-4000-8000-000000000003",
+        "floorSourceId": "20000000-0000-4000-8000-000000000001",
+        "x": 65,
+        "y": 30,
+        "nodeType": "walkway",
+        "transitionGroupId": null
+      },
+      {
+        "sourceId": "30000000-0000-4000-8000-000000000004",
+        "floorSourceId": "20000000-0000-4000-8000-000000000001",
+        "x": 38,
+        "y": 34,
+        "nodeType": "transition",
+        "transitionGroupId": "40000000-0000-4000-8000-000000000001"
+      },
+      {
+        "sourceId": "30000000-0000-4000-8000-000000000005",
+        "floorSourceId": "20000000-0000-4000-8000-000000000001",
+        "x": 32,
+        "y": 34,
+        "nodeType": "transition",
+        "transitionGroupId": "40000000-0000-4000-8000-000000000002"
+      },
+      {
+        "sourceId": "30000000-0000-4000-8000-000000000006",
+        "floorSourceId": "20000000-0000-4000-8000-000000000002",
+        "x": 35,
+        "y": 30,
+        "nodeType": "walkway",
+        "transitionGroupId": null
+      },
+      {
+        "sourceId": "30000000-0000-4000-8000-000000000007",
+        "floorSourceId": "20000000-0000-4000-8000-000000000002",
+        "x": 65,
+        "y": 30,
+        "nodeType": "walkway",
+        "transitionGroupId": null
+      },
+      {
+        "sourceId": "30000000-0000-4000-8000-000000000008",
+        "floorSourceId": "20000000-0000-4000-8000-000000000002",
+        "x": 38,
+        "y": 34,
+        "nodeType": "transition",
+        "transitionGroupId": "40000000-0000-4000-8000-000000000001"
+      },
+      {
+        "sourceId": "30000000-0000-4000-8000-000000000009",
+        "floorSourceId": "20000000-0000-4000-8000-000000000002",
+        "x": 32,
+        "y": 34,
+        "nodeType": "transition",
+        "transitionGroupId": "40000000-0000-4000-8000-000000000002"
+      },
+      {
+        "sourceId": "30000000-0000-4000-8000-000000000010",
+        "floorSourceId": "20000000-0000-4000-8000-000000000002",
+        "x": 78,
+        "y": 30,
+        "nodeType": "entrance",
+        "transitionGroupId": null
+      }
+    ],
+    "edges": [
+      {
+        "sourceId": "60000000-0000-4000-8000-000000000001",
+        "fromNodeSourceId": "30000000-0000-4000-8000-000000000001",
+        "toNodeSourceId": "30000000-0000-4000-8000-000000000002",
+        "edgeType": "corridor",
+        "baseCostM": 27,
+        "oneWay": false,
+        "restricted": false,
+        "geometry": "[[8,30],[35,30]]"
+      },
+      {
+        "sourceId": "60000000-0000-4000-8000-000000000002",
+        "fromNodeSourceId": "30000000-0000-4000-8000-000000000002",
+        "toNodeSourceId": "30000000-0000-4000-8000-000000000003",
+        "edgeType": "corridor",
+        "baseCostM": 30,
+        "oneWay": false,
+        "restricted": false,
+        "geometry": "[[35,30],[65,30]]"
+      },
+      {
+        "sourceId": "60000000-0000-4000-8000-000000000003",
+        "fromNodeSourceId": "30000000-0000-4000-8000-000000000002",
+        "toNodeSourceId": "30000000-0000-4000-8000-000000000004",
+        "edgeType": "corridor",
+        "baseCostM": 5,
+        "oneWay": false,
+        "restricted": false,
+        "geometry": "[[35,30],[38,34]]"
+      },
+      {
+        "sourceId": "60000000-0000-4000-8000-000000000004",
+        "fromNodeSourceId": "30000000-0000-4000-8000-000000000002",
+        "toNodeSourceId": "30000000-0000-4000-8000-000000000005",
+        "edgeType": "corridor",
+        "baseCostM": 5,
+        "oneWay": false,
+        "restricted": false,
+        "geometry": "[[35,30],[32,34]]"
+      },
+      {
+        "sourceId": "60000000-0000-4000-8000-000000000005",
+        "fromNodeSourceId": "30000000-0000-4000-8000-000000000006",
+        "toNodeSourceId": "30000000-0000-4000-8000-000000000007",
+        "edgeType": "corridor",
+        "baseCostM": 30,
+        "oneWay": false,
+        "restricted": false,
+        "geometry": "[[35,30],[65,30]]"
+      },
+      {
+        "sourceId": "60000000-0000-4000-8000-000000000006",
+        "fromNodeSourceId": "30000000-0000-4000-8000-000000000006",
+        "toNodeSourceId": "30000000-0000-4000-8000-000000000008",
+        "edgeType": "corridor",
+        "baseCostM": 5,
+        "oneWay": false,
+        "restricted": false,
+        "geometry": "[[35,30],[38,34]]"
+      },
+      {
+        "sourceId": "60000000-0000-4000-8000-000000000007",
+        "fromNodeSourceId": "30000000-0000-4000-8000-000000000006",
+        "toNodeSourceId": "30000000-0000-4000-8000-000000000009",
+        "edgeType": "corridor",
+        "baseCostM": 5,
+        "oneWay": false,
+        "restricted": false,
+        "geometry": "[[35,30],[32,34]]"
+      },
+      {
+        "sourceId": "60000000-0000-4000-8000-000000000008",
+        "fromNodeSourceId": "30000000-0000-4000-8000-000000000007",
+        "toNodeSourceId": "30000000-0000-4000-8000-000000000010",
+        "edgeType": "corridor",
+        "baseCostM": 13,
+        "oneWay": false,
+        "restricted": false,
+        "geometry": "[[65,30],[78,30]]"
+      },
+      {
+        "sourceId": "60000000-0000-4000-8000-000000000009",
+        "fromNodeSourceId": "30000000-0000-4000-8000-000000000004",
+        "toNodeSourceId": "30000000-0000-4000-8000-000000000008",
+        "edgeType": "escalator",
+        "baseCostM": 8,
+        "oneWay": false,
+        "restricted": false,
+        "geometry": "[[38,34],[38,34]]"
+      },
+      {
+        "sourceId": "60000000-0000-4000-8000-000000000010",
+        "fromNodeSourceId": "30000000-0000-4000-8000-000000000005",
+        "toNodeSourceId": "30000000-0000-4000-8000-000000000009",
+        "edgeType": "lift",
+        "baseCostM": 6,
+        "oneWay": false,
+        "restricted": false,
+        "geometry": "[[32,34],[32,34]]"
+      }
+    ],
+    "pois": [
+      {
+        "sourceId": "50000000-0000-4000-8000-000000000001",
+        "floorSourceId": "20000000-0000-4000-8000-000000000002",
+        "name": "Zara",
+        "aliases": [
+          "ZARA",
+          "Zara clothing"
+        ],
+        "searchKeywords": [
+          "fashion",
+          "clothes",
+          "women",
+          "men"
+        ],
+        "entryPointNodeSourceId": "30000000-0000-4000-8000-000000000010",
+        "visualAnchorX": 80.8,
+        "visualAnchorY": 24.8,
+        "status": "open"
+      },
+      {
+        "sourceId": "50000000-0000-4000-8000-000000000002",
+        "floorSourceId": "20000000-0000-4000-8000-000000000001",
+        "name": "Information desk",
+        "aliases": [
+          "Help desk",
+          "Guest services"
+        ],
+        "searchKeywords": [
+          "information",
+          "help"
+        ],
+        "entryPointNodeSourceId": "30000000-0000-4000-8000-000000000002",
+        "visualAnchorX": 34.2,
+        "visualAnchorY": 26.6,
+        "status": "open"
+      }
+    ]
+  }
+}

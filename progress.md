@@ -4,7 +4,7 @@ Living checklist for the Indoor Spatial Navigation Platform, organized by system
 
 Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 
-**Last updated:** 2026-08-11 — platform-api backend build-out (schema, routing, search, ingestion, admin, security).
+**Last updated:** 2026-08-11 — MapPackageV1 validation tooling (map-importer) + contract test suite.
 
 ---
 
@@ -174,8 +174,8 @@ Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 - [x] `map-importer` package scaffold (CLI + `validateMapPackage` stub)
 - [x] `calibration-console` package scaffold (`loadFixture` stub)
 - [x] `fixture-generator` package scaffold
-- [ ] Real map-package schema validation
-- [x] Real deterministic two-floor venue generator — versioned package, admin-import payload, routable Zara + information POIs, escalator/lift transitions, invariant tests
+- [x] Real map-package schema validation — Zod structural schema + full semantic rule set (cross-entity refs, bounds, geometry, connectivity, transition groups) with stable error codes; CLI `validate`/`inspect`/`canonicalize` with exit codes; canonical JSON + SHA-256 checksum; contract documented in `docs/mapping/map-package-contract.md`
+- [x] Real deterministic two-floor venue generator — versioned package, admin-import payload, routable Zara + information POIs, escalator/lift transitions, invariant tests; passes map-importer validation with zero warnings
 - [ ] Real replay-fixture loader + comparison reporting
 
 ---
@@ -184,7 +184,7 @@ Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 
 - [ ] Unit tests: step detection, heading normalisation, coordinate transforms, graph/A* correctness, constraint handling, map-matching scoring, confidence decay/recovery, event-schema validation, campaign eligibility/impression dedup
 - [ ] Replay-test harness wired to `tests/positioning-replays`
-- [ ] Contract tests (`tests/contract`): API client vs. OpenAPI, map-package import compatibility, event idempotency, privacy enforcement, dashboard authorisation, campaign accounting
+- [~] Contract tests (`tests/contract`): map-package validation suite green (32 checks: valid fixture, broken refs, disconnected graph, invalid geometry, unroutable POI, missing metadata, structured issue shape, canonical JSON/checksum determinism, CLI exit codes). Remaining: API client vs. OpenAPI, event idempotency, privacy enforcement, dashboard authorisation, campaign accounting
 - [ ] End-to-end tests (`tests/end-to-end`): full navigation flow, confidence/correction flow, floor transition, offline recovery, closure-aware rerouting, sponsored-search labelling
 - [ ] Performance tests (`tests/performance`): route computation latency, ingestion throughput, map-package generation time
 - [ ] Field-test device/carrying-state/speed/coverage matrix execution (`techspec.md` §14.5)
@@ -237,6 +237,7 @@ Status: **not met**. Needs (in order): synthetic venue fixture generator → map
 
 ## Changelog
 
+- **2026-08-11 (map-importer pass):** Implemented the MapPackageV1 contract end to end: versioned schema in `packages/spatial-model/src/map-package.ts`; global `GeoJSON` namespace replaced with explicit `geojson` typed imports across spatial-model and fixture-generator; Zod runtime schema (`schema.ts`) + semantic validator (`validate.ts`) covering metadata, ID uniqueness, venue/floor/node/edge/POI references, bounds, transition groups, connectivity, and geometry plausibility, all with stable structured error codes; deterministic canonical JSON + SHA-256 checksum (`canonical.ts`); CLI with `validate`/`inspect`/`canonicalize` and correct exit codes. `tests/contract` is now a workspace package with generated on-disk fixtures (valid + 5 malformed variants) and a 32-check contract suite — all green, and the fixture-generator output validates with zero warnings. Types re-exported from `@atlas/map-importer` and `@atlas/spatial-model` roots for a future API client. Contract documented in `docs/mapping/map-package-contract.md`. Also fixed workspace package entry points (`main`/`types` → `dist`) and nested-`pnpm` scripts in map-importer/fixture-generator/contract-tests.
 - **2026-08-11:** Backend build-out pass on `services/platform-api`: Flyway `V1__initial_schema.sql` (venues, map versions, floors, POIs/categories, navigation nodes/edges, beacons, events_raw, audit_log); JPA entities + repositories; standard error contract; Kotlin A* `RouteService` with closure/restriction/one-way/validity filtering and floor segments/transitions (unit-tested); `SearchService` with §11 ranking; idempotent `EventIngestionService` with quarantine path (unit-tested); `MapPackageService`; public controllers (venues, floors, search, routes, map-package, positioning-config, events); admin controllers (venues, map publish/rollback, floors, graph bulk import + connectivity validation, closures, POIs, beacons) with role-gated `@PreAuthorize` and interim API-key auth; springdoc OpenAPI wired. Gradle wrappers generated for both services; `compileKotlin`/`test` green. Also created `agentconvo.md` for inter-agent coordination.
 - **2026-08-07:** Redesigned the fixture-driven mobile prototype around a dark, map-first indoor cartography system. Expanded the schematic venue to a coherent atrium/concourse plan with 14+ tenant footprints, facilities, transition cores, doorway-specific Zara endpoint, map grid, chartreuse route, cyan position treatment, floating controls, phone-width web canvas, and mature light-theme counterpart. Follow-up browser QA corrected flex-growing buttons, route-preview clipping, search result columns, map-backed search, action contrast, overlay collisions, web landmarks, and centered graphite tablet/desktop framing. The existing search, navigation, correction, offline, and supporting-state functionality remains deterministic and local.
 - **2026-08-06:** Replaced the mobile placeholder with a deterministic Sandton City consumer prototype: native two-floor schematic map, neutral and sponsored Zara search results, destination and route preview, active guidance, floor transition, confidence correction/reroute, arrival, and supporting offline/alert/report/privacy/camera/light/dark states. This is fixture-driven UI only; it does not claim live positioning, camera recognition, backend routing, or production GIS rendering. Dependency installation remains incomplete because the package mirror is missing `xtend` metadata.

@@ -4,4 +4,6 @@ Standards for digitising venue floor plans into the spatial model (`techspec.md`
 
 Covers: coordinate systems and anchors, floor/POI/graph digitisation conventions, map versioning and publish/rollback workflow, and validation rules enforced by `tooling/map-importer`.
 
-TODO: document the source-plan-to-local-metres transform convention once the first synthetic venue fixture (`tooling/fixture-generator`) is implemented.
+- **Package contract:** [`map-package-contract.md`](./map-package-contract.md) — MapPackageV1 structure, semantic validation rules and error codes, canonical JSON + checksum, CLI usage.
+
+TODO: document the source-plan-to-local-metres transform convention for real venue digitisation (the synthetic fixture already uses local metres).

@@ -3,6 +3,7 @@
 // released pilot map package; bump schemaVersion on breaking changes.
 
 import type { IsoDateTime, Uuid } from "@atlas/shared-types";
+import type { LineString, Polygon } from "geojson";
 
 export interface Venue {
   id: Uuid;
@@ -10,7 +11,7 @@ export interface Venue {
   name: string;
   status: "draft" | "active" | "inactive";
   timezone: string;
-  geographicBoundary: GeoJSON.Polygon;
+  geographicBoundary: Polygon;
   defaultMapVersionId: Uuid | null;
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
@@ -37,7 +38,7 @@ export interface PointOfInterest {
   type: string;
   categories: string[];
   keywords: string[];
-  spaceGeometry: GeoJSON.Polygon;
+  spaceGeometry: Polygon;
   entranceNodeIds: Uuid[];
   openingStatus: "open" | "closed" | "temporarily_closed";
   searchableMetadata: Record<string, unknown>;
@@ -61,7 +62,7 @@ export interface NavigationEdge {
   id: Uuid;
   fromNodeId: Uuid;
   toNodeId: Uuid;
-  geometry: GeoJSON.LineString;
+  geometry: LineString;
   distanceM: number;
   estimatedTimeS: number;
   directionality: "bidirectional" | "forward" | "backward";
@@ -71,6 +72,9 @@ export interface NavigationEdge {
   validFrom: IsoDateTime | null;
   validUntil: IsoDateTime | null;
 }
+
+export type { MapPackageChecksum, MapPackageV1 } from "./map-package";
+export { MAP_PACKAGE_SCHEMA_VERSION } from "./map-package";
 
 export type MapVersionStatus = "draft" | "validated" | "published" | "retired";
 

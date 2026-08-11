@@ -2,6 +2,7 @@
 // techspec.md §17 Phase 0/1 and §21 (first development milestone), plus
 // synthetic movement sessions for replay testing (§14.2).
 
+import type { LineString, Polygon } from "geojson";
 import type { Floor, MapVersion, NavigationEdge, NavigationNode, PointOfInterest, Venue } from "@atlas/spatial-model";
 
 export interface SyntheticVenueFixture {
@@ -143,6 +144,6 @@ function poi(id: string, floorId: string, name: string, aliases: string[], keywo
   return { id, venueId: IDS.venue, floorId, name, aliases, type: "destination", categories: ["retail"], keywords, spaceGeometry: polygon([[[left, top], [right, top], [right, bottom], [left, bottom], [left, top]]]), entranceNodeIds: [entranceNodeId], openingStatus: "open", searchableMetadata: {}, accessibilityMetadata: {} };
 }
 
-function polygon(coordinates: number[][][]): GeoJSON.Polygon { return { type: "Polygon", coordinates }; }
-function line(coordinates: number[][]): GeoJSON.LineString { return { type: "LineString", coordinates }; }
+function polygon(coordinates: number[][][]): Polygon { return { type: "Polygon", coordinates }; }
+function line(coordinates: number[][]): LineString { return { type: "LineString", coordinates }; }
 function centre(ring: number[][], axis: 0 | 1): number { return ring.reduce((sum, point) => sum + point[axis], 0) / ring.length; }
