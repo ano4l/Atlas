@@ -17,12 +17,14 @@ import java.util.UUID
 
 interface VenueRepository : JpaRepository<Venue, UUID> {
     fun findByActiveTrue(): List<Venue>
+    fun findBySlug(slug: String): Optional<Venue>
 }
 
 interface MapVersionRepository : JpaRepository<MapVersion, UUID> {
     fun findByVenueId(venueId: UUID): List<MapVersion>
     fun findByVenueIdAndStatus(venueId: UUID, status: MapVersionStatus): List<MapVersion>
     fun findTopByVenueIdOrderByVersionDesc(venueId: UUID): Optional<MapVersion>
+    fun findByImportedSourceChecksum(importedSourceChecksum: String): Optional<MapVersion>
 }
 
 interface FloorRepository : JpaRepository<Floor, UUID> {

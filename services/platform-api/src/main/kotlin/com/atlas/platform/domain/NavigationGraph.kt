@@ -8,6 +8,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.time.OffsetDateTime
 import java.util.UUID
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 
 @Entity
 @Table(name = "navigation_nodes")
@@ -79,8 +81,10 @@ class NavigationEdge(
     var validUntil: OffsetDateTime? = null,
 
     @Column(name = "accessibility_metadata", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     var accessibilityMetadata: String = "{}",
 
     @Column(columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     var geometry: String? = null,
 )

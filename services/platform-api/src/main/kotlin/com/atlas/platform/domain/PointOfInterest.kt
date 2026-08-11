@@ -7,6 +7,8 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.util.UUID
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 
 enum class PoiStatus {
     open, temporarily_closed, closed
@@ -31,6 +33,7 @@ class PointOfInterest(
     var name: String,
 
     @Column(columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     var aliases: String = "[]",
 
     @Column(name = "category_id")
@@ -48,9 +51,11 @@ class PointOfInterest(
     var entryPointNodeId: UUID? = null,
 
     @Column(name = "search_keywords", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     var searchKeywords: String = "[]",
 
     @Column(name = "opening_hours", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     var openingHours: String? = null,
 
     @Enumerated(EnumType.STRING)

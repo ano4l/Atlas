@@ -2,7 +2,7 @@ spring:
   application:
     name: platform-api
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/indoor_navigation}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:55432/indoor_navigation}
     username: ${DATABASE_USERNAME:atlas}
     password: ${DATABASE_PASSWORD:atlas}
   jpa:
@@ -20,10 +20,10 @@ springdoc:
     path: /swagger-ui.html
 
 # Interim admin authentication until an IdP is chosen (techspec.md §20).
-# Semicolon-separated "actor:secret:ROLE1,ROLE2" entries. Must be overridden per env.
+# Semicolon-separated "secret:ROLE1,ROLE2" entries. Must be overridden per env.
 atlas:
   security:
-    admin-api-keys: ${ADMIN_API_KEYS:local-admin:changeme:PLATFORM_ADMIN}
+    admin-api-keys: ${ADMIN_API_KEYS:changeme:PLATFORM_ADMIN,MAPPING_OPERATOR}
 
 server:
   port: ${PORT:8080}

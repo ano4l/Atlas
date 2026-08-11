@@ -8,6 +8,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.time.OffsetDateTime
 import java.util.UUID
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 
 enum class EventStatus {
     accepted, quarantined
@@ -56,6 +58,7 @@ class RawEvent(
     var personalisedAdsAllowed: Boolean = false,
 
     @Column(columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     var payload: String = "{}",
 
     @Enumerated(EnumType.STRING)
@@ -85,6 +88,7 @@ class AuditLogEntry(
     var entityId: String? = null,
 
     @Column(columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     var details: String = "{}",
 
     @Column(name = "created_at", nullable = false)

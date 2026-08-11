@@ -5,6 +5,8 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.util.UUID
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 
 @Entity
 @Table(name = "floors")
@@ -28,6 +30,7 @@ class Floor(
     var publicLabel: String? = null,
 
     @Column(name = "local_bounds", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     var localBounds: String? = null,
 
     @Column(name = "source_scale")

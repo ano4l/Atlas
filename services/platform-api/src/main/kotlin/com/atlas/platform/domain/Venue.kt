@@ -6,6 +6,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.time.OffsetDateTime
 import java.util.UUID
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 
 @Entity
 @Table(name = "venues")
@@ -33,6 +35,7 @@ class Venue(
     var defaultLocale: String = "en",
 
     @Column(name = "content_languages", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     var contentLanguages: String = "[]",
 
     @Column(name = "published_map_version_id")

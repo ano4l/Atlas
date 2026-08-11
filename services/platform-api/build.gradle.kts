@@ -9,6 +9,8 @@ plugins {
 group = "com.atlas.platform"
 version = "0.1.0"
 
+extra["testcontainers.version"] = "1.21.4"
+
 java {
     sourceCompatibility = JavaVersion.VERSION_21
 }
@@ -35,6 +37,8 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("io.mockk:mockk:1.13.11")
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:postgresql")
 }
 
 kotlin {

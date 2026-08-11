@@ -10,6 +10,7 @@ import com.atlas.platform.errors.NotFoundException
 import com.atlas.platform.repo.AuditLogRepository
 import com.atlas.platform.repo.MapVersionRepository
 import com.atlas.platform.repo.VenueRepository
+import com.atlas.platform.mappackage.MapPackageValidationService
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -36,6 +37,7 @@ class AdminVenueController(
     private val venueRepository: VenueRepository,
     private val mapVersionRepository: MapVersionRepository,
     private val auditLogRepository: AuditLogRepository,
+    private val mapPackageValidationService: MapPackageValidationService,
 ) {
 
     private val mapper = jacksonObjectMapper()
@@ -113,6 +115,12 @@ class AdminVenueController(
         if (mapVersion.status == MapVersionStatus.published) {
             throw ConflictException("Map version is already published")
         }
+
+        val validation = mapPackageValidationService.validatePersisted(mapVersionId)
+        mapPackageValidationService.requireValid(validation)
+        mapVersion.status = MapVersionStatus.validated
+        mapVersionRepository.save(mapVersion)
+        audit(actor, "map_version.validate", "map_version", mapVersionId.toString(), mapOf("issueCount" to validation.issues.size))
 
         // Retire the currently published version, then publish atomically.
         mapVersionRepository.findByVenueIdAndStatus(venueId, MapVersionStatus.published)

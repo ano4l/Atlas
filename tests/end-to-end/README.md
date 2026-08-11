@@ -1,5 +1,19 @@
-# End-to-end tests
+# End-to-end backend flow
 
-Full-stack scenarios from `techspec.md` §14.4, e.g. detect venue → search → select destination → route preview; start route → receive position updates → reach destination; confidence falls → user corrects position; floor transition; connectivity loss recovery; closure-aware rerouting; sponsored search labelling.
+`run-map-package-flow.ps1` exercises the first real platform milestone:
 
-No test runner is wired yet. Recommended: Playwright/Detox once `apps/mobile` and `apps/venue-dashboard` have enough surface area to exercise.
+1. Start local PostGIS.
+2. Generate the deterministic two-floor venue package.
+3. Start `platform-api`.
+4. Import the package transactionally.
+5. Publish the imported map version.
+6. Search for Zara.
+7. Request and verify a two-floor route.
+
+Run from the repository root:
+
+```powershell
+.\tests\end-to-end\run-map-package-flow.ps1
+```
+
+Use `-KeepApiRunning` to leave the API process alive after the check. The script never removes the PostGIS volume.
