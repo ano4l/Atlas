@@ -6,13 +6,17 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
+    "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "generate:synthetic-venue": "echo \"TODO: implement synthetic two-floor venue generator\" && exit 0"
+    "test": "pnpm run build && node dist/test.js",
+    "generate:synthetic-venue": "pnpm run build && node dist/cli.js"
   },
   "dependencies": {
     "@atlas/spatial-model": "workspace:*"
   },
   "devDependencies": {
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^20.0.0",
     "typescript": "^5.5.0"
   }
 }

@@ -14,6 +14,7 @@ out/
 .gradle/
 **/build/
 !apps/**/build.gradle.kts
+.gradle-bootstrap/
 
 # Environment and secrets
 .env

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Consumer indoor-navigation mobile application (techspec.md §5).",
-  "main": "expo-router/entry",
+  "main": "index.ts",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -17,14 +17,18 @@
     "@atlas/positioning-core": "workspace:*",
     "@atlas/shared-types": "workspace:*",
     "@atlas/spatial-model": "workspace:*",
+    "@babel/runtime": "7.24.0",
+    "@expo/metro-runtime": "~3.2.3",
     "expo": "~51.0.0",
     "expo-status-bar": "~1.12.0",
     "react": "18.2.0",
-    "react-native": "0.74.0"
+    "react-dom": "18.2.0",
+    "react-native": "0.74.5",
+    "react-native-web": "~0.19.13"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
     "@types/react": "~18.2.0",
-    "typescript": "^5.5.0"
+    "typescript": "^5.3.3"
   }
 }

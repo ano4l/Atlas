@@ -4,7 +4,7 @@ Living checklist for the Indoor Spatial Navigation Platform, organized by system
 
 Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 
-**Last updated:** 2026-08-04 — initial scaffold pass (Phase 0 groundwork).
+**Last updated:** 2026-08-11 — platform-api backend build-out (schema, routing, search, ingestion, admin, security).
 
 ---
 
@@ -19,7 +19,7 @@ Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 - [ ] Dependencies actually installed (`pnpm install`) — blocked, see below
 - [ ] CI pipeline (lint, typecheck, unit tests, build) — not started
 - [ ] Secret-scanning check in CI — not started
-- [ ] Gradle wrapper generated for `platform-api` and `analytics-worker`
+- [x] Gradle wrapper generated for `platform-api` and `analytics-worker`
 - [ ] Local PostGIS verified running end-to-end (`infrastructure/local/docker-compose.yml` written, not yet run)
 - [ ] Environment configuration/secrets handling documented beyond `.env.example`
 
@@ -101,26 +101,29 @@ Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 
 ### platform-api
 - [x] Spring Boot/Kotlin shell, Gradle build, `application.yml`, `/v1/health` endpoint
-- [x] Context-load test
-- [ ] Gradle wrapper generated
-- [ ] Venue/floor/POI/graph/map-version persistence (JPA entities + PostGIS mapping)
-- [ ] Search indexing and ranking (`techspec.md` §11)
-- [ ] Route calculation endpoint (`POST /v1/venues/{venueId}/routes`)
-- [ ] Map package generation and distribution (`GET /v1/venues/{venueId}/map-package`)
-- [ ] Positioning-config distribution endpoint
-- [ ] Event ingestion endpoint (`POST /v1/events/batch`) — idempotent via `eventId`, batch validation
+- [x] Context-load test (disabled without a live PostGIS — run manually with local compose up)
+- [x] Gradle wrapper generated
+- [x] Flyway `V1__initial_schema.sql` — venues, map_versions, floors, POIs/categories, nodes, edges, beacons, events_raw, audit_log
+- [x] JPA entities + Spring Data repositories for all core tables
+- [x] Standard error contract (`code`, `message`, `details`, `requestId`) via `@RestControllerAdvice`
+- [x] Search service with §11 ranking (exact/alias/prefix/keyword relevance, availability penalty) — `GET /v1/venues/{venueId}/search`
+- [x] Route calculation endpoint (`POST /v1/venues/{venueId}/routes`) — Kotlin A*, closure/restriction/one-way/validity filtering, floor segments + transitions
+- [x] Map package endpoint (`GET /v1/venues/{venueId}/map-package`) — single-version consistent package
+- [x] Positioning-config endpoint (`GET /v1/venues/{venueId}/positioning-config`)
+- [x] Event ingestion endpoint (`POST /v1/events/batch`) — idempotent via `eventId`, quarantine for bad schema/unknown venue/future timestamps; unit-tested
 - [ ] Advertising eligibility endpoint (`GET /v1/venues/{venueId}/ads/eligible`)
 - [ ] Privacy endpoints (preferences, deletion)
-- [ ] Admin endpoint groups (`/v1/admin/*`) — venues, maps, POIs, graph, closures, beacons, calibration, advertisers, campaigns, analytics, audit-log
-- [ ] OpenAPI 3.1 spec authored and published to `docs/api`
-- [ ] Role-based authorisation (server-side, not UI-only)
-- [ ] Rate limiting / payload-size limits on public ingestion endpoints
+- [x] Admin endpoints: venues create/list, map-version create/publish/rollback (atomic), floors, graph bulk import + connectivity validation, closures (urgent path), POIs create/status, beacon registry
+- [ ] Admin endpoints remaining: calibration, advertisers, campaigns, analytics, audit-log read API
+- [x] OpenAPI via springdoc (`/v1/api-docs`, `/swagger-ui.html`) — not yet exported to `docs/api`
+- [x] Role-based authorisation (server-side `@PreAuthorize` per role) with interim API-key auth — pending IdP decision (techspec.md §20)
+- [ ] Rate limiting / payload-size limits on public ingestion endpoints (batch size capped at 500; no rate limiter yet)
 - [ ] Signed/integrity-checked map packages
 
 ### analytics-worker
 - [x] Spring Boot/Kotlin shell, `application.yml`, context-load test
 - [x] `AggregationJobs` scheduled-job skeleton (hourly/daily rollups, currently no-op)
-- [ ] Gradle wrapper generated
+- [x] Gradle wrapper generated
 - [ ] Event validation and quarantine logic
 - [ ] Actual rollup queries (search demand, route completion, zone footfall, dwell, ad delivery, positioning-confidence rates)
 - [ ] Venue/campaign reporting outputs consumed by dashboard
@@ -170,9 +173,9 @@ Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 
 - [x] `map-importer` package scaffold (CLI + `validateMapPackage` stub)
 - [x] `calibration-console` package scaffold (`loadFixture` stub)
-- [x] `fixture-generator` package scaffold (`generateTwoFloorVenue` stub)
+- [x] `fixture-generator` package scaffold
 - [ ] Real map-package schema validation
-- [ ] Real synthetic two-floor venue generator (needed for Phase 0/1 exit criteria and first milestone, `techspec.md` §21)
+- [x] Real deterministic two-floor venue generator — versioned package, admin-import payload, routable Zara + information POIs, escalator/lift transitions, invariant tests
 - [ ] Real replay-fixture loader + comparison reporting
 
 ---
@@ -234,4 +237,7 @@ Status: **not met**. Needs (in order): synthetic venue fixture generator → map
 
 ## Changelog
 
+- **2026-08-11:** Backend build-out pass on `services/platform-api`: Flyway `V1__initial_schema.sql` (venues, map versions, floors, POIs/categories, navigation nodes/edges, beacons, events_raw, audit_log); JPA entities + repositories; standard error contract; Kotlin A* `RouteService` with closure/restriction/one-way/validity filtering and floor segments/transitions (unit-tested); `SearchService` with §11 ranking; idempotent `EventIngestionService` with quarantine path (unit-tested); `MapPackageService`; public controllers (venues, floors, search, routes, map-package, positioning-config, events); admin controllers (venues, map publish/rollback, floors, graph bulk import + connectivity validation, closures, POIs, beacons) with role-gated `@PreAuthorize` and interim API-key auth; springdoc OpenAPI wired. Gradle wrappers generated for both services; `compileKotlin`/`test` green. Also created `agentconvo.md` for inter-agent coordination.
+- **2026-08-07:** Redesigned the fixture-driven mobile prototype around a dark, map-first indoor cartography system. Expanded the schematic venue to a coherent atrium/concourse plan with 14+ tenant footprints, facilities, transition cores, doorway-specific Zara endpoint, map grid, chartreuse route, cyan position treatment, floating controls, phone-width web canvas, and mature light-theme counterpart. Follow-up browser QA corrected flex-growing buttons, route-preview clipping, search result columns, map-backed search, action contrast, overlay collisions, web landmarks, and centered graphite tablet/desktop framing. The existing search, navigation, correction, offline, and supporting-state functionality remains deterministic and local.
+- **2026-08-06:** Replaced the mobile placeholder with a deterministic Sandton City consumer prototype: native two-floor schematic map, neutral and sponsored Zara search results, destination and route preview, active guidance, floor transition, confidence correction/reroute, arrival, and supporting offline/alert/report/privacy/camera/light/dark states. This is fixture-driven UI only; it does not claim live positioning, camera recognition, backend routing, or production GIS rendering. Dependency installation remains incomplete because the package mirror is missing `xtend` metadata.
 - **2026-08-04:** Initial scaffold pass — monorepo structure, app/service shells, spatial/routing/positioning package contracts + BLE/fingerprint algorithms, analytics-worker job skeleton, ADRs 0001–0002. `pnpm install` blocked by environment permissions issue.
