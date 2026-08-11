@@ -40,7 +40,7 @@ export function FloatingSearchBar({
       >
         {/* Search Icon */}
         <View style={styles.searchIconWrapper}>
-          <Text style={[styles.searchIcon, { color: theme.ink }]}>🔍</Text>
+          <Text style={[styles.searchIcon, { color: theme.ink }]}>⌕</Text>
         </View>
 
         {/* Search Input Text */}
@@ -67,7 +67,7 @@ export function FloatingSearchBar({
             },
           ]}
         >
-          <Text style={[styles.micIcon, { color: theme.ink }]}>🎙️</Text>
+          <Text style={[styles.micIcon, { color: theme.ink }]}>●</Text>
         </Pressable>
       </Pressable>
     </View>

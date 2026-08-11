@@ -20,12 +20,12 @@ type Props = {
 };
 
 const stepIcons: Record<string, string> = {
-  straight: "⬆️",
+  straight: "↑",
   "turn-left": "↰",
   "turn-right": "↱",
-  escalator: "🪜",
-  lift: "🛗",
-  arrive: "🏁",
+  escalator: "↗",
+  lift: "↕",
+  arrive: "●",
 };
 
 export function ActiveNavigationPanel({
@@ -76,7 +76,7 @@ export function ActiveNavigationPanel({
             ]}
           >
             <Text style={[styles.turnIconText, { color: theme.accent }]}>
-              {stepIcons[currentStep.icon] ?? "⬆️"}
+              {stepIcons[currentStep.icon] ?? "↑"}
             </Text>
           </View>
 

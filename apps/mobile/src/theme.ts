@@ -18,7 +18,7 @@ export const lightTheme = {
   line: "#E5E5EA",           // Delicate divider line
   
   // Map Cartography
-  mapBg: "#FAF9F5",          // Very light warm-grey map background
+  mapBg: "#F5F5F3",
   mapPlate: "#FFFFFF",       // Soft white venue footprint
   mapConcourse: "#F5F4EF",   // Pale warm-grey corridor/concourse
   mapRoom: "#FAFAF7",        // Store/room background
@@ -26,11 +26,11 @@ export const lightTheme = {
   mapText: "#18181B",        // Store label color
   
   // Navigation & Accent Colors
-  routeCasing: "#18181B",    // Thick dark route casing
-  routeStart: "#FF6B00",     // Warm orange start
-  routeMiddle: "#FF3B70",    // Coral pink transition
-  routeViolet: "#8B5CF6",    // Violet accent
-  routeEnd: "#3B82F6",       // Sky blue destination accent
+  routeCasing: "#FFFFFF",
+  routeStart: "#1A73E8",
+  routeMiddle: "#1A73E8",
+  routeViolet: "#1A73E8",
+  routeEnd: "#1A73E8",
   
   // Functional Accents
   primary: "#111111",        // Main CTA button fill
@@ -69,11 +69,11 @@ export const darkTheme: Theme = {
   mapStroke: "#343842",
   mapText: "#F4F4F5",
   
-  routeCasing: "#000000",
-  routeStart: "#FF8533",
-  routeMiddle: "#FF5C8A",
-  routeViolet: "#A78BFA",
-  routeEnd: "#60A5FA",
+  routeCasing: "#E8EAED",
+  routeStart: "#8AB4F8",
+  routeMiddle: "#8AB4F8",
+  routeViolet: "#8AB4F8",
+  routeEnd: "#8AB4F8",
   
   primary: "#FFFFFF",
   primaryText: "#111111",
@@ -124,4 +124,3 @@ export const shadows = {
     elevation: 12,
   },
 };
-

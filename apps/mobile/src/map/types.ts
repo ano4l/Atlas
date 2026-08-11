@@ -56,6 +56,9 @@ export type IndoorFloor = {
   bounds: MapBounds;
   plate: MapPoint[];
   concourses: MapPoint[][];
+  /** Abstract routing network only; not surveyed architectural geometry. */
+  corridorPaths?: MapPoint[][];
+  contextZones?: MapPoint[][];
   rooms: MapRoom[];
   facilities: MapFacility[];
   labels: MapLabel[];
@@ -87,4 +90,3 @@ export type IndoorMapData = {
   startFloorLevel: number;
   destination: POIItem;
 };
-

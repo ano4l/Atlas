@@ -1,393 +1,78 @@
 import React from "react";
-import Svg, {
-  Circle,
-  Defs,
-  Ellipse,
-  G,
-  Line,
-  LinearGradient,
-  Path,
-  Polygon,
-  Polyline,
-  Rect,
-  Stop,
-  Text as SvgText,
-} from "react-native-svg";
+import Svg, { Circle, G, Line, Path, Polygon, Polyline, Rect, Text as SvgText } from "react-native-svg";
 import { Theme } from "../theme";
 import { IndoorFloor, MapPoint, RouteFloorSegment } from "../map/types";
 
-const pointsStr = (value: MapPoint[]) => value.map((point) => `${point.x},${point.y}`).join(" ");
-
-const facilityGlyphs: Record<string, string> = {
-  lift: "LIFT",
-  escalator: "E2",
-  restroom: "WC",
-  information: "i",
-  parking: "P",
-  accessibility: "♿",
-};
+const points = (items: MapPoint[]) => items.map(({ x, y }) => `${x},${y}`).join(" ");
+const glyphs: Record<string, string> = { lift: "↕", escalator: "↗", restroom: "WC", information: "i", parking: "P", accessibility: "A" };
 
 type Props = {
-  floor: IndoorFloor;
-  route?: RouteFloorSegment;
-  theme: Theme;
-  position: MapPoint;
-  confidence?: "high" | "medium" | "low";
-  showClosure?: boolean;
-  selected?: boolean;
-  progressAnimated?: number; // 0 to 1
-  destinationPoint?: MapPoint;
-  showRouteMarkers?: boolean;
+  floor: IndoorFloor; route?: RouteFloorSegment; theme: Theme; position: MapPoint;
+  confidence?: "high" | "medium" | "low"; showClosure?: boolean; selected?: boolean;
+  progressAnimated?: number; destinationPoint?: MapPoint; showRouteMarkers?: boolean;
 };
 
-export function MapCanvas({
-  floor,
-  route,
-  theme,
-  position,
-  confidence = "high",
-  showClosure,
-  selected,
-  progressAnimated = 1,
-  destinationPoint,
-  showRouteMarkers = false,
-}: Props) {
+export function MapCanvas({ floor, route, theme, position, confidence = "high", showClosure,
+  selected, progressAnimated = 1, destinationPoint, showRouteMarkers = false }: Props) {
   const dark = theme.isDark;
-  
-  // Cartography colors matching reference image
-  const plateBg = dark ? "#1C1F26" : "#FFFFFF";
-  const concourseBg = dark ? "#2A2E38" : "#F4F3ED";
-  const roomBg = dark ? "#222630" : "#FAF9F4";
-  const roomStroke = dark ? "#383E4B" : "#E2E0D6";
-  const labelColor = dark ? "#E4E4E7" : "#18181B";
-  const mutedText = dark ? "#9CA3AF" : "#71717A";
+  const routePoints = route?.polyline ?? [];
+  const visible = progressAnimated < 1 && routePoints.length > 1
+    ? routePoints.slice(0, Math.max(2, Math.ceil(routePoints.length * progressAnimated))) : routePoints;
+  const mapBg = dark ? "#202124" : "#F5F5F3";
+  const zone = dark ? "#292A2D" : "#EAEAE7";
+  const minor = dark ? "#3C4043" : "#DADCE0";
+  const corridor = dark ? "#303134" : "#FFFFFF";
+  const corridorEdge = dark ? "#5F6368" : "#C9CDD1";
+  const text = dark ? "#E1E4E8" : "#3C4043";
+  const blue = dark ? "#8AB4F8" : "#1A73E8";
+  const red = "#EA4335";
+  const halo = confidence === "low" ? 28 : confidence === "medium" ? 21 : 16;
 
-  // Position accuracy halo radius based on confidence
-  const haloRadius = confidence === "low" ? 28 : confidence === "medium" ? 20 : 14;
-  const haloColor = confidence === "low" ? theme.amber : dark ? "#3B82F6" : "#2563EB";
+  return <Svg width="100%" height="100%" viewBox={`0 0 ${floor.bounds.width} ${floor.bounds.height}`}>
+    <Rect width={floor.bounds.width} height={floor.bounds.height} fill={mapBg} />
 
-  // Slice polyline based on progressAnimated for smooth drawing
-  const rawPolyline = route?.polyline ?? [];
-  let visiblePolyline = rawPolyline;
-  if (progressAnimated < 1 && rawPolyline.length >= 2) {
-    const totalPoints = rawPolyline.length;
-    const count = Math.max(2, Math.ceil(totalPoints * progressAnimated));
-    visiblePolyline = rawPolyline.slice(0, count);
-  }
+    {(floor.contextZones ?? []).map((area, i) =>
+      <Polygon key={`zone-${i}`} points={points(area)} fill={zone} stroke={minor} strokeWidth="1" />)}
 
-  return (
-    <Svg
-      width="100%"
-      height="100%"
-      viewBox={`0 0 ${floor.bounds.width} ${floor.bounds.height}`}
-      preserveAspectRatio="xMidYMid meet"
-    >
-      <Defs>
-        {/* Multi-color gradient route inside black casing (Orange -> Coral -> Violet -> Blue) */}
-        <LinearGradient id="atlasRouteGradient" x1="0%" y1="100%" x2="100%" y2="0%">
-          <Stop offset="0%" stopColor={theme.routeStart} />
-          <Stop offset="35%" stopColor={theme.routeMiddle} />
-          <Stop offset="70%" stopColor={theme.routeViolet} />
-          <Stop offset="100%" stopColor={theme.routeEnd} />
-        </LinearGradient>
+    {/* Abstract navigation network: casing first, then walkable center. */}
+    {(floor.corridorPaths ?? []).map((path, i) => <G key={`path-${i}`}>
+      <Polyline points={points(path)} fill="none" stroke={corridorEdge} strokeWidth={i < 2 ? "27" : "20"} strokeLinecap="round" strokeLinejoin="round" />
+      <Polyline points={points(path)} fill="none" stroke={corridor} strokeWidth={i < 2 ? "23" : "16"} strokeLinecap="round" strokeLinejoin="round" />
+      {path.slice(1, -1).map((node, n) => <Circle key={n} cx={node.x} cy={node.y} r="3" fill={minor} />)}
+    </G>)}
 
-        {/* Start position glowing aura */}
-        <LinearGradient id="startGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor={theme.routeStart} stopOpacity="0.4" />
-          <Stop offset="100%" stopColor={theme.routeMiddle} stopOpacity="0.05" />
-        </LinearGradient>
-      </Defs>
+    {floor.labels.map(label => <SvgText key={label.id} x={label.point.x} y={label.point.y}
+      fill={text} fontFamily="system-ui, -apple-system, sans-serif" fontSize={label.prominent ? 13 : 11} fontWeight={label.prominent ? "600" : "500"}
+      textAnchor="middle">{label.text}</SvgText>)}
 
-      {/* Venue Outer Footprint Plate */}
-      <Polygon
-        points={pointsStr(floor.plate)}
-        fill={plateBg}
-        stroke={roomStroke}
-        strokeWidth="1.5"
-      />
+    {floor.facilities.map(f => <G key={f.id}>
+      <Circle cx={f.point.x} cy={f.point.y} r="10" fill={dark ? "#303134" : "#FFFFFF"} stroke={minor} />
+      <SvgText x={f.point.x} y={f.point.y + 3} fill={f.kind === "information" ? blue : text}
+        fontFamily="system-ui, -apple-system, sans-serif" fontSize="8" fontWeight="700" textAnchor="middle">{glyphs[f.kind] ?? "•"}</SvgText>
+    </G>)}
 
-      {/* Concourse & Corridors */}
-      {floor.concourses.map((concourse, index) => (
-        <Polygon
-          key={`concourse-${index}`}
-          points={pointsStr(concourse)}
-          fill={concourseBg}
-          stroke={roomStroke}
-          strokeWidth="1"
-        />
-      ))}
+    {showClosure && floor.closure && <G><Circle cx={floor.closure.x} cy={floor.closure.y} r="10" fill={red} />
+      <Line x1={floor.closure.x - 4} y1={floor.closure.y} x2={floor.closure.x + 4} y2={floor.closure.y} stroke="#fff" strokeWidth="2" /></G>}
 
-      {/* Atrium Circle Feature */}
-      <Circle
-        cx="191"
-        cy="278"
-        r="64"
-        fill={plateBg}
-        stroke={roomStroke}
-        strokeWidth="1.5"
-      />
+    {visible.length > 1 && <G>
+      <Polyline points={points(visible)} fill="none" stroke={dark ? "#202124" : "#FFFFFF"} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
+      <Polyline points={points(visible)} fill="none" stroke={blue} strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
+    </G>}
 
-      {/* Venue Rooms / Stores */}
-      {floor.rooms.map((mapRoom) => {
-        const isDest = mapRoom.destination;
-        return (
-          <G key={mapRoom.id}>
-            <Polygon
-              points={pointsStr(mapRoom.points)}
-              fill={isDest ? (dark ? "#2E2818" : "#FFFBEB") : roomBg}
-              stroke={isDest ? theme.amber : roomStroke}
-              strokeWidth={isDest ? "2" : "1"}
-            />
-            {mapRoom.entrance && (
-              <Line
-                x1={mapRoom.entrance.from.x}
-                y1={mapRoom.entrance.from.y}
-                x2={mapRoom.entrance.to.x}
-                y2={mapRoom.entrance.to.y}
-                stroke={concourseBg}
-                strokeWidth="6"
-              />
-            )}
-            {mapRoom.label && (
-              <SvgText
-                x={mapRoom.label.x}
-                y={mapRoom.label.y}
-                fill={isDest ? theme.ink : labelColor}
-                fontSize={mapRoom.name.length > 11 ? 7.5 : 8.5}
-                fontWeight="700"
-                textAnchor="middle"
-              >
-                {mapRoom.name}
-              </SvgText>
-            )}
-            {isDest && (
-              <SvgText
-                x={mapRoom.label?.x ?? 319}
-                y={(mapRoom.label?.y ?? 47) + 14}
-                fill={theme.amber}
-                fontSize="6"
-                fontWeight="800"
-                textAnchor="middle"
-              >
-                ★ DESTINATION
-              </SvgText>
-            )}
-          </G>
-        );
-      })}
+    {route?.transitionAt && <G>
+      <Circle cx={route.transitionAt.x} cy={route.transitionAt.y} r="13" fill="#FFFFFF" stroke={blue} strokeWidth="2" />
+      <SvgText x={route.transitionAt.x} y={route.transitionAt.y + 3} fill={blue} fontSize="8" fontWeight="700" textAnchor="middle">L{route.transitionToLevel}</SvgText>
+    </G>}
 
-      {/* Concourse & Area Labels */}
-      {floor.labels.map((label) => (
-        <SvgText
-          key={label.id}
-          x={label.point.x}
-          y={label.point.y}
-          fill={mutedText}
-          fontSize={label.prominent ? 8 : 6.5}
-          fontWeight="700"
-          letterSpacing="1.2"
-          textAnchor="middle"
-          transform={
-            label.rotate
-              ? `rotate(${label.rotate} ${label.point.x} ${label.point.y})`
-              : undefined
-          }
-        >
-          {label.text}
-        </SvgText>
-      ))}
+    {showRouteMarkers && floor.level === 2 && destinationPoint && <G>
+      <Path d={`M${destinationPoint.x} ${destinationPoint.y + 8} C${destinationPoint.x - 15} ${destinationPoint.y - 8} ${destinationPoint.x - 11} ${destinationPoint.y - 25} ${destinationPoint.x} ${destinationPoint.y - 25} C${destinationPoint.x + 11} ${destinationPoint.y - 25} ${destinationPoint.x + 15} ${destinationPoint.y - 8} ${destinationPoint.x} ${destinationPoint.y + 8}Z`} fill={red} stroke="#fff" strokeWidth="2" />
+      <Circle cx={destinationPoint.x} cy={destinationPoint.y - 14} r="4" fill="#fff" />
+    </G>}
 
-      {/* Facilities (Lifts, Escalators, Restrooms, Info) */}
-      {floor.facilities.map((facility) => (
-        <G key={facility.id}>
-          <Rect
-            x={facility.point.x - 16}
-            y={facility.point.y - 12}
-            width="32"
-            height="24"
-            rx="8"
-            fill={dark ? "#262932" : "#FFFFFF"}
-            stroke={roomStroke}
-            strokeWidth="1"
-          />
-          <SvgText
-            x={facility.point.x}
-            y={facility.point.y + 4}
-            fill={facility.kind === "information" ? theme.accent : theme.ink}
-            fontSize={facility.kind === "information" ? 13 : 8}
-            fontWeight="800"
-            textAnchor="middle"
-          >
-            {facilityGlyphs[facility.kind] ?? "•"}
-          </SvgText>
-        </G>
-      ))}
-
-      {/* Closure Warning Badge if any */}
-      {showClosure && floor.closure && (
-        <G>
-          <Circle
-            cx={floor.closure.x}
-            cy={floor.closure.y}
-            r="12"
-            fill={theme.danger}
-            stroke="#FFFFFF"
-            strokeWidth="2.5"
-          />
-          <Line
-            x1={floor.closure.x - 4}
-            y1={floor.closure.y}
-            x2={floor.closure.x + 4}
-            y2={floor.closure.y}
-            stroke="#FFFFFF"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
-        </G>
-      )}
-
-      {/* ROUTE DRAWING (Thick Black Outer Casing + Vibrant Multi-color Inner Line) */}
-      {visiblePolyline.length >= 2 && (
-        <G>
-          {/* Thick Dark/Black Route Casing */}
-          <Polyline
-            points={pointsStr(visiblePolyline)}
-            fill="none"
-            stroke={theme.routeCasing}
-            strokeWidth="12"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          {/* Narrower Colored Route Line Inside (Orange -> Coral -> Violet -> Blue Gradient) */}
-          <Polyline
-            points={pointsStr(visiblePolyline)}
-            fill="none"
-            stroke="url(#atlasRouteGradient)"
-            strokeWidth="6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </G>
-      )}
-
-      {/* Start Point Glowing Marker (Ground Floor start) */}
-      {showRouteMarkers && floor.level === 1 && (
-        <G>
-          <Circle cx="190" cy="438" r="18" fill="url(#startGlow)" />
-          <Circle
-            cx="190"
-            cy="438"
-            r="9"
-            fill="#FFFFFF"
-            stroke={theme.routeStart}
-            strokeWidth="3.5"
-          />
-          <Circle cx="190" cy="438" r="3.5" fill={theme.routeStart} />
-        </G>
-      )}
-
-      {/* Floor Transition Badge (Escalator / Lift at junction) */}
-      {route?.transitionAt && (
-        <G>
-          <Circle
-            cx={route.transitionAt.x}
-            cy={route.transitionAt.y}
-            r="14"
-            fill={theme.paper}
-            stroke={theme.routeCasing}
-            strokeWidth="3"
-          />
-          <Circle
-            cx={route.transitionAt.x}
-            cy={route.transitionAt.y}
-            r="10"
-            fill={theme.routeMiddle}
-          />
-          <SvgText
-            x={route.transitionAt.x}
-            y={route.transitionAt.y + 4}
-            fill="#FFFFFF"
-            fontSize="10"
-            fontWeight="900"
-            textAnchor="middle"
-          >
-            L{route.transitionToLevel ?? 2}
-          </SvgText>
-        </G>
-      )}
-
-      {/* Destination Pin (Level 2) */}
-      {showRouteMarkers && floor.level === 2 && destinationPoint && (
-        <G>
-          {/* Drop Shadow / Base ring */}
-          <Ellipse
-            cx={destinationPoint?.x ?? 318}
-            cy={(destinationPoint?.y ?? 96) + 12}
-            rx="10"
-            ry="4"
-            fill="rgba(0,0,0,0.18)"
-          />
-          {/* Pin Body */}
-          <Path
-            d={`M${destinationPoint?.x ?? 318} ${(destinationPoint?.y ?? 96) - 22} C${(destinationPoint?.x ?? 318) - 12} ${(destinationPoint?.y ?? 96) - 22} ${(destinationPoint?.x ?? 318) - 12} ${(destinationPoint?.y ?? 96) - 10} ${(destinationPoint?.x ?? 318)} ${(destinationPoint?.y ?? 96) + 8} C${(destinationPoint?.x ?? 318) + 12} ${(destinationPoint?.y ?? 96) - 10} ${(destinationPoint?.x ?? 318) + 12} ${(destinationPoint?.y ?? 96) - 22} ${(destinationPoint?.x ?? 318)} ${(destinationPoint?.y ?? 96) - 22} Z`}
-            fill={theme.routeCasing}
-            stroke="#FFFFFF"
-            strokeWidth="2"
-          />
-          {/* Inner Accent Dot */}
-          <Circle
-            cx={destinationPoint?.x ?? 318}
-            cy={(destinationPoint?.y ?? 96) - 12}
-            r="4.5"
-            fill={theme.routeStart}
-          />
-        </G>
-      )}
-
-      {/* Active Animated Current Position Marker & Direction Cone */}
-      <G>
-        {/* Accuracy Halo */}
-        <Circle
-          cx={position.x}
-          cy={position.y}
-          r={haloRadius}
-          fill={haloColor}
-          opacity="0.22"
-          stroke={confidence === "low" ? theme.amber : "none"}
-          strokeDasharray={confidence === "low" ? "3 3" : undefined}
-        />
-
-        {/* Directional Field Cone */}
-        {confidence === "high" && (
-          <Path
-            d={`M${position.x} ${position.y - 8} L${position.x - 12} ${position.y - 28} L${position.x + 12} ${position.y - 28} Z`}
-            fill={dark ? "#60A5FA" : "#2563EB"}
-            opacity="0.3"
-          />
-        )}
-
-        {/* Position Dot */}
-        <Circle
-          cx={position.x}
-          cy={position.y}
-          r={selected ? 10 : 7}
-          fill={confidence === "low" ? theme.amber : dark ? "#60A5FA" : "#2563EB"}
-          stroke={theme.paper}
-          strokeWidth="3"
-        />
-
-        {selected && (
-          <Circle
-            cx={position.x}
-            cy={position.y}
-            r="16"
-            fill="none"
-            stroke={theme.accent}
-            strokeWidth="2"
-          />
-        )}
-      </G>
-    </Svg>
-  );
+    <G>
+      <Circle cx={position.x} cy={position.y} r={halo} fill={blue} opacity="0.16" />
+      <Circle cx={position.x} cy={position.y} r={selected ? 9 : 7} fill={blue} stroke="#FFFFFF" strokeWidth="3" />
+      {selected && <Circle cx={position.x} cy={position.y} r="15" fill="none" stroke={blue} strokeWidth="2" />}
+    </G>
+  </Svg>;
 }

@@ -146,7 +146,9 @@ export function FloatingMapControls({
             shadows.soft,
           ]}
         >
-          <Text style={[styles.controlIcon, { color: theme.ink }]}>🎯</Text>
+          <View style={[styles.recenterRing, { borderColor: theme.accent }]}>
+            <View style={[styles.recenterDot, { backgroundColor: theme.accent }]} />
+          </View>
         </Pressable>
 
         {/* Compass Needle */}
@@ -251,6 +253,19 @@ const styles = StyleSheet.create({
   },
   controlIcon: {
     fontSize: 18,
+  },
+  recenterRing: {
+    width: 18,
+    height: 18,
+    borderWidth: 2,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  recenterDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   compassText: {
     fontSize: 10,

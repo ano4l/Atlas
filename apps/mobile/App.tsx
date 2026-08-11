@@ -55,16 +55,19 @@ export default function App() {
   useEffect(() => {
     if (Platform.OS === "web" && typeof document !== "undefined") {
       document.body.style.margin = "0";
-      document.body.style.background = "#121417";
+      document.body.style.background = "#E9ECEF";
       document.body.style.minHeight = "100vh";
+      document.body.style.height = "100vh";
       const root = document.getElementById("root");
       if (root) {
         root.style.minHeight = "100vh";
+        root.style.height = "100vh";
         root.style.width = "100%";
         root.style.display = "flex";
+        root.style.flexDirection = "column";
         root.style.justifyContent = "center";
         root.style.alignItems = "stretch";
-        root.style.background = "#121417";
+        root.style.background = "#E9ECEF";
       }
     }
   }, []);
@@ -72,7 +75,7 @@ export default function App() {
   // Handle selecting a POI from Search or Explore
   const handleSelectPOI = (poi: POIItem) => {
     setSelectedPOI(poi);
-    setFloorLevel(poi.floorLevel === 2 ? 1 : poi.floorLevel); // Start view on starting floor level
+    setFloorLevel(poi.floorLevel); // Preview the complete destination-floor route segment.
     setSheetVisible(true);
     setIsNavigating(false);
     setActiveTab("map");

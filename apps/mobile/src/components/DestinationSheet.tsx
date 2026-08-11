@@ -36,7 +36,7 @@ export function DestinationSheet({
               ? "rgba(30, 32, 36, 0.96)"
               : "rgba(255, 255, 255, 0.96)",
             borderColor: theme.cardBorder,
-            maxHeight: height * 0.48,
+            maxHeight: height * 0.36,
           },
           shadows.strong,
         ]}
@@ -130,7 +130,7 @@ export function DestinationSheet({
 
           {/* Entrance Information */}
           <Text style={[styles.entranceText, { color: theme.muted }]}>
-            📍 {poi.entranceInfo}
+            Entrance · {poi.entranceInfo}
           </Text>
 
           {/* Strong Black Start Navigation CTA Button */}
@@ -161,19 +161,18 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: 96,
+    bottom: 92,
     zIndex: 22,
   },
   sheet: {
-    borderTopLeftRadius: radius.sheet,
-    borderTopRightRadius: radius.sheet,
+    marginHorizontal: 12,
+    borderRadius: 24,
     borderWidth: 1,
-    borderBottomWidth: 0,
-    paddingBottom: 20,
+    paddingBottom: 14,
   },
   handleWrapper: {
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 7,
   },
   handle: {
     width: 38,
@@ -182,7 +181,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: space.xl,
-    gap: space.md,
+    gap: space.sm,
   },
   headerRow: {
     flexDirection: "row",
@@ -210,7 +209,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   title: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: "800",
     letterSpacing: -0.5,
   },
@@ -225,7 +224,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     borderRadius: radius.md,
     borderWidth: 1,
-    paddingVertical: 14,
+    paddingVertical: 10,
     marginVertical: 4,
   },
   metricItem: {
@@ -249,7 +248,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   ctaButton: {
-    height: 56,
+    height: 48,
     borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",

@@ -61,7 +61,7 @@ export function BottomTabBar({ theme, activeTab, onTabChange }: Props) {
                   },
                 ]}
               >
-                {tab.icon}
+                {tab.key === "map" ? "⌁" : tab.key === "explore" ? "◎" : "≡"}
               </Text>
               <Text
                 style={[
@@ -111,7 +111,9 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   tabIcon: {
-    fontSize: 18,
+    fontSize: 20,
+    lineHeight: 20,
+    fontWeight: "600",
   },
   tabLabel: {
     fontSize: 11,
