@@ -1,0 +1,46 @@
+@startuml 10-visitor-privacy
+skinparam backgroundColor #F7F8FA
+skinparam shadowing false
+skinparam defaultFontName Aptos
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ArrowColor #566173
+skinparam ParticipantBorderColor #168B80
+skinparam ParticipantBackgroundColor #E6F4F1
+skinparam ActorBorderColor #667085
+skinparam ActorBackgroundColor #F3F4F6
+skinparam DatabaseBorderColor #4969C5
+skinparam DatabaseBackgroundColor #EAF0FF
+
+actor "Visitor" as visitor
+participant "Atlas mobile app" as app
+participant "Privacy boundary" as privacy
+database "Event store\nshort-lived / minimised" as store
+participant "Aggregation jobs" as agg
+participant "B2B dashboard" as dashboard
+
+visitor -> app : Uses map / navigation
+app -> app : Check analytics consent\nand applicable policy
+
+alt analytics not allowed
+  app -> app : Do not emit movement analytics
+else analytics allowed
+  app -> privacy : Position sample + session context
+  privacy -> privacy : Remove direct identity\nrotate pseudonymous session ID
+  privacy -> store : Anonymous location event\nvenue + map version + timestamp
+  store -> agg : Batch / stream event
+  agg -> agg : Aggregate by time, floor, zone\napply minimum cohort thresholds
+  agg -> dashboard : Dwell, flow, density, footfall\nwith quality / confidence
+end
+
+note over privacy, dashboard
+Operator view is about populations and operations.
+It does not require visitor names, contact details,
+or an individual movement trail.
+end note
+
+note bottom
+Consent, retention, access control, deletion and legal basis are product requirements,
+not merely implementation details. Raw exports remain restricted and auditable.
+end note
+@enduml

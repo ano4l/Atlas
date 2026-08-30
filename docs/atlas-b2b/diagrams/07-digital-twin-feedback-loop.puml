@@ -1,0 +1,72 @@
+@startuml 07-digital-twin-feedback-loop
+!pragma layout smetana
+skinparam backgroundColor #F7F8FA
+skinparam shadowing false
+skinparam defaultFontName Aptos
+skinparam ArrowColor #566173
+skinparam ArrowFontColor #344054
+skinparam rectangle {
+  BorderColor #CBD5E1
+  RoundCorner 16
+}
+skinparam rectangle<<physical>> {
+  BackgroundColor #FFF4E5
+  BorderColor #D88A16
+}
+skinparam rectangle<<atlas>> {
+  BackgroundColor #E6F4F1
+  BorderColor #168B80
+}
+skinparam rectangle<<twin>> {
+  BackgroundColor #EAF0FF
+  BorderColor #4969C5
+}
+skinparam rectangle<<decision>> {
+  BackgroundColor #F2EAFE
+  BorderColor #8557C7
+}
+skinparam rectangle<<control>> {
+  BackgroundColor #F3F4F6
+  BorderColor #667085
+}
+
+rectangle "1. PHYSICAL MALL" as mall <<physical>> {
+  rectangle "Visitors • entrances • stores\nparking • HVAC • equipment" as reality <<physical>>
+}
+rectangle "2. SENSE + INGEST" as ingest <<atlas>> {
+  rectangle "Atlas events + counters + integrations\nvalidate • timestamp • normalise" as signals <<atlas>>
+}
+rectangle "3. DIGITAL TWIN STATE" as twin <<twin>> {
+  rectangle "Live density • flows • dwell\nparking • environment • equipment" as state <<twin>>
+}
+rectangle "4. ANALYSE + PREDICT" as analysis <<decision>> {
+  rectangle "Explain cause • detect anomaly\nforecast pressure • simulate options" as models <<decision>>
+}
+rectangle "5. RECOMMEND / ACT" as act <<decision>> {
+  rectangle "Recommendation + rationale\nmanager approval or safe automation" as recommendation <<decision>>
+}
+rectangle "6. MEASURE + LEARN" as learn <<atlas>> {
+  rectangle "Compare expected vs actual\nupdate baselines • quality • models" as measurement <<atlas>>
+}
+rectangle "CONTROL PLANE" as control <<control>> {
+  rectangle "Policy • privacy • permissions\nmodel version • audit trail" as policy <<control>>
+}
+
+reality --> signals : telemetry
+signals --> state : current observations
+state --> models : live + historical context
+models --> recommendation : forecast / scenario
+recommendation --> reality : approved change
+reality --> measurement : observed outcome
+measurement --> state : refreshed truth
+measurement --> models : learn / recalibrate
+policy ..> signals : governs collection
+policy ..> models : governs use
+policy ..> recommendation : governs action
+
+note bottom of measurement
+The loop is initially human-in-the-loop.
+Automation is introduced only for bounded, reversible, low-risk actions
+with clear approval, monitoring and rollback rules.
+end note
+@enduml

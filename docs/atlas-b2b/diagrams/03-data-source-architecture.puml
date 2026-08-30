@@ -1,0 +1,75 @@
+@startuml 03-data-source-architecture
+!pragma layout smetana
+left to right direction
+skinparam backgroundColor #F7F8FA
+skinparam shadowing false
+skinparam defaultFontName Aptos
+skinparam componentStyle rectangle
+skinparam ArrowColor #566173
+skinparam rectangle {
+  BorderColor #CBD5E1
+  RoundCorner 12
+}
+skinparam rectangle<<native>> {
+  BackgroundColor #E6F4F1
+  BorderColor #168B80
+}
+skinparam rectangle<<thirdparty>> {
+  BackgroundColor #FFF4E5
+  BorderColor #D88A16
+}
+skinparam rectangle<<derived>> {
+  BackgroundColor #EAF0FF
+  BorderColor #4969C5
+}
+
+rectangle "ATLAS-NATIVE DATA" as native <<native>> {
+  rectangle "Atlas app\nposition samples\nroute + navigation events" as app <<native>>
+  rectangle "Spatial model\nfloors • zones • POIs • paths" as map <<native>>
+  rectangle "Consent + session context\nprivacy flags • map version" as consent <<native>>
+}
+
+rectangle "MALL INFRASTRUCTURE\nTHIRD-PARTY / PILOT INTEGRATIONS" as external <<thirdparty>> {
+  rectangle "Entrance counters\nentries • exits" as entrances <<thirdparty>>
+  rectangle "People counters / cameras\nzone occupancy • queue counts" as people <<thirdparty>>
+  rectangle "Wi-Fi controller + BLE / IoT\nanonymous density • beacons • environment" as wireless <<thirdparty>>
+  rectangle "Parking + access control\narrivals • departures • capacity" as parking <<thirdparty>>
+  rectangle "BMS + equipment\nHVAC • energy • lifts • escalators" as bms <<thirdparty>>
+  rectangle "Security + weather APIs\nincidents • context" as context <<thirdparty>>
+}
+
+rectangle "PROVENANCE-AWARE INGESTION" as ingestion <<derived>> {
+  rectangle "Adapter / source registry\nsource • timestamp • latency • quality" as registry <<derived>>
+  rectangle "Canonical event model\nvenue • floor • zone • metric • confidence" as canonical <<derived>>
+}
+
+rectangle "DERIVED METRICS" as metrics <<derived>> {
+  rectangle "Observed movement\njourneys • dwell • zone transitions" as movement <<derived>>
+  rectangle "Calibrated footfall\ntotal visitors • occupancy estimates" as footfall <<derived>>
+  rectangle "Operations state\ncongestion • parking • equipment health" as operations <<derived>>
+  rectangle "Predictions\nfuture density • demand • risk" as predictions <<derived>>
+}
+
+app --> registry : movement events
+map --> canonical : spatial reference
+consent --> registry : allowed purpose + minimisation
+entrances --> registry : counts
+people --> registry : occupancy observations
+wireless --> registry : density / environment
+parking --> registry : parking telemetry
+bms --> registry : building telemetry
+context --> registry : incidents + weather
+registry --> canonical : normalize + validate
+canonical --> movement
+canonical --> footfall
+canonical --> operations
+movement --> predictions : features + history
+footfall --> predictions : calibrated baseline
+operations --> predictions : current state
+
+note bottom of metrics
+No metric is “just an Atlas metric” by default.
+The operator-facing value is a fused estimate with source provenance
+and a confidence / quality signal.
+end note
+@enduml

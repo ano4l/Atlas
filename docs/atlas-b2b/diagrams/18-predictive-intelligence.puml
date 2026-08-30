@@ -1,0 +1,73 @@
+@startuml 18-predictive-intelligence
+!pragma layout smetana
+left to right direction
+skinparam backgroundColor #F7F8FA
+skinparam shadowing false
+skinparam defaultFontName Aptos
+skinparam componentStyle rectangle
+skinparam ArrowColor #566173
+skinparam rectangle {
+  BorderColor #CBD5E1
+  RoundCorner 12
+}
+skinparam rectangle<<history>> {
+  BackgroundColor #E6F4F1
+  BorderColor #168B80
+}
+skinparam rectangle<<context>> {
+  BackgroundColor #FFF4E5
+  BorderColor #D88A16
+}
+skinparam rectangle<<engine>> {
+  BackgroundColor #EAF0FF
+  BorderColor #4969C5
+}
+skinparam rectangle<<output>> {
+  BackgroundColor #F2EAFE
+  BorderColor #8557C7
+}
+skinparam rectangle<<human>> {
+  BackgroundColor #F3F4F6
+  BorderColor #667085
+}
+
+rectangle "HISTORICAL MOVEMENT" as history <<history>> {
+  rectangle "Journeys • dwell • zone transitions\nweekday / weekend baselines" as movement <<history>>
+  rectangle "Historical occupancy + congestion\nseasonality and anomalies" as past <<history>>
+}
+rectangle "CURRENT CONDITIONS" as current <<context>> {
+  rectangle "Live density + flow\narrival rate + parking pressure" as live <<context>>
+  rectangle "BMS / equipment state\ncurrent capacity constraints" as ops <<context>>
+}
+rectangle "EXTERNAL CONTEXT" as external <<context>> {
+  rectangle "Calendar • events • holidays\nweather • public context" as context <<context>>
+}
+rectangle "PREDICTION ENGINE" as engine <<engine>> {
+  rectangle "Feature builder + model\nforecast horizon • baseline • confidence" as model <<engine>>
+  rectangle "Explanation layer\nimportant drivers + data freshness" as explain <<engine>>
+}
+rectangle "OPERATOR DECISION" as result <<output>> {
+  rectangle "Food Court likely congested\nin approximately 25 minutes" as forecast <<output>>
+  rectangle "Suggested response:\nopen west circulation route" as response <<output>>
+}
+rectangle "HUMAN / MAS REVIEW" as review <<human>> {
+  rectangle "Approve • dismiss • simulate\nrecord outcome for learning" as action <<human>>
+}
+
+movement --> model
+past --> model
+live --> model
+ops --> model
+context --> model
+model --> explain
+explain --> forecast
+forecast --> response
+response --> action
+action ..> model : feedback / calibration
+
+note bottom of forecast
+A forecast is not a live measurement.
+Every prediction should show horizon, confidence, baseline,
+drivers, freshness and the assumptions behind it.
+end note
+@enduml

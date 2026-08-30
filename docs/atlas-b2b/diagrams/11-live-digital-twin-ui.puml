@@ -1,0 +1,57 @@
+@startuml 11-live-digital-twin-ui
+!pragma layout smetana
+left to right direction
+skinparam backgroundColor #F7F8FA
+skinparam shadowing false
+skinparam defaultFontName Aptos
+skinparam componentStyle rectangle
+skinparam rectangle {
+  BorderColor #CBD5E1
+  RoundCorner 12
+}
+skinparam rectangle<<header>> {
+  BackgroundColor #172033
+  BorderColor #172033
+  FontColor #FFFFFF
+}
+skinparam rectangle<<map>> {
+  BackgroundColor #E8F0EE
+  BorderColor #168B80
+}
+skinparam rectangle<<metric>> {
+  BackgroundColor #FFFFFF
+  BorderColor #CBD5E1
+}
+skinparam rectangle<<alert>> {
+  BackgroundColor #FFF4E5
+  BorderColor #D88A16
+}
+skinparam rectangle<<status>> {
+  BackgroundColor #F3F4F6
+  BorderColor #667085
+}
+
+rectangle "ATLAS TWIN · LIVE OPERATIONS" as screen <<header>> {
+  rectangle "Sandton City   |   14:32 SAST   |   Last update 12 sec ago" as top <<header>>
+  rectangle "LIVE FLOOR MAP\n\n  ● Central Atrium        HIGH\n  ⇢⇢⇢ Fashion Wing         rising\n  ··· Food Court            MODERATE\n  ▧ Parking                 84% occupied\n\n  [Heatmap] [Flows] [Zones] [Floor 2]" as map <<map>>
+  rectangle "LIVE FOOTFALL\n12,842\nestimated visitors" as footfall <<metric>>
+  rectangle "AVERAGE DWELL\n68 min\n+6% vs normal" as dwell <<metric>>
+  rectangle "ATLAS SAMPLE\n8,300 sessions\nprivacy-safe sample" as sample <<metric>>
+  rectangle "PREDICTED PRESSURE\nFood Court\nHigh in 27 min" as prediction <<alert>>
+  rectangle "ALERTS\n⚠ Atrium congestion rising\n○ Entrance 2 busiest\n○ Escalator telemetry healthy" as alerts <<alert>>
+  rectangle "SYSTEM STATUS\nAtlas events       Healthy\nCounters            Healthy\nParking adapter     Delayed 24 sec\nTwin confidence     0.86" as status <<status>>
+}
+
+top -[hidden]down- map
+map -[hidden]right- footfall
+map -[hidden]right- dwell
+map -[hidden]right- sample
+footfall -[hidden]down- prediction
+dwell -[hidden]down- alerts
+sample -[hidden]down- status
+
+note bottom of screen
+The UI must distinguish measured, estimated and predicted values;
+show data freshness and confidence next to operational decisions.
+end note
+@enduml

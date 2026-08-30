@@ -1,0 +1,89 @@
+@startuml 01-high-level-architecture
+!pragma layout smetana
+left to right direction
+skinparam backgroundColor #F7F8FA
+skinparam shadowing false
+skinparam defaultFontName Aptos
+skinparam componentStyle rectangle
+skinparam ArrowColor #566173
+skinparam ArrowFontColor #344054
+skinparam rectangle {
+  BorderColor #CBD5E1
+  RoundCorner 12
+}
+skinparam rectangle<<atlas>> {
+  BackgroundColor #E6F4F1
+  BorderColor #168B80
+}
+skinparam rectangle<<infra>> {
+  BackgroundColor #FFF4E5
+  BorderColor #D88A16
+}
+skinparam rectangle<<twin>> {
+  BackgroundColor #EAF0FF
+  BorderColor #4969C5
+}
+skinparam rectangle<<future>> {
+  BackgroundColor #F2EAFE
+  BorderColor #8557C7
+}
+skinparam rectangle<<operator>> {
+  BackgroundColor #F3F4F6
+  BorderColor #667085
+}
+
+rectangle "PHYSICAL MALL\nSignals, people, equipment" as mall <<infra>> {
+  rectangle "Entrances + counters" as counters <<infra>>
+  rectangle "Parking + access systems" as parking <<infra>>
+  rectangle "BMS + facilities" as bms <<infra>>
+  rectangle "Wi-Fi / BLE / IoT" as iot <<infra>>
+  rectangle "Security + safety systems" as safety <<infra>>
+}
+
+rectangle "ATLAS CONSUMER SURFACE" as consumer <<atlas>> {
+  rectangle "Mobile app\nmap • search • route • position" as app <<atlas>>
+  rectangle "Opt-in movement events\njourney • dwell • zone transitions" as movement <<atlas>>
+}
+
+rectangle "ATLAS PLATFORM" as platform <<atlas>> {
+  rectangle "API + event ingestion" as ingest <<atlas>>
+  rectangle "Spatial intelligence\nmap matching • aggregation • fusion" as spatial <<atlas>>
+  rectangle "Historical data + spatial DB" as db <<atlas>>
+}
+
+rectangle "DIGITAL TWIN" as twin <<twin>> {
+  rectangle "Live mall state\nflows • density • parking • facilities" as state <<twin>>
+  rectangle "Prediction + simulation context" as context <<twin>>
+}
+
+rectangle "ATLAS NEURAL / MAS" as mas <<future>> {
+  rectangle "Specialist agents\nmovement • congestion • parking\nfacilities • safety • prediction" as agents <<future>>
+  rectangle "Recommendations\nthen human approval or safe automation" as actions <<future>>
+}
+
+rectangle "OPERATOR EXPERIENCE" as operator <<operator>> {
+  rectangle "Live dashboard\nheatmap • alerts • trends • explanations" as dashboard <<operator>>
+  rectangle "Mall systems / approved actions" as actuators <<operator>>
+}
+
+app --> movement : consented events
+movement --> ingest : Atlas event contract
+mall --> ingest : telemetry + counts
+ingest --> spatial : normalize + validate
+spatial --> db : spatial events + aggregates
+spatial --> state : update current state
+db --> context : history + baselines
+state --> context : current conditions
+context --> agents : twin state + features
+agents --> actions : forecast / recommendation
+state --> dashboard : live metrics
+agents --> dashboard : alerts + explanations
+actions --> actuators : approved intervention
+actuators --> mall : operational change
+mall --> state : measured outcome
+
+note bottom of platform
+Current foundation: versioned maps, positioning contracts, event envelopes,
+API ingestion and analytics-worker foundations. Twin/MAS are product direction.
+end note
+@enduml

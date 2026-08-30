@@ -1,0 +1,47 @@
+@startuml 22-scenario-simulation
+skinparam backgroundColor #F7F8FA
+skinparam shadowing false
+skinparam defaultFontName Aptos
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ArrowColor #566173
+skinparam ParticipantBorderColor #168B80
+skinparam ParticipantBackgroundColor #E6F4F1
+skinparam DatabaseBorderColor #4969C5
+skinparam DatabaseBackgroundColor #EAF0FF
+skinparam ActorBorderColor #D88A16
+skinparam ActorBackgroundColor #FFF4E5
+
+actor "Mall manager" as manager
+participant "Atlas Twin UI" as ui
+database "Current twin state" as twin
+participant "Scenario engine" as sim
+participant "Movement + congestion\nmodels / agents" as models
+participant "Comparison + explanation" as compare
+
+manager -> ui : Ask: “What if Entrance 2 closes?”
+ui -> twin : Read current baseline
+twin --> ui : Live state + confidence + freshness
+ui -> sim : Create sandbox scenario\nclose entrance_2
+sim -> sim : Fork current twin state\napply closure constraint
+sim -> models : Run redistributed movement
+models -> models : Estimate route changes\nzone pressure + dwell impact
+models --> sim : Simulated trajectories + metrics
+sim -> compare : Compare scenario vs baseline
+compare --> ui : Impact map + explanation\nassumptions + uncertainty
+ui --> manager : Show likely redistribution\nAtrium + Entrance 3 pressure
+
+opt manager approves a real-world test
+  manager -> ui : Approve bounded intervention
+  ui -> ui : Record approval + scenario version
+  ui -> twin : Send authorised action request
+else manager does not approve
+  manager -> ui : Save scenario for review
+end
+
+note over sim, compare
+Simulation changes a virtual copy first.
+It does not mutate live twin state or mall systems until
+an explicitly authorised action is issued.
+end note
+@enduml

@@ -1,0 +1,81 @@
+@startuml 02-neural-topology-mas
+!pragma layout smetana
+left to right direction
+skinparam backgroundColor #F7F8FA
+skinparam shadowing false
+skinparam defaultFontName Aptos
+skinparam componentStyle rectangle
+skinparam ArrowColor #7255A8
+skinparam ArrowFontColor #4E3B77
+skinparam rectangle {
+  BorderColor #CBD5E1
+  RoundCorner 14
+}
+skinparam rectangle<<input>> {
+  BackgroundColor #E6F4F1
+  BorderColor #168B80
+}
+skinparam rectangle<<agent>> {
+  BackgroundColor #F2EAFE
+  BorderColor #8557C7
+}
+skinparam rectangle<<state>> {
+  BackgroundColor #EAF0FF
+  BorderColor #4969C5
+}
+skinparam rectangle<<action>> {
+  BackgroundColor #FFF4E5
+  BorderColor #D88A16
+}
+
+rectangle "TWIN EVENT / STATE FABRIC" as fabric <<state>> {
+  rectangle "Current density • flows • parking\nfacilities • safety • environmental state" as state <<state>>
+}
+
+rectangle "SPECIALISED AGENTS" as agents <<agent>> {
+  rectangle "Movement Agent\njourneys, dwell, transitions" as movement <<agent>>
+  rectangle "Congestion Agent\npressure, bottlenecks, queues" as congestion <<agent>>
+  rectangle "Parking Agent\narrivals, departures, capacity" as parking <<agent>>
+  rectangle "Facilities Agent\nHVAC, lifts, escalators, energy" as facilities <<agent>>
+  rectangle "Safety Agent\nincidents, abnormal conditions" as safety <<agent>>
+  rectangle "Prediction Agent\nhorizon, forecast, uncertainty" as prediction <<agent>>
+  rectangle "Simulation Agent\nwhat-if scenarios and comparison" as simulation <<agent>>
+}
+
+rectangle "COORDINATION + POLICY" as coordination <<state>> {
+  rectangle "Typed messages • routing rules\nactivation thresholds • permissions" as router <<state>>
+}
+
+rectangle "OPERATOR / ACTUATION" as output <<action>> {
+  rectangle "Explainable recommendation\nhuman approval or bounded automation" as recommendation <<action>>
+}
+
+state --> movement : movement context
+state --> parking : occupancy context
+state --> facilities : equipment context
+state --> safety : incident context
+movement --> router : observations
+parking --> router : observations
+facilities --> router : observations
+safety --> router : observations
+router --> congestion : relevant signal
+router --> prediction : relevant signal
+router --> simulation : scenario request
+congestion --> router : pressure estimate
+prediction --> router : forecast
+simulation --> router : scenario result
+router --> recommendation : coordinated response
+recommendation --> state : approved outcome
+
+movement <--> congestion : flow ↔ pressure
+parking <--> congestion : arrivals ↔ bottleneck
+facilities <--> congestion : capacity constraint
+congestion <--> prediction : current ↔ future
+safety <--> facilities : incident ↔ equipment
+
+note bottom of agents
+The initial pilot can use explicit, testable routing rules.
+Adaptive connection weights and learned topology are a later capability
+that must remain observable, bounded and reversible.
+end note
+@enduml

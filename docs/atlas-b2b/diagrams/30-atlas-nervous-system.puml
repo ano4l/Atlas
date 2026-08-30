@@ -1,0 +1,75 @@
+@startuml 30-atlas-nervous-system
+!pragma layout smetana
+left to right direction
+skinparam backgroundColor #F7F8FA
+skinparam shadowing false
+skinparam defaultFontName Aptos
+skinparam componentStyle rectangle
+skinparam ArrowColor #566173
+skinparam rectangle {
+  BorderColor #CBD5E1
+  RoundCorner 16
+}
+skinparam rectangle<<body>> {
+  BackgroundColor #FFF4E5
+  BorderColor #D88A16
+}
+skinparam rectangle<<senses>> {
+  BackgroundColor #E6F4F1
+  BorderColor #168B80
+}
+skinparam rectangle<<nervous>> {
+  BackgroundColor #EAF0FF
+  BorderColor #4969C5
+}
+skinparam rectangle<<world>> {
+  BackgroundColor #DDE7FF
+  BorderColor #4969C5
+}
+skinparam rectangle<<brain>> {
+  BackgroundColor #F2EAFE
+  BorderColor #8557C7
+}
+skinparam rectangle<<action>> {
+  BackgroundColor #F3F4F6
+  BorderColor #667085
+}
+
+rectangle "THE BODY\nPHYSICAL MALL" as body <<body>> {
+  rectangle "Visitors • corridors • stores\nparking • HVAC • lifts\nentrances • facilities" as physical <<body>>
+}
+
+rectangle "THE SENSES\nMALL + ATLAS SIGNALS" as senses <<senses>> {
+  rectangle "Atlas positioning + movement\nentrance counters • Wi-Fi / BLE\nparking • BMS • safety • weather" as sensors <<senses>>
+}
+
+rectangle "THE NERVOUS SYSTEM\nATLAS PLATFORM" as nervous <<nervous>> {
+  rectangle "Event contracts • spatial model\ningestion • privacy • sensor fusion\nreal-time state updates" as platform <<nervous>>
+}
+
+rectangle "THE INTERNAL WORLD MODEL\nDIGITAL TWIN" as world <<world>> {
+  rectangle "Live map of what is happening\nflows • density • dwell • equipment\ncurrent state + history + uncertainty" as twin <<world>>
+}
+
+rectangle "THE BRAIN\nATLAS NEURAL / MAS" as brain <<brain>> {
+  rectangle "Specialist agents\nunderstand • predict • simulate\ncoordinate • recommend" as mas <<brain>>
+}
+
+rectangle "THE HANDS\nOPERATIONS" as hands <<action>> {
+  rectangle "Manager decisions\nBMS / parking / access actions\nmeasure result and learn" as actions <<action>>
+}
+
+physical --> sensors : environment produces signals
+sensors --> platform : sense + transmit
+platform --> twin : spatially meaningful state
+twin --> mas : context + history
+mas --> actions : recommendation / approved action
+actions --> physical : change physical conditions
+physical --> twin : outcome is measured
+
+note bottom of nervous
+The metaphor is a communication tool. Each layer must still have
+explicit contracts, provenance, privacy controls, confidence signals,
+model versions, human approval rules and auditability.
+end note
+@enduml

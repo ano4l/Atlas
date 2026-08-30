@@ -1,0 +1,71 @@
+@startuml 05-whole-mall-footfall-estimation
+!pragma layout smetana
+left to right direction
+skinparam backgroundColor #F7F8FA
+skinparam shadowing false
+skinparam defaultFontName Aptos
+skinparam componentStyle rectangle
+skinparam ArrowColor #566173
+skinparam rectangle {
+  BorderColor #CBD5E1
+  RoundCorner 12
+}
+skinparam rectangle<<sample>> {
+  BackgroundColor #E6F4F1
+  BorderColor #168B80
+}
+skinparam rectangle<<anchor>> {
+  BackgroundColor #FFF4E5
+  BorderColor #D88A16
+}
+skinparam rectangle<<model>> {
+  BackgroundColor #EAF0FF
+  BorderColor #4969C5
+}
+skinparam rectangle<<output>> {
+  BackgroundColor #F2EAFE
+  BorderColor #8557C7
+}
+
+rectangle "ATLAS-OBSERVED SAMPLE" as sample <<sample>> {
+  rectangle "8,300 observed movement sessions" as sessions <<sample>>
+  rectangle "High-resolution journeys\nzone entry • dwell • route" as journeys <<sample>>
+}
+
+rectangle "WHOLE-MALL ANCHORS" as anchors <<anchor>> {
+  rectangle "Entrance counters\n42,000 counted entries" as counters <<anchor>>
+  rectangle "People counters / Wi-Fi / BLE\nzone-level density signals" as density <<anchor>>
+  rectangle "Parking + calendar + weather\ncontext and arrival pressure" as context <<anchor>>
+}
+
+rectangle "CALIBRATION + FUSION" as fusion <<model>> {
+  rectangle "Match windows and locations\nentrance • floor • zone • time" as align <<model>>
+  rectangle "Estimate coverage / expansion factor\nwith quality and uncertainty" as estimator <<model>>
+  rectangle "Reconcile independent signals\nflag drift, gaps, anomalies" as reconcile <<model>>
+}
+
+rectangle "DIGITAL TWIN OUTPUT" as output <<output>> {
+  rectangle "42,000 estimated total visitors\nnot 8,300 Atlas users" as total <<output>>
+  rectangle "Zone occupancy + flows\nwith confidence bands" as zone <<output>>
+  rectangle "Operator analytics\ntrend • alert • forecast" as analytics <<output>>
+}
+
+sessions --> journeys
+journeys --> align : spatial sample
+counters --> align : population anchor
+density --> reconcile : corroborating signal
+context --> reconcile : context
+align --> estimator
+reconcile --> estimator
+estimator --> total
+estimator --> zone
+total --> analytics
+zone --> analytics
+
+note top of estimator
+Illustrative pilot values only:
+42,000 total visitors vs 8,300 Atlas-observed sessions.
+The ratio is calibrated by venue, time window, zone and signal quality;
+it must not be hard-coded as a universal multiplier.
+end note
+@enduml
