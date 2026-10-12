@@ -1,205 +1,264 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import {
-  AccessibilityInfo,
-  Animated,
-  PanResponder,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Platform, StyleSheet, Text, View } from "react-native";
+import MapView, {
+  Circle,
+  LatLng,
+  Marker,
+  Polygon,
+  Polyline,
+  PROVIDER_GOOGLE,
+} from "react-native-maps";
 import { Theme } from "../theme";
-import { MapCanvas } from "./MapCanvas";
-import { atlasSandtonVenue } from "../fixtures";
-import { MapPoint } from "../map/types";
+import { atlasSandtonVenue, samplePOIs } from "../fixtures";
+import { MapPoint, POIItem } from "../map/types";
+import { Icon } from "./Icon";
+import { DemoRoute } from "../map/demo-routing";
 
 type Props = {
   theme: Theme;
-  progress?: number; // 0 to 1 route progress
-  confidence?: "high" | "medium" | "low";
-  floorLevel?: number; // 1 (Ground) or 2 (Level 1)
-  closure?: boolean;
-  moving?: boolean;
-  pickMode?: boolean;
-  onPick?: () => void;
-  selected?: boolean;
-  recenterKey?: number;
-  routeVisible?: boolean;
-  routeReveal?: number;
-  reducedMotion?: boolean;
+  floorLevel: number;
+  recenterKey: number;
+  route: DemoRoute | null;
+  destination: POIItem | null;
+  position: MapPoint;
+  positionFloor: number;
+  reducedMotion: boolean;
+  onSelectPOI: (poi: POIItem) => void;
+  hasSheet: boolean;
 };
-
-// Calculate interpolated (x, y) point along a polyline given a progress ratio [0, 1]
-function pointAlong(polyline: MapPoint[], progress: number): MapPoint {
-  if (!polyline || polyline.length < 2) return polyline[0] ?? { x: 190, y: 438 };
-  const lengths = polyline
-    .slice(1)
-    .map((point, index) =>
-      Math.hypot(point.x - polyline[index].x, point.y - polyline[index].y),
-    );
-  const total = lengths.reduce((sum, value) => sum + value, 0);
-  let remaining = Math.max(0, Math.min(1, progress)) * total;
-
-  for (let index = 0; index < lengths.length; index += 1) {
-    if (remaining <= lengths[index]) {
-      const ratio = lengths[index] ? remaining / lengths[index] : 0;
-      return {
-        x:
-          polyline[index].x +
-          (polyline[index + 1].x - polyline[index].x) * ratio,
-        y:
-          polyline[index].y +
-          (polyline[index + 1].y - polyline[index].y) * ratio,
-      };
-    }
-    remaining -= lengths[index];
-  }
-  return polyline[polyline.length - 1];
-}
+const ORIGIN = { latitude: -26.10745, longitude: 28.05675 };
+const EXTENT = { latitude: 0.00235, longitude: 0.00205 };
+const toCoordinate = (p: MapPoint): LatLng => ({
+  latitude: ORIGIN.latitude + ((275 - p.y) / 550) * EXTENT.latitude,
+  longitude: ORIGIN.longitude + ((p.x - 190) / 380) * EXTENT.longitude,
+});
 
 export function IndoorMap({
   theme,
-  floorLevel = 1,
-  progress = 0.1,
-  confidence = "high",
-  closure,
-  moving,
-  pickMode,
-  onPick,
-  selected,
-  recenterKey = 0,
-  routeVisible = false,
-  routeReveal = 1,
-  reducedMotion: reducedMotionPreference = false,
+  floorLevel,
+  recenterKey,
+  route,
+  destination,
+  position,
+  positionFloor,
+  reducedMotion,
+  onSelectPOI,
+  hasSheet,
 }: Props) {
-  const pan = useRef(new Animated.ValueXY()).current;
-  const scale = useRef(new Animated.Value(1)).current;
-  const [systemReducedMotion, setSystemReducedMotion] = useState(false);
-  const reducedMotion = reducedMotionPreference || systemReducedMotion;
-
-  const floor =
-    atlasSandtonVenue.floors.find((item) => item.level === floorLevel) ??
-    atlasSandtonVenue.floors[0];
-
-  const routeSegment = routeVisible ? atlasSandtonVenue.route.find(
-    (item) => item.floorId === floor.id,
-  ) : undefined;
-
-  // Map progress to current floor
-  const localProgress =
-    floorLevel === 1
-      ? Math.min(1, progress / 0.55)
-      : Math.max(0, (progress - 0.45) / 0.55);
-
-  const position = useMemo(
-    () =>
-      pointAlong(
-        routeSegment?.polyline ?? [atlasSandtonVenue.start],
-        localProgress,
-      ),
-    [routeSegment, localProgress],
-  );
-
+  const mapRef = useRef<MapView>(null);
+  const floor = atlasSandtonVenue.floors.find((f) => f.level === floorLevel)!;
+  const segment = route?.segments.find((s) => s.floorLevel === floorLevel);
+  const focus = () =>
+    mapRef.current?.fitToCoordinates(floor.plate.map(toCoordinate), {
+      edgePadding: {
+        top: 190,
+        right: 64,
+        bottom: hasSheet ? 300 : 190,
+        left: 32,
+      },
+      animated: !reducedMotion,
+    });
   useEffect(() => {
-    AccessibilityInfo.isReduceMotionEnabled().then(setSystemReducedMotion);
-    const subscription = AccessibilityInfo.addEventListener(
-      "reduceMotionChanged",
-      setSystemReducedMotion,
-    );
-    return () => subscription.remove();
-  }, []);
-
-  // Recenter map on recenterKey change
-  useEffect(() => {
-    pan.setValue({ x: 0, y: 0 });
-    Animated.spring(scale, {
-      toValue: 1,
-      useNativeDriver: true,
-      damping: 20,
-    }).start();
-  }, [recenterKey, pan, scale]);
-
-  // Subtle zoom bounce when navigating floor transition
-  useEffect(() => {
-    Animated.timing(scale, {
-      toValue: moving ? 0.94 : 1,
-      duration: reducedMotion ? 0 : 380,
-      useNativeDriver: true,
-    }).start();
-  }, [moving, reducedMotion, scale]);
-
-  // PanResponder for smooth dragging/panning
-  const responder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => !pickMode,
-      onMoveShouldSetPanResponder: (_, gesture) =>
-        !pickMode && (Math.abs(gesture.dx) > 4 || Math.abs(gesture.dy) > 4),
-      onPanResponderGrant: () =>
-        pan.setOffset({
-          x: (pan.x as unknown as { _value: number })._value,
-          y: (pan.y as unknown as { _value: number })._value,
-        }),
-      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
-        useNativeDriver: false,
-      }),
-      onPanResponderRelease: () => pan.flattenOffset(),
-    }),
-  ).current;
-
+    focus();
+  }, [recenterKey, floorLevel, hasSheet]);
+  const backdrop = [
+    { x: -2000, y: -2000 },
+    { x: 2380, y: -2000 },
+    { x: 2380, y: 2550 },
+    { x: -2000, y: 2550 },
+  ];
   return (
-    <Pressable
-      onPress={pickMode ? onPick : undefined}
-      accessibilityRole={pickMode ? "button" : undefined}
-      accessibilityLabel={
-        pickMode
-          ? "Map correction mode. Tap to place your location on the map"
-          : routeVisible
-            ? `Indoor map of Sandton City, ${floor.name}. Route preview visible.`
-            : `Indoor map of Sandton City, ${floor.name}. No destination selected.`
-      }
-      style={[styles.mapContainer, { backgroundColor: theme.mapBg }]}
-    >
-      <Animated.View
-        {...responder.panHandlers}
-        style={[
-          styles.canvasWrapper,
-          {
-            transform: [
-              { translateX: pan.x },
-              { translateY: pan.y },
-              { scale },
-            ],
-          },
-        ]}
+    <View style={[styles.container, { backgroundColor: theme.mapBg }]}>
+      <MapView
+        ref={mapRef}
+        style={StyleSheet.absoluteFill}
+        provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
+        mapType={Platform.OS === "android" ? "none" : "standard"}
+        initialRegion={{
+          ...ORIGIN,
+          latitudeDelta: 0.0038,
+          longitudeDelta: 0.003,
+        }}
+        showsCompass={false}
+        showsUserLocation={false}
+        showsMyLocationButton={false}
+        toolbarEnabled={false}
+        rotateEnabled={false}
+        pitchEnabled={false}
+        onMapReady={focus}
+        accessibilityLabel={"Illustrative indoor map, " + floor.name}
       >
-        <MapCanvas
-          floor={floor}
-          route={routeSegment}
-          theme={theme}
-          position={position}
-          confidence={confidence}
-          showClosure={closure}
-          selected={selected}
-          progressAnimated={reducedMotion ? 1 : routeReveal}
-          destinationPoint={routeVisible ? atlasSandtonVenue.destination.point : undefined}
-          showRouteMarkers={routeVisible}
+        <Polygon
+          coordinates={backdrop.map(toCoordinate)}
+          fillColor={theme.mapBg}
+          strokeColor={theme.mapBg}
+          zIndex={1}
         />
-      </Animated.View>
-    </Pressable>
+        {(floor.contextZones ?? []).map((zone, i) => (
+          <Polygon
+            key={i}
+            coordinates={zone.map(toCoordinate)}
+            fillColor={theme.mapRoom}
+            strokeColor={theme.mapStroke}
+            strokeWidth={1}
+            zIndex={2}
+          />
+        ))}
+        {(floor.corridorPaths ?? []).map((path, i) => (
+          <Polyline
+            key={"edge-" + i}
+            coordinates={path.map(toCoordinate)}
+            strokeColor={theme.mapStroke}
+            strokeWidth={24}
+            lineCap="round"
+            lineJoin="round"
+            zIndex={3}
+          />
+        ))}
+        {(floor.corridorPaths ?? []).map((path, i) => (
+          <Polyline
+            key={"walk-" + i}
+            coordinates={path.map(toCoordinate)}
+            strokeColor={theme.mapConcourse}
+            strokeWidth={20}
+            lineCap="round"
+            lineJoin="round"
+            zIndex={4}
+          />
+        ))}
+        {segment && segment.polyline.length > 1 && (
+          <>
+            <Polyline
+              coordinates={segment.polyline.map(toCoordinate)}
+              strokeColor={theme.routeCasing}
+              strokeWidth={11}
+              lineCap="round"
+              lineJoin="round"
+              zIndex={5}
+            />
+            <Polyline
+              coordinates={segment.polyline.map(toCoordinate)}
+              strokeColor={theme.accent}
+              strokeWidth={6}
+              lineCap="round"
+              lineJoin="round"
+              zIndex={6}
+            />
+          </>
+        )}
+        {samplePOIs
+          .filter((p) => p.floorLevel === floorLevel)
+          .map((p) => (
+            <Marker
+              key={p.id}
+              coordinate={toCoordinate(p.point)}
+              anchor={{ x: 0.5, y: 0.5 }}
+              onPress={() => onSelectPOI(p)}
+              zIndex={destination?.id === p.id ? 10 : 7}
+            >
+              <View
+                style={[
+                  styles.place,
+                  {
+                    backgroundColor:
+                      destination?.id === p.id ? theme.primary : theme.paper,
+                    borderColor: theme.line,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.placeText,
+                    {
+                      color:
+                        destination?.id === p.id
+                          ? theme.primaryText
+                          : theme.mapText,
+                    },
+                  ]}
+                >
+                  {p.name}
+                </Text>
+              </View>
+            </Marker>
+          ))}
+        {floor.facilities
+          .filter((f) => f.kind === "lift" || f.kind === "escalator")
+          .map((f) => (
+            <Marker
+              key={f.id}
+              coordinate={toCoordinate(f.point)}
+              anchor={{ x: 0.5, y: 0.5 }}
+              zIndex={8}
+            >
+              <View
+                style={[
+                  styles.core,
+                  { backgroundColor: theme.paper, borderColor: theme.line },
+                ]}
+              >
+                <Icon
+                  name={f.kind === "lift" ? "lift" : "route"}
+                  color={theme.muted}
+                  size={16}
+                />
+              </View>
+            </Marker>
+          ))}
+        {positionFloor === floorLevel && (
+          <>
+            <Circle
+              center={toCoordinate(position)}
+              radius={9}
+              fillColor="rgba(39,93,216,0.13)"
+              strokeColor="rgba(39,93,216,0.16)"
+              zIndex={9}
+            />
+            <Marker
+              coordinate={toCoordinate(position)}
+              anchor={{ x: 0.5, y: 0.5 }}
+              zIndex={11}
+            >
+              <View style={styles.position}>
+                <View
+                  style={[
+                    styles.positionCore,
+                    { backgroundColor: theme.accent },
+                  ]}
+                />
+              </View>
+            </Marker>
+          </>
+        )}
+      </MapView>
+    </View>
   );
 }
-
 const styles = StyleSheet.create({
-  mapContainer: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-    overflow: "hidden",
+  container: { flex: 1, overflow: "hidden" },
+  place: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderRadius: 8,
   },
-  canvasWrapper: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
+  placeText: { fontSize: 12, fontWeight: "600" },
+  core: {
+    width: 28,
+    height: 28,
+    borderWidth: 1,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
+  position: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 4,
+  },
+  positionCore: { width: 14, height: 14, borderRadius: 7 },
 });

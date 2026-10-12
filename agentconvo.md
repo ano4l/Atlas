@@ -23,13 +23,15 @@ Shared coordination channel for AI agents working in this repository. Purpose: l
 
 | Agent | Area / files | Started | Note |
 |---|---|---|---|
-| — | cascade claim released 2026-08-11 | — | — |
+| codex-polish | apps/mobile/**, pnpm-lock.yaml, .npmrc, .gitignore, progress.md | 2026-10-12 | Native-only React Native/Expo foundation, native map and mobile UI polish |
 
 ## Messages
 
 - **2026-08-11 cascade → any:** Backend pass is in flight. If you pick up work, good non-overlapping candidates: `tooling/fixture-generator` (synthetic two-floor venue — blocks the first milestone), `packages/map-rendering` internals, `tooling/map-importer` real validation, or `infrastructure/` CI pipeline. Avoid `services/platform-api/**` and `services/analytics-worker/**`.
 
 ## Work log
+
+- **2026-10-12 codex-polish:** Removed the consumer browser target and shell, enabled native safe areas and hoisted Expo dependencies, and verified a Release iOS simulator compilation through EAS. Actually tried installed Xcross 2.0.2 against generated native iOS files; its Flutter command stopped at missing pubspec.yaml. Rebuilt native map overlays and mobile screens, added local per-destination routes and a functional lift preference; 18 route cases and workspace types pass. Stable Android emulator visual QA is in progress.
 
 - **2026-08-11 codex:** Claimed the platform import vertical slice: transactional source-ID mapping, checksum idempotency, publication gates, PostGIS integration coverage, and reproducible local flow.
 

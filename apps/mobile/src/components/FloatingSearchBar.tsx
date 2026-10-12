@@ -1,37 +1,95 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { radius, shadows, Theme } from "../theme";
-
-type Props = { theme: Theme; onPress: () => void; value?: string; onVoicePress?: () => void };
-
-export function FloatingSearchBar({ theme, onPress, value = "", onVoicePress }: Props) {
-  const surface = theme.isDark ? "rgba(30,32,36,0.95)" : "rgba(255,255,255,0.96)";
-  return <View style={styles.container} pointerEvents="box-none">
-    <Pressable accessibilityRole="button" accessibilityLabel="Search destinations" onPress={onPress}
-      style={({ pressed }) => [styles.pill, { backgroundColor: surface, borderColor: theme.cardBorder, opacity: pressed ? 0.92 : 1 }, shadows.medium]}>
-      <View style={styles.searchIcon}><View style={[styles.searchRing, { borderColor: theme.ink }]} /><View style={[styles.searchHandle, { backgroundColor: theme.ink }]} /></View>
-      <View style={styles.copy}>
-        <Text numberOfLines={1} style={[styles.placeholder, { color: value ? theme.ink : theme.muted }]}>{value || "Where do you want to go?"}</Text>
-        {!value && <Text style={[styles.context, { color: theme.muted }]}>Search this venue</Text>}
+import { Theme, shadows } from "../theme";
+import { Icon } from "./Icon";
+export function FloatingSearchBar({
+  theme,
+  onPress,
+  value = "",
+}: {
+  theme: Theme;
+  onPress: () => void;
+  value?: string;
+}) {
+  return (
+    <View style={styles.container} pointerEvents="box-none">
+      <View style={styles.header}>
+        <View style={styles.brand}>
+          <Icon name="compass" color={theme.accent} size={28} />
+          <Text style={[styles.wordmark, { color: theme.ink }]}>atlas</Text>
+        </View>
+        <View style={[styles.demo, { backgroundColor: theme.paper }]}>
+          <Text style={[styles.demoText, { color: theme.inkSecondary }]}>
+            Demo venue
+          </Text>
+        </View>
       </View>
-      <Pressable accessibilityRole="button" accessibilityLabel="Voice search" onPress={onVoicePress ?? onPress}
-        style={({ pressed }) => [styles.voice, { backgroundColor: theme.subtle, opacity: pressed ? 0.72 : 1 }]}>
-        <View style={[styles.micCapsule, { borderColor: theme.ink }]} /><View style={[styles.micStem, { backgroundColor: theme.ink }]} />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Search destinations"
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.search,
+          shadows.soft,
+          {
+            backgroundColor: theme.paper,
+            borderColor: theme.cardBorder,
+            opacity: pressed ? 0.8 : 1,
+          },
+        ]}
+      >
+        <Icon name="search" color={theme.accent} />
+        <View style={styles.copy}>
+          <Text numberOfLines={1} style={[styles.title, { color: theme.ink }]}>
+            {value || "Where to?"}
+          </Text>
+          <Text style={[styles.subtitle, { color: theme.muted }]}>
+            Shops, food & facilities
+          </Text>
+        </View>
+        <View style={[styles.arrow, { backgroundColor: theme.subtle }]}>
+          <Icon name="arrow" size={18} color={theme.inkSecondary} />
+        </View>
       </Pressable>
-    </Pressable>
-  </View>;
+    </View>
+  );
 }
-
 const styles = StyleSheet.create({
-  container: { position: "absolute", top: 54, left: 16, right: 16, zIndex: 20 },
-  pill: { height: 62, borderRadius: radius.pill, borderWidth: 1, flexDirection: "row", alignItems: "center", paddingHorizontal: 17, gap: 13 },
-  searchIcon: { width: 22, height: 22, alignItems: "center", justifyContent: "center" },
-  searchRing: { width: 13, height: 13, borderRadius: 7, borderWidth: 1.8, marginLeft: -3, marginTop: -3 },
-  searchHandle: { width: 7, height: 1.8, borderRadius: 1, position: "absolute", right: 1, bottom: 4, transform: [{ rotate: "45deg" }] },
-  copy: { flex: 1, justifyContent: "center", gap: 1 },
-  placeholder: { fontSize: 16, lineHeight: 20, fontWeight: "650" as "600", letterSpacing: -0.25 },
-  context: { fontSize: 10, lineHeight: 13, fontWeight: "600", letterSpacing: 0.1 },
-  voice: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
-  micCapsule: { width: 9, height: 14, borderRadius: 5, borderWidth: 1.5, marginTop: -3 },
-  micStem: { width: 1.5, height: 6, position: "absolute", bottom: 7, borderRadius: 1 },
+  container: {
+    position: "absolute",
+    top: 12,
+    left: 20,
+    right: 20,
+    zIndex: 20,
+    gap: 16,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  brand: { flexDirection: "row", gap: 6, alignItems: "center" },
+  wordmark: { fontSize: 32, fontWeight: "600", letterSpacing: -1.2 },
+  demo: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20 },
+  demoText: { fontSize: 12, fontWeight: "600" },
+  search: {
+    minHeight: 64,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  copy: { flex: 1, gap: 2 },
+  title: { fontSize: 16, fontWeight: "600" },
+  subtitle: { fontSize: 12 },
+  arrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

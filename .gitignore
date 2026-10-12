@@ -9,6 +9,11 @@ build/
 out/
 .expo/
 .expo-shared/
+apps/mobile/dist-ios-check/
+apps/mobile/ios/
+apps/mobile/android/
+apps/mobile/artifacts/
+*.tsbuildinfo
 
 # Gradle / Kotlin
 .gradle/

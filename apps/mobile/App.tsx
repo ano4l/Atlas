@@ -1,11 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Animated,
-  Platform,
-  SafeAreaView,
+  AccessibilityInfo,
+  BackHandler,
+  Pressable,
   StyleSheet,
+  Text,
   View,
 } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import {
   ActiveNavigationPanel,
@@ -18,234 +20,278 @@ import {
   SearchOverlay,
   SettingsScreen,
 } from "./src/components";
+import { Icon } from "./src/components/Icon";
+import { TabKey } from "./src/components/BottomTabBar";
 import { atlasSandtonVenue, samplePOIs } from "./src/fixtures";
 import { POIItem } from "./src/map/types";
-import { darkTheme, lightTheme } from "./src/theme";
+import { buildDemoRoute } from "./src/map/demo-routing";
+import { darkTheme, lightTheme, shadows } from "./src/theme";
 
 export default function App() {
-  // Navigation & Screen state
-  const [activeTab, setActiveTab] = useState<"map" | "explore" | "settings">("map");
+  const [activeTab, setActiveTab] = useState<TabKey>("map");
   const [isDark, setIsDark] = useState(false);
-  const [floorLevel, setFloorLevel] = useState<number>(1);
-  const [recenterKey, setRecenterKey] = useState<number>(0);
-  
-  // Search Overlay
-  const [searchVisible, setSearchOverlayVisible] = useState(false);
-
-  // Selected Destination State
+  const [floorLevel, setFloorLevel] = useState(1);
+  const [recenterKey, setRecenterKey] = useState(0);
+  const [searchVisible, setSearchVisible] = useState(false);
   const [selectedPOI, setSelectedPOI] = useState<POIItem | null>(null);
-  const [sheetVisible, setSheetVisible] = useState<boolean>(false);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const routeReveal = useRef(new Animated.Value(0)).current;
-  const [routeRevealValue, setRouteRevealValue] = useState(0);
-
-  // Active Navigation State
-  const [isNavigating, setIsNavigating] = useState<boolean>(false);
-  const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
-  const [progressRatio, setProgressRatio] = useState<number>(0.1);
-
+  const [stepFree, setStepFree] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [arrived, setArrived] = useState(false);
   const theme = isDark ? darkTheme : lightTheme;
-
+  const route = useMemo(
+    () => (selectedPOI ? buildDemoRoute(selectedPOI, stepFree) : null),
+    [selectedPOI, stepFree],
+  );
+  const currentStep = isNavigating ? route?.steps[currentStepIndex] : undefined;
+  const position =
+    arrived && selectedPOI
+      ? selectedPOI.point
+      : (currentStep?.nodePoint ?? atlasSandtonVenue.start);
+  const positionFloor =
+    arrived && selectedPOI
+      ? selectedPOI.floorLevel
+      : (currentStep?.floorLevel ?? atlasSandtonVenue.startFloorLevel);
+  const closeDestination = () => {
+    setSelectedPOI(null);
+    setIsNavigating(false);
+    setArrived(false);
+    setFloorLevel(1);
+  };
   useEffect(() => {
-    const listenerId = routeReveal.addListener(({ value }) => setRouteRevealValue(value));
-    return () => routeReveal.removeListener(listenerId);
-  }, [routeReveal]);
-
-  // Web container styling
-  useEffect(() => {
-    if (Platform.OS === "web" && typeof document !== "undefined") {
-      document.body.style.margin = "0";
-      document.body.style.background = "#E9ECEF";
-      document.body.style.minHeight = "100vh";
-      document.body.style.height = "100vh";
-      const root = document.getElementById("root");
-      if (root) {
-        root.style.minHeight = "100vh";
-        root.style.height = "100vh";
-        root.style.width = "100%";
-        root.style.display = "flex";
-        root.style.flexDirection = "column";
-        root.style.justifyContent = "center";
-        root.style.alignItems = "stretch";
-        root.style.background = "#E9ECEF";
-      }
-    }
+    AccessibilityInfo.isReduceMotionEnabled().then(setReducedMotion);
+    const subscription = AccessibilityInfo.addEventListener(
+      "reduceMotionChanged",
+      setReducedMotion,
+    );
+    return () => subscription.remove();
   }, []);
-
-  // Handle selecting a POI from Search or Explore
-  const handleSelectPOI = (poi: POIItem) => {
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (selectedPOI) {
+          closeDestination();
+          return true;
+        }
+        if (activeTab !== "map") {
+          setActiveTab("map");
+          return true;
+        }
+        return false;
+      },
+    );
+    return () => subscription.remove();
+  }, [selectedPOI, activeTab]);
+  const selectPlace = (poi: POIItem) => {
     setSelectedPOI(poi);
-    setFloorLevel(poi.floorLevel); // Preview the complete destination-floor route segment.
-    setSheetVisible(true);
+    setFloorLevel(poi.floorLevel);
     setIsNavigating(false);
-    setActiveTab("map");
-    routeReveal.setValue(0);
-    Animated.timing(routeReveal, {
-      toValue: 1,
-      duration: reducedMotion ? 0 : 700,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  // Start active navigation
-  const handleStartNavigation = () => {
-    setSheetVisible(false);
-    setIsNavigating(true);
     setCurrentStepIndex(0);
-    setProgressRatio(0.12);
+    setArrived(false);
+    setActiveTab("map");
   };
-
-  // Step forward in active navigation
-  const handleNextStep = () => {
-    const nextIdx = currentStepIndex + 1;
-    if (nextIdx < atlasSandtonVenue.steps.length) {
-      setCurrentStepIndex(nextIdx);
-      const nextRatio = (nextIdx + 1) / atlasSandtonVenue.steps.length;
-      setProgressRatio(nextRatio);
-
-      // Auto switch floor level if step moves to floor 2
-      const step = atlasSandtonVenue.steps[nextIdx];
-      if (step.floorLevel === 2 && floorLevel !== 2) {
-        setFloorLevel(2);
-      }
-    } else {
-      // Arrived at destination
+  const start = () => {
+    if (!route) return;
+    setIsNavigating(true);
+    setArrived(false);
+    setCurrentStepIndex(0);
+    setFloorLevel(route.steps[0].floorLevel);
+    setRecenterKey((k) => k + 1);
+  };
+  const nextStep = () => {
+    if (!route) return;
+    const next = currentStepIndex + 1;
+    if (next >= route.steps.length) {
       setIsNavigating(false);
-      setSheetVisible(true);
+      setArrived(true);
+      setFloorLevel(selectedPOI!.floorLevel);
+    } else {
+      setCurrentStepIndex(next);
+      setFloorLevel(route.steps[next].floorLevel);
+    }
+    setRecenterKey((k) => k + 1);
+  };
+  const changeStepFree = (value: boolean) => {
+    setStepFree(value);
+    if (isNavigating) {
+      setIsNavigating(false);
+      setCurrentStepIndex(0);
     }
   };
-
-  // Stop active navigation
-  const handleStopNavigation = () => {
-    setIsNavigating(false);
-    setSheetVisible(true);
-    setProgressRatio(0.1);
-    setCurrentStepIndex(0);
-  };
-
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
-      <StatusBar style={isDark ? "light" : "dark"} />
-
-      <View style={styles.appContainer}>
-        {/* TAB 1: FULL SCREEN INTERACTIVE MAP */}
-        {activeTab === "map" && (
-          <View style={styles.mapTabWrapper}>
-            {/* Full-screen Interactive Vector Map */}
-            <IndoorMap
+    <SafeAreaProvider>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <View style={styles.container}>
+          {activeTab === "map" && (
+            <View style={styles.container}>
+              <IndoorMap
+                theme={theme}
+                floorLevel={floorLevel}
+                route={route}
+                destination={selectedPOI}
+                position={position}
+                positionFloor={positionFloor}
+                recenterKey={recenterKey}
+                reducedMotion={reducedMotion}
+                onSelectPOI={selectPlace}
+                hasSheet={!!selectedPOI}
+              />
+              {!isNavigating && (
+                <FloatingSearchBar
+                  theme={theme}
+                  value={selectedPOI?.name ?? ""}
+                  onPress={() => setSearchVisible(true)}
+                />
+              )}
+              <FloatingMapControls
+                theme={theme}
+                floorLevel={floorLevel}
+                onSelectFloor={setFloorLevel}
+                onRecenter={() => setRecenterKey((k) => k + 1)}
+                navigating={isNavigating}
+              />
+              {!selectedPOI && (
+                <View
+                  style={[
+                    styles.welcome,
+                    { backgroundColor: theme.paper, borderColor: theme.line },
+                    shadows.soft,
+                  ]}
+                >
+                  <Text style={[styles.welcomeTitle, { color: theme.ink }]}>
+                    Find your way.
+                  </Text>
+                  <Text style={[styles.meta, { color: theme.muted }]}>
+                    Browse a place to preview your route.
+                  </Text>
+                  <View style={styles.quickRow}>
+                    {[
+                      { id: "zara", label: "ZARA", icon: "shop" as const },
+                      {
+                        id: "food-court",
+                        label: "Food court",
+                        icon: "coffee" as const,
+                      },
+                      {
+                        id: "restrooms-l1",
+                        label: "Restrooms",
+                        icon: "restroom" as const,
+                      },
+                    ].map((item) => (
+                      <Pressable
+                        key={item.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                          "Preview " +
+                          samplePOIs.find((p) => p.id === item.id)!.name
+                        }
+                        onPress={() =>
+                          selectPlace(samplePOIs.find((p) => p.id === item.id)!)
+                        }
+                        style={({ pressed }) => [
+                          styles.quick,
+                          {
+                            backgroundColor: theme.subtle,
+                            opacity: pressed ? 0.7 : 1,
+                          },
+                        ]}
+                      >
+                        <Icon name={item.icon} color={theme.accent} size={20} />
+                        <Text style={[styles.quickText, { color: theme.ink }]}>
+                          {item.label}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              )}
+              {selectedPOI && !isNavigating && (
+                <DestinationSheet
+                  theme={theme}
+                  poi={selectedPOI}
+                  route={route}
+                  stepFree={stepFree}
+                  arrived={arrived}
+                  onToggleStepFree={changeStepFree}
+                  onStartNavigation={start}
+                  onClose={closeDestination}
+                />
+              )}
+              {selectedPOI && isNavigating && route && (
+                <ActiveNavigationPanel
+                  theme={theme}
+                  destination={selectedPOI}
+                  route={route}
+                  currentStepIndex={currentStepIndex}
+                  onNextStep={nextStep}
+                  onStopNavigation={() => {
+                    setIsNavigating(false);
+                    setCurrentStepIndex(0);
+                    setFloorLevel(selectedPOI.floorLevel);
+                  }}
+                />
+              )}
+            </View>
+          )}
+          {activeTab === "explore" && (
+            <ExploreScreen theme={theme} onSelectPOI={selectPlace} />
+          )}
+          {activeTab === "settings" && (
+            <SettingsScreen
               theme={theme}
-              floorLevel={floorLevel}
-              progress={progressRatio}
-              confidence="high"
-              recenterKey={recenterKey}
-              moving={isNavigating && currentStepIndex === 2}
-              routeVisible={Boolean(selectedPOI)}
-              routeReveal={routeRevealValue}
+              isDark={isDark}
+              onToggleDark={setIsDark}
               reducedMotion={reducedMotion}
+              onToggleReducedMotion={setReducedMotion}
+              stepFree={stepFree}
+              onToggleStepFree={changeStepFree}
             />
-
-            {/* Top Floating Search Pill */}
-            {!isNavigating && (
-              <FloatingSearchBar
-                theme={theme}
-                value={selectedPOI ? selectedPOI.name : ""}
-                onPress={() => setSearchOverlayVisible(true)}
-                onVoicePress={() => setSearchOverlayVisible(true)}
-              />
-            )}
-
-            {/* Floating Map Controls (Venue badge, confidence, floor selector, recenter, compass) */}
-            <FloatingMapControls
-              theme={theme}
-              venueName={atlasSandtonVenue.venueName}
-              floorLevel={floorLevel}
-              onSelectFloor={(lvl) => setFloorLevel(lvl)}
-              onRecenter={() => setRecenterKey((k) => k + 1)}
-              confidence="high"
-              onConfidencePress={() => {}}
-            />
-
-            {/* Destination Preview Sheet (when not actively navigating) */}
-            {!isNavigating && sheetVisible && selectedPOI && (
-              <DestinationSheet
-                theme={theme}
-                poi={selectedPOI}
-                onStartNavigation={handleStartNavigation}
-                onClose={() => setSheetVisible(false)}
-              />
-            )}
-
-            {/* Active Turn-by-Turn Instruction Panel */}
-            {isNavigating && (
-              <ActiveNavigationPanel
-                theme={theme}
-                destination={selectedPOI ?? atlasSandtonVenue.destination}
-                steps={atlasSandtonVenue.steps}
-                currentStepIndex={currentStepIndex}
-                progressRatio={progressRatio}
-                onNextStep={handleNextStep}
-                onStopNavigation={handleStopNavigation}
-              />
-            )}
-          </View>
-        )}
-
-        {/* TAB 2: EXPLORE SCREEN */}
-        {activeTab === "explore" && (
-          <ExploreScreen
+          )}
+          <SearchOverlay
             theme={theme}
-            onSelectPOI={handleSelectPOI}
-          />
-        )}
-
-        {/* TAB 3: SETTINGS SCREEN */}
-        {activeTab === "settings" && (
-          <SettingsScreen
-            theme={theme}
-            isDark={isDark}
-            onToggleDark={setIsDark}
+            visible={searchVisible}
+            onClose={() => setSearchVisible(false)}
+            onSelectPOI={selectPlace}
             reducedMotion={reducedMotion}
-            onToggleReducedMotion={setReducedMotion}
           />
-        )}
-
-        {/* Search Modal / Overlay */}
-        <SearchOverlay
-          theme={theme}
-          visible={searchVisible}
-          onClose={() => setSearchOverlayVisible(false)}
-          onSelectPOI={handleSelectPOI}
-        />
-
-        {/* Persistent Floating 3-Destination Bottom Navigation Bar */}
-        <BottomTabBar
-          theme={theme}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-      </View>
-    </SafeAreaView>
+          <BottomTabBar
+            theme={theme}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
+        </View>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
-
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    width: "100%",
-    maxWidth: 440,
-    alignSelf: "center",
-    overflow: "hidden",
+  safeArea: { flex: 1 },
+  container: { flex: 1 },
+  welcome: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    bottom: 84,
+    borderRadius: 28,
+    padding: 20,
+    borderWidth: 1,
+    gap: 8,
   },
-  appContainer: {
+  welcomeTitle: { fontSize: 24, fontWeight: "600", letterSpacing: -0.5 },
+  meta: { fontSize: 16, lineHeight: 20 },
+  quickRow: { flexDirection: "row", gap: 8, marginTop: 8 },
+  quick: {
     flex: 1,
-    width: "100%",
-    height: "100%",
-    position: "relative",
+    minHeight: 64,
+    borderRadius: 16,
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    padding: 8,
   },
-  mapTabWrapper: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-    position: "relative",
-  },
+  quickText: { fontSize: 12, fontWeight: "600" },
 });

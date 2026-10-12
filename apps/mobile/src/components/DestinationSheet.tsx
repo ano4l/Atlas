@@ -4,259 +4,189 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
+  useWindowDimensions,
 } from "react-native";
-import { radius, shadows, space, Theme } from "../theme";
+import { Theme, shadows } from "../theme";
 import { POIItem } from "../map/types";
-
+import { DemoRoute, floorName } from "../map/demo-routing";
+import { Icon } from "./Icon";
 type Props = {
   theme: Theme;
   poi: POIItem;
+  route: DemoRoute | null;
+  stepFree: boolean;
+  arrived: boolean;
   onStartNavigation: () => void;
   onClose: () => void;
+  onToggleStepFree: (value: boolean) => void;
 };
-
 export function DestinationSheet({
   theme,
   poi,
+  route,
+  stepFree,
+  arrived,
   onStartNavigation,
   onClose,
+  onToggleStepFree,
 }: Props) {
   const { height } = useWindowDimensions();
-  const dark = theme.isDark;
-
   return (
-    <View style={styles.sheetOverlay} pointerEvents="box-none">
-      <View
-        style={[
-          styles.sheet,
-          {
-            backgroundColor: dark
-              ? "rgba(30, 32, 36, 0.96)"
-              : "rgba(255, 255, 255, 0.96)",
-            borderColor: theme.cardBorder,
-            maxHeight: height * 0.36,
-          },
-          shadows.strong,
-        ]}
+    <View
+      style={[
+        styles.sheet,
+        {
+          backgroundColor: theme.paper,
+          borderColor: theme.line,
+          maxHeight: height * 0.5,
+        },
+        shadows.medium,
+      ]}
+    >
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
       >
-        {/* Handle Bar */}
-        <View style={styles.handleWrapper}>
-          <View style={[styles.handle, { backgroundColor: theme.line }]} />
+        <View style={styles.heading}>
+          <View style={[styles.badge, { backgroundColor: theme.accentSoft }]}>
+            <Icon
+              name={arrived ? "check" : "pin"}
+              color={theme.accent}
+              size={24}
+            />
+          </View>
+          <View style={styles.copy}>
+            <Text style={[styles.meta, { color: theme.muted }]}>
+              {arrived
+                ? "DEMO JOURNEY COMPLETE"
+                : floorName(poi.floorLevel) + " · " + poi.category}
+            </Text>
+            <Text style={[styles.title, { color: theme.ink }]}>{poi.name}</Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Close destination"
+            onPress={onClose}
+            style={styles.close}
+          >
+            <Icon name="close" color={theme.muted} />
+          </Pressable>
         </View>
-
-        <ScrollView
-          bounces={false}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {/* Header Row: Category Badge & Close Button */}
-          <View style={styles.headerRow}>
+        <Text style={[styles.description, { color: theme.muted }]}>
+          {arrived
+            ? poi.entranceInfo
+            : route
+              ? route.walkTimeMin +
+                " min walk · " +
+                route.distanceM +
+                " m · From the demo entrance"
+              : "No connected route is available for this destination."}
+        </Text>
+        {!arrived && (
+          <Pressable
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: stepFree }}
+            accessibilityLabel="Step-free route"
+            onPress={() => onToggleStepFree(!stepFree)}
+            style={[styles.preference, { borderColor: theme.line }]}
+          >
+            <Icon name="accessibility" color={theme.accent} size={20} />
+            <Text style={[styles.preferenceText, { color: theme.ink }]}>
+              Step-free route
+            </Text>
             <View
               style={[
-                styles.statusBadge,
-                { backgroundColor: dark ? "rgba(16, 185, 129, 0.15)" : "#ECFDF5" },
-              ]}
-            >
-              <Text style={[styles.statusText, { color: theme.emerald }]}>
-                ● {poi.openingStatus}
-              </Text>
-            </View>
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Close destination sheet"
-              onPress={onClose}
-              style={({ pressed }) => [
-                styles.closeButton,
+                styles.checkbox,
                 {
-                  backgroundColor: dark ? "rgba(255,255,255,0.08)" : "#F2F1EC",
-                  opacity: pressed ? 0.7 : 1,
+                  borderColor: stepFree ? theme.accent : theme.line,
+                  backgroundColor: stepFree ? theme.accentSoft : theme.paper,
                 },
               ]}
             >
-              <Text style={[styles.closeIcon, { color: theme.ink }]}>✕</Text>
-            </Pressable>
-          </View>
-
-          {/* Destination Name & Floor */}
-          <Text style={[styles.title, { color: theme.ink }]}>{poi.name}</Text>
-          <Text style={[styles.categorySubtitle, { color: theme.inkSecondary }]}>
-            {poi.category} • {poi.floorName}
-          </Text>
-
-          {/* Quick Metrics Grid (Walking time, Distance, Entrance) */}
-          <View
-            style={[
-              styles.metricsCard,
-              {
-                backgroundColor: dark ? "rgba(255,255,255,0.04)" : "#FAFAF7",
-                borderColor: theme.cardBorder,
-              },
-            ]}
-          >
-            <View style={styles.metricItem}>
-              <Text style={[styles.metricValue, { color: theme.ink }]}>
-                {poi.walkTimeMin} min
-              </Text>
-              <Text style={[styles.metricLabel, { color: theme.muted }]}>
-                Walk time
-              </Text>
+              {stepFree && <Icon name="check" color={theme.accent} size={16} />}
             </View>
-
-            <View style={[styles.metricDivider, { backgroundColor: theme.line }]} />
-
-            <View style={styles.metricItem}>
-              <Text style={[styles.metricValue, { color: theme.ink }]}>
-                {poi.distanceM} m
-              </Text>
-              <Text style={[styles.metricLabel, { color: theme.muted }]}>
-                Distance
-              </Text>
-            </View>
-
-            <View style={[styles.metricDivider, { backgroundColor: theme.line }]} />
-
-            <View style={styles.metricItem}>
-              <Text style={[styles.metricValue, { color: theme.ink }]}>
-                {poi.accessible ? "Step-free" : "Standard"}
-              </Text>
-              <Text style={[styles.metricLabel, { color: theme.muted }]}>
-                {poi.accessible ? "Accessible" : "Route"}
-              </Text>
-            </View>
-          </View>
-
-          {/* Entrance Information */}
-          <Text style={[styles.entranceText, { color: theme.muted }]}>
-            Entrance · {poi.entranceInfo}
-          </Text>
-
-          {/* Strong Black Start Navigation CTA Button */}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Start navigation to ${poi.name}`}
-            onPress={onStartNavigation}
-            style={({ pressed }) => [
-              styles.ctaButton,
-              {
-                backgroundColor: theme.primary,
-                opacity: pressed ? 0.88 : 1,
-              },
-            ]}
-          >
-            <Text style={[styles.ctaText, { color: theme.primaryText }]}>
-              Start navigation
-            </Text>
           </Pressable>
-        </ScrollView>
-      </View>
+        )}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !route && !arrived }}
+          disabled={!route && !arrived}
+          onPress={arrived ? onClose : onStartNavigation}
+          style={({ pressed }) => [
+            styles.primary,
+            {
+              backgroundColor: theme.primary,
+              opacity: !route && !arrived ? 0.4 : pressed ? 0.8 : 1,
+            },
+          ]}
+        >
+          <Icon
+            name={arrived ? "check" : "route"}
+            color={theme.primaryText}
+            size={20}
+          />
+          <Text style={[styles.buttonText, { color: theme.primaryText }]}>
+            {arrived ? "Done" : "Start demo navigation"}
+          </Text>
+        </Pressable>
+      </ScrollView>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
-  sheetOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 92,
-    zIndex: 22,
-  },
   sheet: {
-    marginHorizontal: 12,
-    borderRadius: 24,
+    position: "absolute",
+    left: 12,
+    right: 12,
+    bottom: 84,
+    borderRadius: 28,
     borderWidth: 1,
-    paddingBottom: 14,
   },
-  handleWrapper: {
-    alignItems: "center",
-    paddingVertical: 7,
-  },
-  handle: {
-    width: 38,
-    height: 5,
-    borderRadius: 3,
-  },
-  scrollContent: {
-    paddingHorizontal: space.xl,
-    gap: space.sm,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
+  content: { padding: 20, gap: 16 },
+  heading: { flexDirection: "row", alignItems: "center", gap: 12 },
+  badge: {
+    width: 48,
+    height: 48,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },
-  closeIcon: {
-    fontSize: 14,
-    fontWeight: "700",
+  copy: { flex: 1, gap: 4 },
+  meta: { fontSize: 12 },
+  title: { fontSize: 24, fontWeight: "600", letterSpacing: -0.5 },
+  close: {
+    width: 44,
+    height: 44,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  title: {
-    fontSize: 22,
-    fontWeight: "800",
-    letterSpacing: -0.5,
-  },
-  categorySubtitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginTop: -6,
-  },
-  metricsCard: {
+  description: { fontSize: 16, lineHeight: 20 },
+  preference: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-around",
-    borderRadius: radius.md,
+    gap: 12,
+    minHeight: 44,
+    borderTopWidth: 1,
+    paddingTop: 12,
+  },
+  preferenceText: { flex: 1, fontSize: 16 },
+  checkbox: {
+    width: 24,
+    height: 24,
     borderWidth: 1,
-    paddingVertical: 10,
-    marginVertical: 4,
-  },
-  metricItem: {
-    alignItems: "center",
-    gap: 2,
-  },
-  metricValue: {
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  metricLabel: {
-    fontSize: 11,
-    fontWeight: "500",
-  },
-  metricDivider: {
-    width: 1,
-    height: 28,
-  },
-  entranceText: {
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  ctaButton: {
-    height: 48,
-    borderRadius: radius.pill,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 6,
   },
-  ctaText: {
-    fontSize: 16,
-    fontWeight: "800",
-    letterSpacing: -0.2,
+  primary: {
+    minHeight: 52,
+    borderRadius: 16,
+    gap: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,
   },
+  buttonText: { fontSize: 16, fontWeight: "600" },
 });

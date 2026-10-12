@@ -1,13 +1,25 @@
-# Atlas mobile prototype — night atlas iteration
+# Atlas native mobile design
 
-The app is a deterministic, backend-free Sandton City journey. `App.tsx` owns the compact state machine, `src/components.tsx` contains reusable controls and the native schematic map, `src/theme.ts` contains light/dark React Native tokens, and `src/fixtures.ts` contains local results and state-lab entries.
+Atlas is an iOS/Android React Native app. The primary task is choosing a destination, previewing an indoor route, and following a clearly labelled demo journey. The map remains the main surface.
 
-Dark mode leads with a near-black graphite plan, lifted charcoal tenant footprints, warm-grey concourses, a chartreuse route, cyan-white position marker, fresh-green completion, amber uncertainty, and coral closures. The mature light mode translates those roles to stone/paper map surfaces and a darker olive-chartreuse route. Type uses 11 px metadata, 13–16 px supporting/action text, 21 px instructions, and 31–32 px destination/search titles. Spacing follows 4/8/12/16/24/32; radii are 10/16/24 with 28 px sheets. Controls are at least 44 px high.
+## Visual language
 
-The handcrafted Sandton City plan contains a central atrium, intersecting concourses, 14 labelled tenant footprints, doorway ticks, an escalator and lift core, restrooms and information facilities, closure context, a route origin, and a Zara doorway endpoint. Floating venue/search controls and the compact floor rail preserve the map as the dominant surface. Web presentation is constrained to a 440 px mobile canvas instead of expanding into a dashboard.
+Light mode uses cool paper surfaces, navy text and a restrained blue accent. Dark mode translates these roles to navy surfaces and pale blue actions. Semantic tokens live in src/theme.ts. System typography, consistent SVG line icons, 4/8/12/16/20/24 spacing, soft shadows and rounded panels keep the interface coherent.
 
-On wide web viewports the 440 px app shell is centered on a graphite field. Search retains the plan behind a raised, internally scrolling panel; results use a fixed pin, flexible two-line copy region, and compact trailing action. Base actions are intrinsic 54 px controls rather than flex-growing panels. Chartreuse actions use graphite labels, while Stop uses a dark red with white text; both pass the automated WCAG AA contrast audit. Venue alerts live in the bottom sheet and closures are anchored to a compact corridor marker to reduce map collisions.
+The map uses react-native-maps with an illustrative corridor network, context zones, selectable places and a conventional blue route/position marker. The synthetic coordinates are anchored near Sandton for the native map camera; they do not describe surveyed mall architecture. Ground Floor and Level 1 labels agree across map controls, directory, preview and guidance.
 
-Start with `pnpm --filter mobile start`. Continue from permission education, edit or submit the destination search, choose the nearest neutral result, preview, and start navigation. The lower primary action advances through turn, an animated floor stack, floor change, low confidence, landmark or map-point correction, visible route redraw, and arrival. The map can be dragged, the floor rail is operable, and recenter restores its camera. **•••** opens supporting states and light/dark appearance.
+## Layout and interaction
 
-All data is illustrative local fixture data. Camera positioning is an explanation/simulation and does not open the device camera. Offline mode demonstrates retained map availability, not a network monitor. Accessibility labels cover the map summary, confidence, editable search, floors, and icon controls; words and symbols reinforce colour states. Sheets are height-bounded and scrollable, action rows wrap on compact widths, map geometry scales from its measured width, and marker/halo/floor motion respects the operating system reduced-motion preference.
+The app fills the device and respects native safe areas. Search sits above venue/floor controls. Bottom navigation remains fixed; destination and guidance cards sit above it and scroll when their content exceeds half the screen. Primary actions sit in the lower thumb area. Category filters and directory rows share the same components across search and Explore.
+
+Search supports typed queries, category filtering and a useful empty state. Native modal dismissal, Android back, floor selection, map panning/zooming, recentering, destination selection, route preview and arrival are wired. Step-free routing uses the fixture's lift core. Light/dark appearance and reduced motion work during the current session; the operating-system motion preference is respected.
+
+## Prototype boundaries
+
+Routes are calculated locally over the illustrative corridor graph and terminate at the selected place. Distance and walking time are demo estimates. Navigation advances through explicit demo steps rather than pretending to track motion. The app does not claim live BLE positioning, spoken guidance, granted sensor permissions, downloaded map packages or transmitted diagnostics.
+
+The bundled directory and floor network remain local. Native provider initialization and outdoor tile availability depend on platform/provider configuration. Standalone Android requires an Android-restricted Google Maps key, supplied through GOOGLE_MAPS_API_KEY rather than committed source.
+
+## Verification
+
+The routing test covers all destinations with both accessibility preferences, exact endpoints, floor changes and unreachable floors. Native iOS compilation uses the EAS simulator profile. Android screenshots and interaction checks are recorded in artifacts and the build-check document when available. A JavaScript bundle export is not native compilation or simulator execution.

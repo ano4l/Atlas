@@ -4,7 +4,7 @@ Living checklist for the Indoor Spatial Navigation Platform, organized by system
 
 Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 
-**Last updated:** 2026-08-11 — premium Atlas mobile indoor-navigation application redesign.
+**Last updated:** 2026-10-12 — native-only Atlas mobile foundation, UI polish and iOS compilation.
 
 ---
 
@@ -27,19 +27,18 @@ Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 
 ## 1. Consumer mobile application (`apps/mobile`, `techspec.md` §5)
 
-- [x] Expo/React Native/TypeScript shell (`App.tsx`, `app.json`, `babel.config.js`)
-- [x] iOS/Android permission strings declared (location, motion, Bluetooth, camera)
-- [x] Full-screen interactive 2D vector map with light warm-grey canvas and refined cartography
-- [x] Route drawing with thick dark casing, multi-color gradient line (orange → coral → violet → blue), and rounded caps
-- [x] Start glowing marker, directional accuracy halo, destination pin, and escalator/lift level badges
-- [x] Floating top search bar with frosted translucent surface, placeholder, and voice search simulation
-- [x] Compact floating map controls (recenter, floor selector pill, compass, venue & floor badge, confidence dot)
-- [x] Persistent floating bottom navigation bar (Map, Explore, Settings) with line icons and soft shadow
-- [x] Search overlay modal with category chips, recent results, voice search, and sponsored indicators
-- [x] Destination preview bottom sheet (walking time, distance, step-free indicator, Start Navigation CTA)
-- [x] Active turn-by-turn instruction panel (next turn direction, distance, route progress bar, step list, stop CTA)
-- [x] Explore screen (nearby shops & facilities, search categories, sponsored cards, preview route on map)
-- [x] Settings screen (route accessibility, dark appearance mode, voice guidance, reduced motion, permissions, offline maps)
+- [x] Native-only Expo/React Native/TypeScript app (iOS and Android; browser target removed)
+- [x] Native safe areas and full-device layout
+- [x] Native interactive map with illustrative corridor overlays, floor selection, selectable destinations and recenter
+- [x] Consistent blue/light and navy/dark design system, SVG icons and bottom tabs
+- [x] Search with typed queries, shared category filters and useful empty states
+- [x] Destination preview, locally calculated per-destination demo routes and explicit navigation/arrival states
+- [x] Step-free preference selects lift transitions; 18 route/preference cases verified
+- [x] Appearance and reduced-motion preferences, including operating-system motion setting
+- [x] iOS Release simulator compilation verified through EAS (2026-10-12)
+- [~] Xcross verification: installed 2.0.2 was tried with generated iOS files; Flutter builder fails at missing pubspec.yaml. Working React Native command/wrapper remains unresolved.
+- [~] Native visual QA: Expo Go 2.31.2 startup fails on Android 37 and fresh API 34, including a minimal startup probe. Native visual/interaction QA remains unverified.
+- [ ] Live positioning, backend route integration, spoken guidance, persistent preferences and downloadable map packages
 
 ---
 
@@ -234,6 +233,8 @@ Status: **backend slice met**. A fresh PostGIS instance imports and publishes th
 4. Keep this file scoped to status tracking — design rationale belongs in `docs/architecture-decisions/`.
 
 ## Changelog
+
+- **2026-10-12 (native-only mobile polish):** Removed the consumer browser target/frame and SVG web map fallback; added native safe areas, coherent light/dark tokens and line icons, shared search/category/directory rows, scroll-bounded destination and guidance panels, explicit arrival, and a native corridor map with selectable places. Fixed destination previews using Zara's route by calculating local schematic routes for each selected POI; step-free mode uses lifts and all 18 destination/preference cases pass. Removed fake voice, granted-permission, diagnostics and download controls. Hoisted pnpm dependencies fix Expo native prebuild/autolinking and iOS bundle resolution. Final EAS Release simulator build 1aaa674b passes, as do workspace types, Expo dependency checks and Hermes export. Xcross 2.0.2 was actually tried but its Flutter builder fails at missing pubspec.yaml; a working React Native wrapper/command remains needed. Android visual QA is unverified after Expo Go startup failures on both API 37 and fresh API 34, including a minimal startup probe. Details: apps/mobile/BUILD_CHECKS.md.
 
 - **2026-08-11 (native map-provider pass):** Added `react-native-maps` as the iOS/Android renderer with a desaturated outdoor basemap used explicitly as temporary interaction context, synthetic fixture coordinate projection, camera fitting/recentering, position accuracy, and route/marker overlays. Web retains the structured SVG fallback. Workspace typecheck, Expo web export, and Android production bundling pass; device/emulator visual QA remains outstanding.
 

@@ -1,12 +1,14 @@
 {
   "expo": {
-    "name": "Indoor Navigation",
+    "name": "Atlas",
     "slug": "indoor-navigation-mobile",
     "version": "0.1.0",
+    "platforms": ["ios", "android"],
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "scheme": "indoornav",
     "ios": {
+      "bundleIdentifier": "com.certi4no.atlas",
       "supportsTablet": false,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Used to detect which venue you are in and to navigate indoors.",
@@ -16,6 +18,7 @@
       }
     },
     "android": {
+      "package": "com.certi4no.atlas",
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
@@ -23,6 +26,12 @@
         "BLUETOOTH_CONNECT",
         "CAMERA"
       ]
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5856e41b-634f-45d4-a136-bc868b356b13"
+      }
+    },
+    "owner": "certi4no"
   }
 }

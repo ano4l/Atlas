@@ -1,126 +1,92 @@
-// Atlas Mobile Design System Tokens
-// Inspired by premium modern indoor cartography and mobile UI design standards.
-
 export const lightTheme = {
   isDark: false,
-  // Primary backgrounds & surfaces
-  bg: "#F6F5F2",             // Soft warm off-white canvas
-  paper: "#FFFFFF",          // Pure white surface
-  paperTranslucent: "rgba(255, 255, 255, 0.92)",
+  bg: "#F3F5F8",
+  paper: "#FFFFFF",
+  paperTranslucent: "rgba(255,255,255,0.96)",
   card: "#FFFFFF",
-  cardBorder: "rgba(0, 0, 0, 0.06)",
-  
-  // Typography & Icons
-  ink: "#111111",            // Crisp black primary text
-  inkSecondary: "#52525B",   // Neutral charcoal text
-  muted: "#8E8E93",          // Muted grey text & icons
-  subtle: "#F2F1EC",         // Subtle pill/chip fill
-  line: "#E5E5EA",           // Delicate divider line
-  
-  // Map Cartography
-  mapBg: "#F5F5F3",
-  mapPlate: "#FFFFFF",       // Soft white venue footprint
-  mapConcourse: "#F5F4EF",   // Pale warm-grey corridor/concourse
-  mapRoom: "#FAFAF7",        // Store/room background
-  mapStroke: "#E2E0D8",      // Fine low-contrast outlines
-  mapText: "#18181B",        // Store label color
-  
-  // Navigation & Accent Colors
+  cardBorder: "#E4E9F1",
+  ink: "#172B4D",
+  inkSecondary: "#46556D",
+  muted: "#637189",
+  subtle: "#EDF1F7",
+  line: "#DFE5EE",
+  mapBg: "#EDF0F4",
+  mapPlate: "#F7F9FC",
+  mapConcourse: "#FFFFFF",
+  mapRoom: "#E2E8EF",
+  mapStroke: "#CDD6E3",
+  mapText: "#46556D",
   routeCasing: "#FFFFFF",
-  routeStart: "#1A73E8",
-  routeMiddle: "#1A73E8",
-  routeViolet: "#1A73E8",
-  routeEnd: "#1A73E8",
-  
-  // Functional Accents
-  primary: "#111111",        // Main CTA button fill
-  primaryText: "#FFFFFF",    // Main CTA button text
-  accent: "#2563EB",         // Atlas blue accent
-  emerald: "#10B981",        // Green success / confidence
-  amber: "#F59E0B",          // Amber warning / sponsored
-  amberSoft: "#FEF3C7",
-  danger: "#EF4444",         // Red stop / closure
-  
-  // Shadows
-  shadow: "#000000",
+  routeStart: "#275DD8",
+  routeMiddle: "#275DD8",
+  routeViolet: "#275DD8",
+  routeEnd: "#275DD8",
+  primary: "#275DD8",
+  primaryText: "#FFFFFF",
+  accent: "#275DD8",
+  accentSoft: "#EAF0FF",
+  emerald: "#18734D",
+  amber: "#936000",
+  amberSoft: "#FFF4D8",
+  danger: "#C63E4B",
+  shadow: "#172B4D",
 };
-
 export type Theme = typeof lightTheme;
-
 export const darkTheme: Theme = {
   ...lightTheme,
   isDark: true,
-  bg: "#121417",
-  paper: "#1E2024",
-  paperTranslucent: "rgba(30, 32, 36, 0.92)",
-  card: "#1E2024",
-  cardBorder: "rgba(255, 255, 255, 0.08)",
-  
-  ink: "#F4F4F5",
-  inkSecondary: "#D4D4D8",
-  muted: "#9CA3AF",
-  subtle: "#272A30",
-  line: "#2E3238",
-  
-  mapBg: "#16181C",
-  mapPlate: "#1F2228",
-  mapConcourse: "#282C34",
-  mapRoom: "#22252C",
-  mapStroke: "#343842",
-  mapText: "#F4F4F5",
-  
-  routeCasing: "#E8EAED",
-  routeStart: "#8AB4F8",
-  routeMiddle: "#8AB4F8",
-  routeViolet: "#8AB4F8",
-  routeEnd: "#8AB4F8",
-  
-  primary: "#FFFFFF",
-  primaryText: "#111111",
-  accent: "#3B82F6",
-  emerald: "#34D399",
-  amber: "#FBBF24",
-  amberSoft: "#362B0D",
-  danger: "#F87171",
+  bg: "#101B2C",
+  paper: "#19283D",
+  paperTranslucent: "rgba(25,40,61,0.96)",
+  card: "#19283D",
+  cardBorder: "#2D3D54",
+  ink: "#EDF3FF",
+  inkSecondary: "#BECCE1",
+  muted: "#A1B1C9",
+  subtle: "#23344E",
+  line: "#2D3D54",
+  mapBg: "#142135",
+  mapPlate: "#1B2B42",
+  mapConcourse: "#263A54",
+  mapRoom: "#20334C",
+  mapStroke: "#3B506E",
+  mapText: "#BECCE1",
+  routeCasing: "#152238",
+  routeStart: "#88B1FF",
+  routeMiddle: "#88B1FF",
+  routeViolet: "#88B1FF",
+  routeEnd: "#88B1FF",
+  primary: "#A9C6FF",
+  primaryText: "#142135",
+  accent: "#A9C6FF",
+  accentSoft: "#253D62",
+  emerald: "#73D6AB",
+  amber: "#F3C56B",
+  amberSoft: "#3C321F",
+  danger: "#FF98A3",
 };
-
-export const space = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  xxl: 28,
-};
-
-export const radius = {
-  sm: 10,
-  md: 16,
-  lg: 24,
-  pill: 28,
-  sheet: 32,
-};
-
+export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28 };
+export const radius = { sm: 10, md: 16, lg: 24, pill: 28, sheet: 32 };
 export const shadows = {
   soft: {
-    shadowColor: "#000000",
+    shadowColor: "#172B4D",
     shadowOpacity: 0.07,
-    shadowRadius: 14,
+    shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    elevation: 3,
   },
   medium: {
-    shadowColor: "#000000",
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
+    shadowColor: "#172B4D",
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
+    elevation: 5,
   },
   strong: {
-    shadowColor: "#000000",
-    shadowOpacity: 0.18,
-    shadowRadius: 28,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 12,
+    shadowColor: "#172B4D",
+    shadowOpacity: 0.14,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
   },
 };

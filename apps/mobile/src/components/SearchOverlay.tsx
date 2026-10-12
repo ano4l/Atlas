@@ -1,416 +1,172 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { radius, shadows, space, Theme } from "../theme";
-import { samplePOIs, searchCategories } from "../fixtures";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Theme } from "../theme";
 import { POIItem } from "../map/types";
-
+import { Icon } from "./Icon";
+import {
+  CategoryPicker,
+  EmptyPlaces,
+  filterPlaces,
+  PlaceRow,
+} from "./PlaceList";
 type Props = {
   theme: Theme;
   visible: boolean;
   onClose: () => void;
   onSelectPOI: (poi: POIItem) => void;
+  reducedMotion?: boolean;
 };
-
 export function SearchOverlay({
   theme,
   visible,
   onClose,
   onSelectPOI,
+  reducedMotion,
 }: Props) {
   const [query, setQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
-  const [isListeningVoice, setIsListeningVoice] = useState(false);
-  const dark = theme.isDark;
-
-  // Filter POIs by category and query
-  const filteredPOIs = samplePOIs.filter((poi) => {
-    const matchesQuery =
-      poi.name.toLowerCase().includes(query.toLowerCase()) ||
-      poi.category.toLowerCase().includes(query.toLowerCase()) ||
-      (poi.description ?? "").toLowerCase().includes(query.toLowerCase());
-
-    const matchesCategory =
-      activeCategory === "all" ||
-      (activeCategory === "fashion" && poi.category.includes("Fashion")) ||
-      (activeCategory === "food" && poi.category.includes("Dining")) ||
-      (activeCategory === "restrooms" && poi.category.includes("Restrooms")) ||
-      (activeCategory === "info" && poi.category.includes("Guest")) ||
-      (activeCategory === "accessibility" && poi.accessible);
-
-    return matchesQuery && matchesCategory;
-  });
-
-  const handleVoiceSearch = () => {
-    setIsListeningVoice(true);
-    setTimeout(() => {
-      setQuery("Zara");
-      setIsListeningVoice(false);
-    }, 1200);
-  };
-
+  const [category, setCategory] = useState("all");
+  useEffect(() => {
+    if (visible) {
+      setQuery("");
+      setCategory("all");
+    }
+  }, [visible]);
+  const places = filterPlaces(query, category);
   return (
     <Modal
       visible={visible}
-      animationType="slide"
-      transparent
+      animationType={reducedMotion ? "none" : "slide"}
       onRequestClose={onClose}
     >
-      <SafeAreaView style={[styles.modalSafeArea, { backgroundColor: dark ? "rgba(18, 20, 23, 0.85)" : "rgba(246, 245, 242, 0.85)" }]}>
-        <View style={styles.modalContent}>
-          {/* Top Search Field Container */}
+      <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg }]}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <View style={styles.heading}>
+            <Text style={[styles.title, { color: theme.ink }]}>
+              Find a place
+            </Text>
+            <Pressable
+              onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel="Close search"
+              style={styles.close}
+            >
+              <Icon name="close" color={theme.ink} />
+            </Pressable>
+          </View>
           <View
             style={[
-              styles.searchHeader,
-              {
-                backgroundColor: dark ? theme.paper : "rgba(255,255,255,0.96)",
-                borderColor: theme.cardBorder,
-              },
-              shadows.medium,
+              styles.inputRow,
+              { backgroundColor: theme.paper, borderColor: theme.line },
             ]}
           >
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Back to map"
-              onPress={onClose}
-              style={({ pressed }) => [
-                styles.backButton,
-                { opacity: pressed ? 0.7 : 1 },
-              ]}
-            >
-              <Text style={[styles.backIcon, { color: theme.ink }]}>←</Text>
-            </Pressable>
-
+            <Icon name="search" color={theme.accent} size={20} />
             <TextInput
               autoFocus
-              accessibilityLabel="Search destinations in Sandton City"
-              placeholder="Search Sandton City..."
+              accessibilityLabel="Search Sandton City destinations"
+              placeholder="Shop, food or facility"
               placeholderTextColor={theme.muted}
               value={query}
               onChangeText={setQuery}
-              style={[styles.searchInput, { color: theme.ink }]}
+              style={[styles.input, { color: theme.ink }]}
+              autoCorrect={false}
+              returnKeyType="search"
             />
-
-            {query.length > 0 ? (
+            {!!query && (
               <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Clear search text"
                 onPress={() => setQuery("")}
-                style={styles.clearBtn}
-              >
-                <Text style={[styles.clearIcon, { color: theme.muted }]}>✕</Text>
-              </Pressable>
-            ) : (
-              <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Voice search"
-                onPress={handleVoiceSearch}
-                style={({ pressed }) => [
-                  styles.micBtn,
-                  {
-                    backgroundColor: isListeningVoice ? theme.amberSoft : "transparent",
-                    opacity: pressed ? 0.7 : 1,
-                  },
-                ]}
+                accessibilityLabel="Clear search"
+                style={styles.close}
               >
-                <Text style={styles.micIcon}>
-                  {isListeningVoice ? "🎙️..." : "🎙️"}
-                </Text>
+                <Icon name="close" color={theme.muted} size={18} />
               </Pressable>
             )}
           </View>
-
-          {/* Voice Listening Prompt */}
-          {isListeningVoice && (
-            <View
-              style={[
-                styles.voiceBanner,
-                { backgroundColor: theme.amberSoft, borderColor: theme.amber },
-              ]}
-            >
-              <Text style={[styles.voiceText, { color: theme.amber }]}>
-                🎙️ Listening... Say "Zara", "Apple Store", or "Restrooms"
-              </Text>
-            </View>
-          )}
-
-          {/* Category Filter Chips Horizontal Scroll */}
-          <View style={styles.categoriesContainer}>
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={searchCategories}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.categoriesList}
-              renderItem={({ item }) => {
-                const isSelected = activeCategory === item.id;
-                return (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: isSelected }}
-                    accessibilityLabel={`Filter by ${item.label}`}
-                    onPress={() => setActiveCategory(item.id)}
-                    style={({ pressed }) => [
-                      styles.chip,
-                      {
-                        backgroundColor: isSelected
-                          ? theme.primary
-                          : dark
-                          ? "rgba(255,255,255,0.08)"
-                          : "#FFFFFF",
-                        borderColor: isSelected ? theme.primary : theme.line,
-                        opacity: pressed ? 0.8 : 1,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.chipText,
-                        {
-                          color: isSelected ? theme.primaryText : theme.ink,
-                          fontWeight: isSelected ? "700" : "500",
-                        },
-                      ]}
-                    >
-                      {item.icon} {item.label}
-                    </Text>
-                  </Pressable>
-                );
-              }}
+          <View style={styles.filters}>
+            <CategoryPicker
+              theme={theme}
+              value={category}
+              onChange={setCategory}
             />
           </View>
-
-          {/* Search Results List */}
+          <Text style={[styles.resultTitle, { color: theme.muted }]}>
+            {query.trim()
+              ? places.length + " matching places"
+              : "Discover the demo venue"}
+          </Text>
           <FlatList
-            data={filteredPOIs}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.resultsList}
-            showsVerticalScrollIndicator={false}
-            ListEmptyComponent={
-              <View style={[styles.emptyContainer, { borderColor: theme.line }]}>
-                <Text style={[styles.emptyTitle, { color: theme.ink }]}>
-                  No destinations found
-                </Text>
-                <Text style={[styles.emptySubtitle, { color: theme.muted }]}>
-                  Try searching for "Zara", "Food Court", "Apple", or "Restrooms".
-                </Text>
-              </View>
-            }
+            data={places}
+            keyExtractor={(p) => p.id}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            contentContainerStyle={styles.results}
             renderItem={({ item }) => (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`${item.name}, ${item.category}, ${item.floorName}, ${item.walkTimeMin} minutes walk`}
+              <PlaceRow
+                theme={theme}
+                poi={item}
                 onPress={() => {
                   onSelectPOI(item);
                   onClose();
                 }}
-                style={({ pressed }) => [
-                  styles.resultCard,
-                  {
-                    backgroundColor: dark ? theme.card : "#FFFFFF",
-                    borderColor: theme.cardBorder,
-                    opacity: pressed ? 0.9 : 1,
-                  },
-                  shadows.soft,
-                ]}
-              >
-                <View style={styles.cardHeaderRow}>
-                  <View style={styles.cardTitleGroup}>
-                    {item.sponsored && (
-                      <View style={[styles.sponsoredTag, { backgroundColor: theme.amberSoft }]}>
-                        <Text style={[styles.sponsoredText, { color: theme.amber }]}>
-                          ★ SPONSORED
-                        </Text>
-                      </View>
-                    )}
-                    <Text style={[styles.cardTitle, { color: theme.ink }]}>
-                      {item.name}
-                    </Text>
-                    <Text style={[styles.cardCategory, { color: theme.muted }]}>
-                      {item.category} • {item.floorName}
-                    </Text>
-                  </View>
-
-                  <View style={styles.timeBadge}>
-                    <Text style={[styles.timeText, { color: theme.ink }]}>
-                      {item.walkTimeMin} min
-                    </Text>
-                    <Text style={[styles.distanceText, { color: theme.muted }]}>
-                      {item.distanceM} m
-                    </Text>
-                  </View>
-                </View>
-
-                {item.description && (
-                  <Text numberOfLines={2} style={[styles.cardDescription, { color: theme.inkSecondary }]}>
-                    {item.description}
-                  </Text>
-                )}
-              </Pressable>
+              />
             )}
+            ListEmptyComponent={
+              <EmptyPlaces
+                theme={theme}
+                onReset={() => {
+                  setQuery("");
+                  setCategory("all");
+                }}
+              />
+            }
           />
-        </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </Modal>
   );
 }
-
 const styles = StyleSheet.create({
-  modalSafeArea: {
-    flex: 1,
-  },
-  modalContent: {
-    flex: 1,
-    paddingHorizontal: space.lg,
-    paddingTop: space.sm,
-  },
-  searchHeader: {
-    height: 56,
-    borderRadius: radius.pill,
-    borderWidth: 1,
+  safe: { flex: 1 },
+  heading: {
+    paddingHorizontal: 24,
+    paddingTop: 12,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    gap: 8,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  backIcon: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: "500",
-    height: "100%",
-  },
-  clearBtn: {
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  clearIcon: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  micBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  micIcon: {
-    fontSize: 16,
-  },
-  voiceBanner: {
-    marginTop: 10,
-    padding: 12,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    alignItems: "center",
-  },
-  voiceText: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  categoriesContainer: {
-    marginVertical: 12,
-  },
-  categoriesList: {
-    gap: 8,
-  },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-  },
-  chipText: {
-    fontSize: 13,
-  },
-  resultsList: {
-    gap: 10,
-    paddingBottom: 40,
-  },
-  resultCard: {
-    borderRadius: radius.md,
-    borderWidth: 1,
-    padding: 14,
-    gap: 6,
-  },
-  cardHeaderRow: {
-    flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
   },
-  cardTitleGroup: {
-    gap: 2,
-    flex: 1,
-  },
-  sponsoredTag: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginBottom: 2,
-  },
-  sponsoredText: {
-    fontSize: 9,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-  },
-  cardTitle: {
-    fontSize: 17,
-    fontWeight: "800",
-    letterSpacing: -0.2,
-  },
-  cardCategory: {
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  timeBadge: {
-    alignItems: "flex-end",
-  },
-  timeText: {
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  distanceText: {
-    fontSize: 11,
-  },
-  cardDescription: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  emptyContainer: {
-    padding: 28,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderStyle: "dashed",
+  title: { fontSize: 32, fontWeight: "600", letterSpacing: -1 },
+  close: {
+    width: 44,
+    height: 44,
     alignItems: "center",
-    gap: 6,
-    marginTop: 20,
+    justifyContent: "center",
   },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: "800",
+  inputRow: {
+    margin: 20,
+    minHeight: 56,
+    paddingLeft: 16,
+    flexDirection: "row",
+    gap: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 16,
   },
-  emptySubtitle: {
-    fontSize: 13,
-    textAlign: "center",
-  },
+  input: { flex: 1, fontSize: 16, paddingVertical: 16 },
+  filters: { marginBottom: 24 },
+  resultTitle: { fontSize: 16, marginHorizontal: 24, marginBottom: 12 },
+  results: { paddingHorizontal: 20, paddingBottom: 24 },
 });

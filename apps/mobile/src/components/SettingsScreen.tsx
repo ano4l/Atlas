@@ -1,359 +1,200 @@
-import React, { useState } from "react";
-import {
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from "react-native";
-import { radius, shadows, space, Theme } from "../theme";
-
+import React from "react";
+import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { Theme } from "../theme";
+import { Icon, IconName } from "./Icon";
 type Props = {
   theme: Theme;
   isDark: boolean;
   onToggleDark: (value: boolean) => void;
   reducedMotion: boolean;
   onToggleReducedMotion: (value: boolean) => void;
+  stepFree: boolean;
+  onToggleStepFree: (value: boolean) => void;
 };
-
-export function SettingsScreen({ theme, isDark, onToggleDark, reducedMotion, onToggleReducedMotion }: Props) {
-  // Settings state
-  const [avoidStairs, setAvoidStairs] = useState(false);
-  const [preferLifts, setPreferLifts] = useState(true);
-  const [voiceGuidance, setVoiceGuidance] = useState(true);
-  const [shareQualityData, setShareQualityData] = useState(true);
-  const [offlineMapDownloaded, setOfflineMapDownloaded] = useState(true);
-
-  const dark = theme.isDark;
-
+function Preference({
+  theme,
+  icon,
+  title,
+  description,
+  value,
+  onChange,
+}: {
+  theme: Theme;
+  icon: IconName;
+  title: string;
+  description: string;
+  value: boolean;
+  onChange: (value: boolean) => void;
+}) {
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Title Header */}
-        <View style={styles.header}>
-          <Text style={[styles.eyebrow, { color: theme.muted }]}>PREFERENCES</Text>
-          <Text style={[styles.title, { color: theme.ink }]}>Settings</Text>
-        </View>
-
-        {/* SECTION 1: ROUTING & ACCESSIBILITY */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionHeader, { color: theme.inkSecondary }]}>
-            ROUTE ACCESSIBILITY
-          </Text>
-
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: dark ? theme.card : "#FFFFFF", borderColor: theme.cardBorder },
-              shadows.soft,
-            ]}
-          >
-            <View style={styles.row}>
-              <View style={styles.rowTextGroup}>
-                <Text style={[styles.rowTitle, { color: theme.ink }]}>
-                  Avoid stairs & escalators
-                </Text>
-                <Text style={[styles.rowSub, { color: theme.muted }]}>
-                  Calculates step-free routes suitable for strollers and wheelchairs
-                </Text>
-              </View>
-              <Switch
-                accessibilityLabel="Avoid stairs and escalators"
-                value={avoidStairs}
-                onValueChange={setAvoidStairs}
-                trackColor={{ true: theme.accent, false: theme.line }}
-              />
-            </View>
-
-            <View style={[styles.divider, { backgroundColor: theme.line }]} />
-
-            <View style={styles.row}>
-              <View style={styles.rowTextGroup}>
-                <Text style={[styles.rowTitle, { color: theme.ink }]}>
-                  Prefer lifts & ramps
-                </Text>
-                <Text style={[styles.rowSub, { color: theme.muted }]}>
-                  Prioritizes elevator transition cores when moving between levels
-                </Text>
-              </View>
-              <Switch
-                accessibilityLabel="Prefer lifts and ramps"
-                value={preferLifts}
-                onValueChange={setPreferLifts}
-                trackColor={{ true: theme.accent, false: theme.line }}
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* SECTION 2: APPEARANCE & VOICE GUIDANCE */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionHeader, { color: theme.inkSecondary }]}>
-            APPEARANCE & VOICE
-          </Text>
-
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: dark ? theme.card : "#FFFFFF", borderColor: theme.cardBorder },
-              shadows.soft,
-            ]}
-          >
-            <View style={styles.row}>
-              <View style={styles.rowTextGroup}>
-                <Text style={[styles.rowTitle, { color: theme.ink }]}>
-                  Dark appearance
-                </Text>
-                <Text style={[styles.rowSub, { color: theme.muted }]}>
-                  Adapts map colors and interface for low light environments
-                </Text>
-              </View>
-              <Switch
-                accessibilityLabel="Dark appearance"
-                value={isDark}
-                onValueChange={onToggleDark}
-                trackColor={{ true: theme.accent, false: theme.line }}
-              />
-            </View>
-
-            <View style={[styles.divider, { backgroundColor: theme.line }]} />
-
-            <View style={styles.row}>
-              <View style={styles.rowTextGroup}>
-                <Text style={[styles.rowTitle, { color: theme.ink }]}>
-                  Voice turn guidance
-                </Text>
-                <Text style={[styles.rowSub, { color: theme.muted }]}>
-                  Spoken directions as you approach turns and floor transitions
-                </Text>
-              </View>
-              <Switch
-                accessibilityLabel="Voice turn guidance"
-                value={voiceGuidance}
-                onValueChange={setVoiceGuidance}
-                trackColor={{ true: theme.accent, false: theme.line }}
-              />
-            </View>
-
-            <View style={[styles.divider, { backgroundColor: theme.line }]} />
-
-            <View style={styles.row}>
-              <View style={styles.rowTextGroup}>
-                <Text style={[styles.rowTitle, { color: theme.ink }]}>
-                  Reduced motion
-                </Text>
-                <Text style={[styles.rowSub, { color: theme.muted }]}>
-                  Minimizes map zoom and transition animations
-                </Text>
-              </View>
-              <Switch
-                accessibilityLabel="Reduced motion"
-                value={reducedMotion}
-                onValueChange={onToggleReducedMotion}
-                trackColor={{ true: theme.accent, false: theme.line }}
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* SECTION 3: PRIVACY & POSITIONING PERMISSIONS */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionHeader, { color: theme.inkSecondary }]}>
-            PRIVACY & PERMISSIONS
-          </Text>
-
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: dark ? theme.card : "#FFFFFF", borderColor: theme.cardBorder },
-              shadows.soft,
-            ]}
-          >
-            <View style={styles.row}>
-              <View style={styles.rowTextGroup}>
-                <Text style={[styles.rowTitle, { color: theme.ink }]}>
-                  Indoor positioning signals
-                </Text>
-                <Text style={[styles.rowSub, { color: theme.muted }]}>
-                  Uses BLE beacons and motion sensors solely to place you on the map
-                </Text>
-              </View>
-              <Text style={[styles.statusTag, { color: theme.emerald }]}>
-                Granted
-              </Text>
-            </View>
-
-            <View style={[styles.divider, { backgroundColor: theme.line }]} />
-
-            <View style={styles.row}>
-              <View style={styles.rowTextGroup}>
-                <Text style={[styles.rowTitle, { color: theme.ink }]}>
-                  Anonymous quality diagnostics
-                </Text>
-                <Text style={[styles.rowSub, { color: theme.muted }]}>
-                  Helps improve indoor map accuracy without linking to device IDs
-                </Text>
-              </View>
-              <Switch
-                accessibilityLabel="Anonymous quality diagnostics"
-                value={shareQualityData}
-                onValueChange={setShareQualityData}
-                trackColor={{ true: theme.accent, false: theme.line }}
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* SECTION 4: OFFLINE VENUE MAPS */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionHeader, { color: theme.inkSecondary }]}>
-            OFFLINE VENUE MAPS
-          </Text>
-
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: dark ? theme.card : "#FFFFFF", borderColor: theme.cardBorder },
-              shadows.soft,
-            ]}
-          >
-            <View style={styles.row}>
-              <View style={styles.rowTextGroup}>
-                <Text style={[styles.rowTitle, { color: theme.ink }]}>
-                  Sandton City Map
-                </Text>
-                <Text style={[styles.rowSub, { color: theme.muted }]}>
-                  32 MB • Version 1.2 • 2 Floors cached
-                </Text>
-              </View>
-
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Toggle offline map download"
-                onPress={() => setOfflineMapDownloaded(!offlineMapDownloaded)}
-                style={({ pressed }) => [
-                  styles.downloadBtn,
-                  {
-                    backgroundColor: offlineMapDownloaded
-                      ? dark
-                        ? "rgba(16, 185, 129, 0.2)"
-                        : "#ECFDF5"
-                      : theme.subtle,
-                    opacity: pressed ? 0.7 : 1,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.downloadText,
-                    { color: offlineMapDownloaded ? theme.emerald : theme.ink },
-                  ]}
-                >
-                  {offlineMapDownloaded ? "✓ Saved" : "Download"}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-
-        {/* App Version Info Footer */}
-        <View style={styles.footer}>
-          <Text style={[styles.appTitle, { color: theme.ink }]}>Atlas Navigation v1.0.0</Text>
-          <Text style={[styles.appMeta, { color: theme.muted }]}>
-            Indoor Spatial Platform • Schema V1 Compliant
-          </Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <View style={[styles.row, { borderColor: theme.line }]}>
+      <View style={[styles.icon, { backgroundColor: theme.accentSoft }]}>
+        <Icon name={icon} color={theme.accent} size={20} />
+      </View>
+      <View style={styles.copy}>
+        <Text style={[styles.rowTitle, { color: theme.ink }]}>{title}</Text>
+        <Text style={[styles.description, { color: theme.muted }]}>
+          {description}
+        </Text>
+      </View>
+      <Switch
+        accessibilityLabel={title}
+        value={value}
+        onValueChange={onChange}
+        trackColor={{ true: theme.accent, false: theme.line }}
+        thumbColor="#FFFFFF"
+      />
+    </View>
   );
 }
-
+export function SettingsScreen({
+  theme,
+  isDark,
+  onToggleDark,
+  reducedMotion,
+  onToggleReducedMotion,
+  stepFree,
+  onToggleStepFree,
+}: Props) {
+  return (
+    <ScrollView
+      style={{ flex: 1, backgroundColor: theme.bg }}
+      contentContainerStyle={styles.scroll}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.header}>
+        <Text style={[styles.eyebrow, { color: theme.muted }]}>
+          MAKE IT YOURS
+        </Text>
+        <Text style={[styles.title, { color: theme.ink }]}>
+          Your preferences
+        </Text>
+        <Text style={[styles.description, { color: theme.muted }]}>
+          A more comfortable way around.
+        </Text>
+      </View>
+      <Text style={[styles.sectionTitle, { color: theme.muted }]}>
+        NAVIGATION
+      </Text>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: theme.paper, borderColor: theme.line },
+        ]}
+      >
+        <Preference
+          theme={theme}
+          icon="accessibility"
+          title="Step-free routes"
+          description="Use lifts when moving between floors."
+          value={stepFree}
+          onChange={onToggleStepFree}
+        />
+      </View>
+      <Text style={[styles.sectionTitle, { color: theme.muted }]}>
+        APPEARANCE
+      </Text>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: theme.paper, borderColor: theme.line },
+        ]}
+      >
+        <Preference
+          theme={theme}
+          icon="moon"
+          title="Dark appearance"
+          description="Softer surfaces for low light."
+          value={isDark}
+          onChange={onToggleDark}
+        />
+        <Preference
+          theme={theme}
+          icon="layers"
+          title="Reduced motion"
+          description="Limit camera and screen animations."
+          value={reducedMotion}
+          onChange={onToggleReducedMotion}
+        />
+      </View>
+      <Text style={[styles.sectionTitle, { color: theme.muted }]}>
+        YOUR VENUE
+      </Text>
+      <View
+        style={[
+          styles.venue,
+          { backgroundColor: theme.paper, borderColor: theme.line },
+        ]}
+      >
+        <Icon name="map" color={theme.accent} size={28} />
+        <Text style={[styles.rowTitle, { color: theme.ink }]}>
+          Sandton City demo
+        </Text>
+        <Text style={[styles.description, { color: theme.muted }]}>
+          The illustrative floor network and directory are included in the app.
+          Outdoor map tiles depend on the map provider.
+        </Text>
+        <View style={[styles.included, { backgroundColor: theme.accentSoft }]}>
+          <Icon name="check" color={theme.accent} size={16} />
+          <Text style={{ color: theme.accent, fontSize: 12 }}>
+            2 floors included
+          </Text>
+        </View>
+      </View>
+      <View style={styles.footer}>
+        <Text style={[styles.rowTitle, { color: theme.ink }]}>atlas</Text>
+        <Text style={[styles.description, { color: theme.muted }]}>
+          Mobile navigation · v0.1.0
+        </Text>
+        <Text style={[styles.note, { color: theme.muted }]}>
+          Demo positioning. No live sensor tracking or diagnostics are active.
+          Preferences apply to this app session.
+        </Text>
+      </View>
+    </ScrollView>
+  );
+}
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: space.xl,
-    paddingBottom: 100,
-    gap: space.lg,
-  },
-  header: {
-    gap: 2,
-    marginTop: 8,
-  },
-  eyebrow: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 1.2,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "800",
-    letterSpacing: -0.5,
-  },
-  section: {
-    gap: 8,
-  },
-  sectionHeader: {
-    fontSize: 11,
-    fontWeight: "800",
+  scroll: { padding: 20, paddingTop: 24, paddingBottom: 112, gap: 16 },
+  header: { gap: 8, marginBottom: 16 },
+  eyebrow: { fontSize: 12, fontWeight: "600", letterSpacing: 1 },
+  title: { fontSize: 32, lineHeight: 38, fontWeight: "600", letterSpacing: -1 },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: "600",
     letterSpacing: 1,
+    marginTop: 8,
+    marginLeft: 4,
   },
-  card: {
-    borderRadius: radius.md,
-    borderWidth: 1,
-    padding: 16,
-  },
+  card: { borderRadius: 24, borderWidth: 1, overflow: "hidden" },
   row: {
+    minHeight: 100,
+    padding: 16,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     gap: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  rowTextGroup: {
-    flex: 1,
-    gap: 2,
-  },
-  rowTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  rowSub: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  divider: {
-    height: 1,
-    marginVertical: 12,
-  },
-  statusTag: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  downloadBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radius.sm,
-  },
-  downloadText: {
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  footer: {
+  icon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: "center",
-    marginTop: 16,
-    gap: 2,
+    justifyContent: "center",
   },
-  appTitle: {
-    fontSize: 13,
-    fontWeight: "800",
+  copy: { flex: 1, gap: 4 },
+  rowTitle: { fontSize: 16, fontWeight: "600" },
+  description: { fontSize: 16, lineHeight: 20 },
+  venue: { padding: 24, gap: 12, borderRadius: 24, borderWidth: 1 },
+  included: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
   },
-  appMeta: {
-    fontSize: 11,
-  },
+  footer: { alignItems: "center", gap: 8, paddingTop: 16 },
+  note: { fontSize: 12, lineHeight: 18, textAlign: "center", maxWidth: 320 },
 });
