@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import {
-  FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
+  SectionList,
   StyleSheet,
   Text,
   TextInput,
@@ -13,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Theme } from "../theme";
 import { POIItem } from "../map/types";
+import { samplePOIs } from "../fixtures";
 import { Icon } from "./Icon";
 import {
   CategoryPicker,
@@ -26,6 +28,10 @@ type Props = {
   onClose: () => void;
   onSelectPOI: (poi: POIItem) => void;
   reducedMotion?: boolean;
+  savedIds: string[];
+  recentIds: string[];
+  onClearRecent: () => void;
+  storageIssue: boolean;
 };
 export function SearchOverlay({
   theme,
@@ -33,16 +39,54 @@ export function SearchOverlay({
   onClose,
   onSelectPOI,
   reducedMotion,
+  savedIds,
+  recentIds,
+  onClearRecent,
+  storageIssue,
 }: Props) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
+  const [savedOnly, setSavedOnly] = useState(false);
   useEffect(() => {
     if (visible) {
       setQuery("");
       setCategory("all");
+      setSavedOnly(false);
     }
   }, [visible]);
-  const places = filterPlaces(query, category);
+  const places = filterPlaces(query, category).filter(
+    (poi) => !savedOnly || savedIds.includes(poi.id),
+  );
+  const suggestions = !savedOnly && !query.trim() && category === "all";
+  const byIds = (ids: string[]) =>
+    ids
+      .map((id) => samplePOIs.find((poi) => poi.id === id))
+      .filter((poi): poi is POIItem => !!poi);
+  const saved = byIds(savedIds);
+  const recent = byIds(recentIds);
+  const sections = suggestions
+    ? [
+        { title: "Saved places", data: saved },
+        { title: "Recent places", data: recent },
+        {
+          title: "Discover the venue",
+          data: places.filter(
+            (poi) => !savedIds.includes(poi.id) && !recentIds.includes(poi.id),
+          ),
+        },
+      ].filter((section) => section.data.length)
+    : [
+        {
+          title:
+            places.length + (savedOnly ? " saved places" : " matching places"),
+          data: places,
+        },
+      ];
+  const select = (poi: POIItem) => {
+    Keyboard.dismiss();
+    onSelectPOI(poi);
+    onClose();
+  };
   return (
     <Modal
       visible={visible}
@@ -55,9 +99,14 @@ export function SearchOverlay({
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
           <View style={styles.heading}>
-            <Text style={[styles.title, { color: theme.ink }]}>
-              Find a place
-            </Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.title, { color: theme.ink }]}>
+                Find a place
+              </Text>
+              <Text style={[styles.meta, { color: theme.muted }]}>
+                Sandton City · Demo directory
+              </Text>
+            </View>
             <Pressable
               onPress={onClose}
               accessibilityRole="button"
@@ -84,6 +133,7 @@ export function SearchOverlay({
               style={[styles.input, { color: theme.ink }]}
               autoCorrect={false}
               returnKeyType="search"
+              onSubmitEditing={Keyboard.dismiss}
             />
             {!!query && (
               <Pressable
@@ -96,6 +146,38 @@ export function SearchOverlay({
               </Pressable>
             )}
           </View>
+          <View style={styles.scopes}>
+            {[false, true].map((value) => (
+              <Pressable
+                key={String(value)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: savedOnly === value }}
+                onPress={() => setSavedOnly(value)}
+                style={({ pressed }) => [
+                  styles.scope,
+                  {
+                    backgroundColor:
+                      savedOnly === value ? theme.accentSoft : theme.paper,
+                    opacity: pressed ? 0.7 : 1,
+                  },
+                ]}
+              >
+                <Icon
+                  name={value ? "bookmark" : "compass"}
+                  color={savedOnly === value ? theme.accent : theme.muted}
+                  size={18}
+                />
+                <Text
+                  style={[
+                    styles.scopeText,
+                    { color: savedOnly === value ? theme.accent : theme.ink },
+                  ]}
+                >
+                  {value ? "Saved (" + savedIds.length + ")" : "All places"}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
           <View style={styles.filters}>
             <CategoryPicker
               theme={theme}
@@ -103,35 +185,72 @@ export function SearchOverlay({
               onChange={setCategory}
             />
           </View>
-          <Text style={[styles.resultTitle, { color: theme.muted }]}>
-            {query.trim()
-              ? places.length + " matching places"
-              : "Discover the demo venue"}
-          </Text>
-          <FlatList
-            data={places}
-            keyExtractor={(p) => p.id}
+          {storageIssue && (
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[styles.storage, { color: theme.muted }]}
+            >
+              Device storage unavailable. Changes may last only for this
+              session.
+            </Text>
+          )}
+          <SectionList
+            sections={sections}
+            keyExtractor={(poi) => poi.id}
+            stickySectionHeadersEnabled={false}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
             contentContainerStyle={styles.results}
-            renderItem={({ item }) => (
-              <PlaceRow
-                theme={theme}
-                poi={item}
-                onPress={() => {
-                  onSelectPOI(item);
-                  onClose();
-                }}
-              />
+            renderSectionHeader={({ section }) => (
+              <View style={styles.sectionHeading}>
+                <Text
+                  accessibilityRole="header"
+                  style={[styles.sectionTitle, { color: theme.ink }]}
+                >
+                  {section.title}
+                </Text>
+                {section.title === "Recent places" && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Clear recent places"
+                    onPress={onClearRecent}
+                    style={styles.clear}
+                  >
+                    <Text style={[styles.scopeText, { color: theme.accent }]}>
+                      Clear
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
             )}
-            ListEmptyComponent={
-              <EmptyPlaces
-                theme={theme}
-                onReset={() => {
-                  setQuery("");
-                  setCategory("all");
-                }}
-              />
+            renderItem={({ item }) => (
+              <PlaceRow theme={theme} poi={item} onPress={() => select(item)} />
+            )}
+            ListFooterComponent={
+              savedOnly &&
+              !places.length &&
+              !query.trim() &&
+              category === "all" ? (
+                <View style={[styles.empty, { backgroundColor: theme.paper }]}>
+                  <Icon name="bookmark" color={theme.accent} size={28} />
+                  <Text style={[styles.sectionTitle, { color: theme.ink }]}>
+                    Keep your go-to places
+                  </Text>
+                  <Text style={[styles.body, { color: theme.muted }]}>
+                    Open a destination and tap its bookmark. Your saved places
+                    stay on this device.
+                  </Text>
+                </View>
+              ) : !places.length ? (
+                <EmptyPlaces
+                  theme={theme}
+                  onReset={() => {
+                    setQuery("");
+                    setCategory("all");
+                    setSavedOnly(false);
+                  }}
+                />
+              ) : null
             }
           />
         </KeyboardAvoidingView>
@@ -146,9 +265,10 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: 8,
   },
   title: { fontSize: 32, fontWeight: "600", letterSpacing: -1 },
+  meta: { fontSize: 12, marginTop: 4 },
   close: {
     width: 44,
     height: 44,
@@ -157,6 +277,7 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     margin: 20,
+    marginBottom: 12,
     minHeight: 56,
     paddingLeft: 16,
     flexDirection: "row",
@@ -166,7 +287,41 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   input: { flex: 1, fontSize: 16, paddingVertical: 16 },
-  filters: { marginBottom: 24 },
-  resultTitle: { fontSize: 16, marginHorizontal: 24, marginBottom: 12 },
+  scopes: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
+  scope: {
+    flex: 1,
+    flexDirection: "row",
+    gap: 8,
+    borderRadius: 12,
+    minHeight: 44,
+    padding: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scopeText: { fontSize: 16, fontWeight: "600" },
+  filters: { marginBottom: 8 },
   results: { paddingHorizontal: 20, paddingBottom: 24 },
+  sectionHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    minHeight: 48,
+    marginTop: 8,
+  },
+  sectionTitle: { fontSize: 16, fontWeight: "600", flexShrink: 1 },
+  clear: {
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  empty: { padding: 24, gap: 12, borderRadius: 24 },
+  body: { fontSize: 16, lineHeight: 22 },
+  storage: { paddingHorizontal: 24, fontSize: 12 },
 });

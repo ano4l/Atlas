@@ -10,6 +10,7 @@ import {
 import { Theme, shadows } from "../theme";
 import { POIItem } from "../map/types";
 import { DemoRoute, floorName } from "../map/demo-routing";
+import { MotionSurface, MotionPressable } from "./Motion";
 import { Icon } from "./Icon";
 type Props = {
   theme: Theme;
@@ -17,6 +18,10 @@ type Props = {
   route: DemoRoute | null;
   stepFree: boolean;
   arrived: boolean;
+  saved: boolean;
+  storageIssue: boolean;
+  onToggleSaved: () => void;
+  onHeightChange: (height: number) => void;
   onStartNavigation: () => void;
   onClose: () => void;
   onToggleStepFree: (value: boolean) => void;
@@ -27,13 +32,18 @@ export function DestinationSheet({
   route,
   stepFree,
   arrived,
+  saved,
+  storageIssue,
+  onToggleSaved,
+  onHeightChange,
   onStartNavigation,
   onClose,
   onToggleStepFree,
 }: Props) {
   const { height } = useWindowDimensions();
   return (
-    <View
+    <MotionSurface
+      onLayout={(event) => onHeightChange(event.nativeEvent.layout.height)}
       style={[
         styles.sheet,
         {
@@ -49,13 +59,6 @@ export function DestinationSheet({
         contentContainerStyle={styles.content}
       >
         <View style={styles.heading}>
-          <View style={[styles.badge, { backgroundColor: theme.accentSoft }]}>
-            <Icon
-              name={arrived ? "check" : "pin"}
-              color={theme.accent}
-              size={24}
-            />
-          </View>
           <View style={styles.copy}>
             <Text style={[styles.meta, { color: theme.muted }]}>
               {arrived
@@ -66,6 +69,22 @@ export function DestinationSheet({
           </View>
           <Pressable
             accessibilityRole="button"
+            accessibilityState={{ selected: saved }}
+            accessibilityLabel={
+              (saved ? "Remove " : "Save ") +
+              poi.name +
+              (saved ? " from saved places" : " to saved places")
+            }
+            onPress={onToggleSaved}
+            style={styles.close}
+          >
+            <Icon
+              name={saved ? "check" : "bookmark"}
+              color={saved ? theme.accent : theme.muted}
+            />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
             accessibilityLabel="Close destination"
             onPress={onClose}
             style={styles.close}
@@ -73,6 +92,22 @@ export function DestinationSheet({
             <Icon name="close" color={theme.muted} />
           </Pressable>
         </View>
+        {saved && (
+          <Text
+            accessibilityLiveRegion="polite"
+            style={[styles.meta, { color: theme.accent }]}
+          >
+            Saved on this device
+          </Text>
+        )}
+        {storageIssue && (
+          <Text
+            accessibilityLiveRegion="polite"
+            style={[styles.meta, { color: theme.muted }]}
+          >
+            Device storage unavailable. Changes may last only for this session.
+          </Text>
+        )}
         <Text style={[styles.description, { color: theme.muted }]}>
           {arrived
             ? poi.entranceInfo
@@ -108,7 +143,9 @@ export function DestinationSheet({
             </View>
           </Pressable>
         )}
-        <Pressable
+      </ScrollView>
+      <View style={styles.actions}>
+        <MotionPressable
           accessibilityRole="button"
           accessibilityState={{ disabled: !route && !arrived }}
           disabled={!route && !arrived}
@@ -129,9 +166,9 @@ export function DestinationSheet({
           <Text style={[styles.buttonText, { color: theme.primaryText }]}>
             {arrived ? "Done" : "Start demo navigation"}
           </Text>
-        </Pressable>
-      </ScrollView>
-    </View>
+        </MotionPressable>
+      </View>
+    </MotionSurface>
   );
 }
 const styles = StyleSheet.create({
@@ -143,7 +180,8 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     borderWidth: 1,
   },
-  content: { padding: 20, gap: 16 },
+  content: { padding: 20, paddingBottom: 12, gap: 12 },
+  actions: { paddingHorizontal: 20, paddingBottom: 20 },
   heading: { flexDirection: "row", alignItems: "center", gap: 12 },
   badge: {
     width: 48,
@@ -178,6 +216,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
+  },
+  save: {
+    minHeight: 44,
+    padding: 12,
+    borderRadius: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
   },
   primary: {
     minHeight: 52,

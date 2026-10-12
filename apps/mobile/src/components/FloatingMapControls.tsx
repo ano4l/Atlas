@@ -1,7 +1,16 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { shadows, Theme } from "../theme";
 import { atlasSandtonVenue } from "../fixtures";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CameraMode } from "../map/camera";
+import { floorName } from "../map/demo-routing";
 import { Icon } from "./Icon";
 type Props = {
   theme: Theme;
@@ -9,6 +18,10 @@ type Props = {
   onSelectFloor: (level: number) => void;
   onRecenter: () => void;
   navigating?: boolean;
+  sheetHeight: number;
+  hasDestination: boolean;
+  cameraMode: CameraMode;
+  controlsTop: number;
 };
 export function FloatingMapControls({
   theme,
@@ -16,30 +29,48 @@ export function FloatingMapControls({
   onSelectFloor,
   onRecenter,
   navigating,
+  cameraMode,
+  controlsTop,
+  sheetHeight,
+  hasDestination,
 }: Props) {
+  const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const compact =
+    height - insets.top - insets.bottom - 84 - sheetHeight - controlsTop < 216;
   return (
     <View
       pointerEvents="box-none"
-      style={[styles.overlay, { top: navigating ? 132 : 144 }]}
+      style={[styles.overlay, { top: controlsTop }]}
     >
-      <View style={[styles.venue, { backgroundColor: theme.paper }]}>
-        <Icon name="pin" color={theme.accent} size={18} />
-        <View>
-          <Text style={[styles.name, { color: theme.ink }]}>Sandton City</Text>
-          <Text style={[styles.meta, { color: theme.muted }]}>
-            Illustrative indoor map
-          </Text>
+      {!hasDestination && !compact && (
+        <View
+          style={[
+            styles.venue,
+            { backgroundColor: theme.paper, maxWidth: 200 },
+          ]}
+        >
+          <Icon name="pin" color={theme.accent} size={18} />
+          <View style={{ flexShrink: 1 }}>
+            <Text style={[styles.name, { color: theme.ink }]}>
+              Sandton City
+            </Text>
+            <Text style={[styles.meta, { color: theme.muted }]}>
+              {floorName(floorLevel)} · Demo map
+            </Text>
+          </View>
         </View>
-      </View>
-      <View style={styles.controls}>
+      )}
+      <View style={[styles.controls, compact && { flexDirection: "row" }]}>
         <View
           style={[
             styles.floors,
+            compact && { flexDirection: "row", padding: 4 },
             { backgroundColor: theme.paper, borderColor: theme.line },
             shadows.soft,
           ]}
         >
-          <Icon name="layers" color={theme.muted} size={18} />
+          {!compact && <Icon name="layers" color={theme.muted} size={18} />}
           {[...atlasSandtonVenue.floors].reverse().map((f) => (
             <Pressable
               key={f.id}
@@ -71,12 +102,16 @@ export function FloatingMapControls({
         </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Recenter map"
+          accessibilityLabel={
+            navigating ? "Resume following demo position" : "Recenter map"
+          }
+          accessibilityState={{ selected: cameraMode === "follow" }}
           onPress={onRecenter}
           style={({ pressed }) => [
             styles.recenter,
             {
-              backgroundColor: theme.paper,
+              backgroundColor:
+                cameraMode === "follow" ? theme.accentSoft : theme.paper,
               borderColor: theme.line,
               opacity: pressed ? 0.7 : 1,
             },
@@ -96,7 +131,7 @@ const styles = StyleSheet.create({
     right: 20,
     flexDirection: "row",
     alignItems: "flex-start",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
   },
   venue: {
     flexDirection: "row",
@@ -107,7 +142,7 @@ const styles = StyleSheet.create({
   },
   name: { fontSize: 16, fontWeight: "600" },
   meta: { fontSize: 12, marginTop: 4 },
-  controls: { gap: 12 },
+  controls: { gap: 12, marginLeft: "auto" },
   floors: {
     borderWidth: 1,
     borderRadius: 20,

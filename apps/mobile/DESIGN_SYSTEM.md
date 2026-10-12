@@ -10,9 +10,13 @@ The map uses react-native-maps with an illustrative corridor network, context zo
 
 ## Layout and interaction
 
-The app fills the device and respects native safe areas. Search sits above venue/floor controls. Bottom navigation remains fixed; destination and guidance cards sit above it and scroll when their content exceeds half the screen. Primary actions sit in the lower thumb area. Category filters and directory rows share the same components across search and Explore.
+The app fills the device and respects native safe areas. Search sits above venue/floor controls. Bottom navigation remains fixed; destination and guidance cards sit above it and scroll when their content exceeds half the screen. Primary actions sit in the lower thumb area and remain visible outside scrolling details. Category filters and directory rows share the same components across search and Explore.
 
-Search supports typed queries, category filtering and a useful empty state. Native modal dismissal, Android back, floor selection, map panning/zooming, recentering, destination selection, route preview and arrival are wired. Step-free routing uses the fixture's lift core. Light/dark appearance and reduced motion work during the current session; the operating-system motion preference is respected.
+Search supports typed queries, category filtering, device-local saved places, clearable recent-place suggestions and a useful empty state. Native modal dismissal, Android back, floor selection, map panning/zooming, recentering, destination selection, route preview and arrival are wired. Step-free routing uses the fixture's lift core. Light/dark appearance and reduced motion work during the current session; the operating-system motion preference always takes precedence. Touch feedback is independently optional.
+
+Map camera modes distinguish floor browsing, route overview, following and manual exploration. Panning suspends automatic framing; Resume restores the current demo position/floor. Overlay heights feed map padding, and short map areas use a horizontal floor control. Navigation previews the next instruction and makes the instruction card open written steps.
+
+New sheets and instructions use a 220 ms, 12-point entrance. Prominent button presses use 0.98 scale, and route-step progress uses a 180 ms transform. Motion is interruptible and disabled with reduced motion. There are no looping map effects. See [research and rationale](../../docs/mobile-ux-research.md) for primary sources, token contrast and runtime validation limits.
 
 ## Prototype boundaries
 

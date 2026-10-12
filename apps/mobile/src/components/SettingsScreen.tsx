@@ -8,6 +8,9 @@ type Props = {
   onToggleDark: (value: boolean) => void;
   reducedMotion: boolean;
   onToggleReducedMotion: (value: boolean) => void;
+  systemReducedMotion: boolean;
+  haptics: boolean;
+  onToggleHaptics: (value: boolean) => void;
   stepFree: boolean;
   onToggleStepFree: (value: boolean) => void;
 };
@@ -18,6 +21,7 @@ function Preference({
   description,
   value,
   onChange,
+  disabled = false,
 }: {
   theme: Theme;
   icon: IconName;
@@ -25,6 +29,7 @@ function Preference({
   description: string;
   value: boolean;
   onChange: (value: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
     <View style={[styles.row, { borderColor: theme.line }]}>
@@ -40,6 +45,7 @@ function Preference({
       <Switch
         accessibilityLabel={title}
         value={value}
+        disabled={disabled}
         onValueChange={onChange}
         trackColor={{ true: theme.accent, false: theme.line }}
         thumbColor="#FFFFFF"
@@ -52,6 +58,9 @@ export function SettingsScreen({
   isDark,
   onToggleDark,
   reducedMotion,
+  systemReducedMotion,
+  haptics,
+  onToggleHaptics,
   onToggleReducedMotion,
   stepFree,
   onToggleStepFree,
@@ -112,9 +121,22 @@ export function SettingsScreen({
           theme={theme}
           icon="layers"
           title="Reduced motion"
-          description="Limit camera and screen animations."
+          description={
+            systemReducedMotion
+              ? "Enabled by your device accessibility settings."
+              : "Limit camera, sheet and button motion."
+          }
+          disabled={systemReducedMotion}
           value={reducedMotion}
           onChange={onToggleReducedMotion}
+        />
+        <Preference
+          theme={theme}
+          icon="check"
+          title="Touch feedback"
+          description="Gentle feedback for saves, floor changes and arrival."
+          value={haptics}
+          onChange={onToggleHaptics}
         />
       </View>
       <Text style={[styles.sectionTitle, { color: theme.muted }]}>
@@ -148,7 +170,8 @@ export function SettingsScreen({
         </Text>
         <Text style={[styles.note, { color: theme.muted }]}>
           Demo positioning. No live sensor tracking or diagnostics are active.
-          Preferences apply to this app session.
+          Preferences apply to this app session. Saved and recent places stay on
+          this device.
         </Text>
       </View>
     </ScrollView>

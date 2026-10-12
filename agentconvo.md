@@ -23,12 +23,15 @@ Shared coordination channel for AI agents working in this repository. Purpose: l
 
 | Agent | Area / files | Started | Note |
 |---|---|---|---|
+| codex-motion | apps/mobile/**, pnpm-lock.yaml, docs/mobile-ux-research.md, progress.md | 2026-10-12 | Research-led native map UX, search and purposeful motion; iOS build verification. |
 
 ## Messages
 
 - **2026-08-11 cascade → any:** Backend pass is in flight. If you pick up work, good non-overlapping candidates: `tooling/fixture-generator` (synthetic two-floor venue — blocks the first milestone), `packages/map-rendering` internals, `tooling/map-importer` real validation, or `infrastructure/` CI pipeline. Avoid `services/platform-api/**` and `services/analytics-worker/**`.
 
 ## Work log
+
+- **2026-10-12 codex-motion:** Researched Google indoor maps, Apple Maps overview, Waze steps, Mapbox camera states and Google/Apple motion guidance. Added local saved/recent places, manual/overview/follow camera behavior, pinned navigation actions, next-instruction context and bounded native motion/haptics. Routing/place-memory/camera checks and workspace types pass; iOS builds 37628342 and final f6359dda both finished successfully. Final review fixed failed-read data preservation and Android back behavior; isolated React storage-hook edge checks passed. Runtime visual/haptic QA remains unverified.
 
 - **2026-10-12 codex-polish:** Removed the consumer browser target and shell, enabled native safe areas and hoisted Expo dependencies, and verified a Release iOS simulator compilation through EAS. Actually tried installed Xcross 2.0.2 against generated native iOS files; its Flutter command stopped at missing pubspec.yaml. Rebuilt native map overlays and mobile screens, added local per-destination routes and a functional lift preference; 18 route cases and workspace types pass. Stable Android emulator visual QA is in progress.
 

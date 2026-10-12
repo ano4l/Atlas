@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
+  Animated,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,6 +12,7 @@ import { Theme, shadows } from "../theme";
 import { POIItem } from "../map/types";
 import { DemoRoute } from "../map/demo-routing";
 import { Icon } from "./Icon";
+import { FeedbackContext, MotionPressable, MotionSurface } from "./Motion";
 type Props = {
   theme: Theme;
   destination: POIItem;
@@ -18,6 +20,11 @@ type Props = {
   currentStepIndex: number;
   onNextStep: () => void;
   onStopNavigation: () => void;
+  onHeightChange: (height: number) => void;
+  onInstructionHeightChange: (height: number) => void;
+  onOverview: () => void;
+  onFollow: () => void;
+  following: boolean;
 };
 export function ActiveNavigationPanel({
   theme,
@@ -26,22 +33,51 @@ export function ActiveNavigationPanel({
   currentStepIndex,
   onNextStep,
   onStopNavigation,
+  onHeightChange,
+  onInstructionHeightChange,
+  onOverview,
+  onFollow,
+  following,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const { height } = useWindowDimensions();
+  const { reducedMotion } = useContext(FeedbackContext);
   const step = route.steps[currentStepIndex];
+  const next = route.steps[currentStepIndex + 1];
   const progress = currentStepIndex / Math.max(1, route.steps.length - 1);
+  const fill = useRef(new Animated.Value(progress)).current;
+  const [trackWidth, setTrackWidth] = useState(0);
+  useEffect(() => {
+    fill.stopAnimation();
+    Animated.timing(fill, {
+      toValue: progress,
+      duration: reducedMotion ? 0 : 180,
+      useNativeDriver: true,
+    }).start();
+    return () => fill.stopAnimation();
+  }, [progress, reducedMotion, fill]);
   return (
     <>
-      <View
+      <MotionSurface
+        key={step.id}
+        onLayout={(event) =>
+          onInstructionHeightChange(event.nativeEvent.layout.height)
+        }
         style={[
           styles.instruction,
           { backgroundColor: theme.primary },
           shadows.medium,
         ]}
-        accessibilityLiveRegion="polite"
       >
-        <View style={styles.turn}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={
+            step.floorName + ". " + step.instruction + ". Show route steps."
+          }
+          accessibilityState={{ expanded }}
+          onPress={() => setExpanded((value) => !value)}
+          style={styles.instructionRow}
+        >
           <Icon
             name={
               step.icon === "lift"
@@ -53,18 +89,22 @@ export function ActiveNavigationPanel({
             color={theme.primaryText}
             size={28}
           />
-        </View>
-        <View style={{ flex: 1, gap: 4 }}>
-          <Text style={[styles.kicker, { color: theme.primaryText }]}>
-            {step.distanceM ? step.distanceM + " m · " : ""}
-            {step.floorName}
-          </Text>
-          <Text style={[styles.instructionText, { color: theme.primaryText }]}>
-            {step.instruction}
-          </Text>
-        </View>
-      </View>
-      <View
+          <View style={{ flex: 1, gap: 4 }}>
+            <Text style={[styles.kicker, { color: theme.primaryText }]}>
+              {step.distanceM ? step.distanceM + " m · " : ""}
+              {step.floorName}
+            </Text>
+            <Text
+              style={[styles.instructionText, { color: theme.primaryText }]}
+            >
+              {step.instruction}
+            </Text>
+          </View>
+          <Icon name="layers" color={theme.primaryText} size={18} />
+        </Pressable>
+      </MotionSurface>
+      <MotionSurface
+        onLayout={(event) => onHeightChange(event.nativeEvent.layout.height)}
         style={[
           styles.panel,
           {
@@ -84,7 +124,7 @@ export function ActiveNavigationPanel({
               <Text style={[styles.title, { color: theme.ink }]}>
                 {destination.name}
               </Text>
-              <Text style={[styles.meta, { color: theme.muted }]}>
+              <Text style={[styles.kicker, { color: theme.muted }]}>
                 Demo journey · Step {currentStepIndex + 1} of{" "}
                 {route.steps.length}
               </Text>
@@ -98,39 +138,85 @@ export function ActiveNavigationPanel({
               <Icon name="close" color={theme.muted} />
             </Pressable>
           </View>
-          <View style={[styles.track, { backgroundColor: theme.subtle }]}>
-            <View
+          <View
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityLabel="Demo route steps"
+            accessibilityValue={{
+              min: 0,
+              max: route.steps.length - 1,
+              now: currentStepIndex,
+            }}
+            onLayout={(event) => setTrackWidth(event.nativeEvent.layout.width)}
+            style={[styles.track, { backgroundColor: theme.subtle }]}
+          >
+            <Animated.View
               style={[
                 styles.fill,
-                { width: `${progress * 100}%`, backgroundColor: theme.accent },
+                {
+                  width: trackWidth,
+                  backgroundColor: theme.accent,
+                  // Scale around the centre, then offset to keep the left edge fixed.
+                  transform: [
+                    {
+                      translateX: fill.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [-trackWidth / 2, 0],
+                      }),
+                    },
+                    { scaleX: fill },
+                  ],
+                },
               ]}
             />
           </View>
           <Text style={[styles.meta, { color: theme.muted }]}>
-            {step.subInstruction}
+            {next ? "Then · " + next.instruction : step.subInstruction}
           </Text>
-          {expanded &&
-            route.steps.map((s, i) => (
-              <View
-                key={s.id}
-                style={[styles.step, { borderColor: theme.line }]}
-              >
-                <Text
-                  style={[
-                    styles.stepNumber,
-                    {
-                      color: i <= currentStepIndex ? theme.accent : theme.muted,
-                    },
-                  ]}
+          {expanded && (
+            <MotionSurface style={styles.steps}>
+              {route.steps.map((item, index) => (
+                <View
+                  key={item.id}
+                  style={[styles.step, { borderColor: theme.line }]}
+                  accessible
+                  accessibilityLabel={`${index < currentStepIndex ? "Completed. " : index === currentStepIndex ? "Current. " : ""}Step ${index + 1}. ${item.floorName}. ${item.instruction}`}
                 >
-                  {i < currentStepIndex ? "✓" : i + 1}
-                </Text>
-                <Text style={[styles.meta, { color: theme.ink, flex: 1 }]}>
-                  {s.instruction}
-                </Text>
-              </View>
-            ))}
-          <Pressable
+                  <View
+                    style={[
+                      styles.stepBadge,
+                      {
+                        backgroundColor:
+                          index === currentStepIndex
+                            ? theme.accentSoft
+                            : theme.subtle,
+                      },
+                    ]}
+                  >
+                    {index < currentStepIndex ? (
+                      <Icon name="check" color={theme.accent} size={16} />
+                    ) : (
+                      <Text style={[styles.kicker, { color: theme.accent }]}>
+                        {index + 1}
+                      </Text>
+                    )}
+                  </View>
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <Text style={[styles.kicker, { color: theme.muted }]}>
+                      {item.floorName}
+                      {index === currentStepIndex ? " · Current step" : ""}
+                    </Text>
+                    <Text style={[styles.meta, { color: theme.ink }]}>
+                      {item.instruction}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </MotionSurface>
+          )}
+        </ScrollView>
+        <View style={styles.actions}>
+          <MotionPressable
             accessibilityRole="button"
             onPress={onNextStep}
             style={({ pressed }) => [
@@ -139,26 +225,38 @@ export function ActiveNavigationPanel({
             ]}
           >
             <Text style={[styles.action, { color: theme.primaryText }]}>
-              {currentStepIndex === route.steps.length - 1
-                ? "Finish demo journey"
-                : "Next demo step"}
+              {next ? "Next demo step" : "Finish demo journey"}
             </Text>
             <Icon name="arrow" color={theme.primaryText} size={20} />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ expanded }}
-            onPress={() => setExpanded(!expanded)}
-            style={styles.details}
-          >
-            <Text
-              style={[styles.meta, { color: theme.accent, fontWeight: "600" }]}
+          </MotionPressable>
+          <View style={styles.row}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={following ? onOverview : onFollow}
+              style={[styles.details, { backgroundColor: theme.accentSoft }]}
             >
-              {expanded ? "Hide route steps" : "View route steps"}
-            </Text>
-          </Pressable>
-        </ScrollView>
-      </View>
+              <Icon
+                name={following ? "map" : "locate"}
+                color={theme.accent}
+                size={18}
+              />
+              <Text style={[styles.action, { color: theme.accent }]}>
+                {following ? "Overview" : "Resume"}
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded }}
+              onPress={() => setExpanded((value) => !value)}
+              style={styles.details}
+            >
+              <Text style={[styles.action, { color: theme.accent }]}>
+                {expanded ? "Hide steps" : "Route steps"}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </MotionSurface>
     </>
   );
 }
@@ -169,12 +267,14 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     borderRadius: 24,
-    padding: 20,
+    padding: 16,
+  },
+  instructionRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+    gap: 12,
+    minHeight: 44,
   },
-  turn: { width: 32, alignItems: "center" },
   kicker: { fontSize: 12 },
   instructionText: { fontSize: 16, lineHeight: 22, fontWeight: "600" },
   panel: {
@@ -184,11 +284,13 @@ const styles = StyleSheet.create({
     bottom: 84,
     borderWidth: 1,
     borderRadius: 28,
+    overflow: "hidden",
   },
-  content: { padding: 20, gap: 12 },
-  row: { flexDirection: "row", alignItems: "center" },
+  content: { padding: 20, paddingBottom: 12, gap: 12 },
+  actions: { paddingHorizontal: 20, paddingBottom: 12, gap: 8 },
+  row: { flexDirection: "row", alignItems: "center", gap: 8 },
   title: { fontSize: 24, fontWeight: "600", letterSpacing: -0.5 },
-  meta: { fontSize: 16, lineHeight: 20 },
+  meta: { fontSize: 16, lineHeight: 22 },
   close: {
     width: 44,
     height: 44,
@@ -207,12 +309,28 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   action: { fontSize: 16, fontWeight: "600" },
-  details: { minHeight: 44, alignItems: "center", justifyContent: "center" },
+  details: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 12,
+    flexDirection: "row",
+    gap: 8,
+    padding: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  steps: { gap: 4 },
   step: {
     paddingVertical: 12,
     borderBottomWidth: 1,
     flexDirection: "row",
     gap: 12,
   },
-  stepNumber: { width: 24, fontSize: 16, fontWeight: "600" },
+  stepBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

@@ -20,6 +20,9 @@ import {
   SearchOverlay,
   SettingsScreen,
 } from "./src/components";
+import { FeedbackContext, useFeedback } from "./src/components/Motion";
+import { usePlaceMemory } from "./src/usePlaceMemory";
+import { CameraMode } from "./src/map/camera";
 import { Icon } from "./src/components/Icon";
 import { TabKey } from "./src/components/BottomTabBar";
 import { atlasSandtonVenue, samplePOIs } from "./src/fixtures";
@@ -28,13 +31,51 @@ import { buildDemoRoute } from "./src/map/demo-routing";
 import { darkTheme, lightTheme, shadows } from "./src/theme";
 
 export default function App() {
+  const [systemReducedMotion, setSystemReducedMotion] = useState(true);
+  const [limitMotion, setLimitMotion] = useState(false);
+  const [haptics, setHaptics] = useState(true);
+  return (
+    <FeedbackContext.Provider
+      value={{ reducedMotion: systemReducedMotion || limitMotion, haptics }}
+    >
+      <AtlasApp
+        systemReducedMotion={systemReducedMotion}
+        setSystemReducedMotion={setSystemReducedMotion}
+        limitMotion={limitMotion}
+        setLimitMotion={setLimitMotion}
+        haptics={haptics}
+        setHaptics={setHaptics}
+      />
+    </FeedbackContext.Provider>
+  );
+}
+function AtlasApp({
+  systemReducedMotion,
+  setSystemReducedMotion,
+  limitMotion,
+  setLimitMotion,
+  haptics,
+  setHaptics,
+}: {
+  systemReducedMotion: boolean;
+  setSystemReducedMotion: (value: boolean) => void;
+  limitMotion: boolean;
+  setLimitMotion: (value: boolean) => void;
+  haptics: boolean;
+  setHaptics: (value: boolean) => void;
+}) {
+  const places = usePlaceMemory();
+  const feedback = useFeedback();
+  const [cameraMode, setCameraMode] = useState<CameraMode>("floor");
+  const [sheetHeight, setSheetHeight] = useState(300);
+  const [instructionHeight, setInstructionHeight] = useState(108);
   const [activeTab, setActiveTab] = useState<TabKey>("map");
   const [isDark, setIsDark] = useState(false);
   const [floorLevel, setFloorLevel] = useState(1);
   const [recenterKey, setRecenterKey] = useState(0);
   const [searchVisible, setSearchVisible] = useState(false);
   const [selectedPOI, setSelectedPOI] = useState<POIItem | null>(null);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const reducedMotion = systemReducedMotion || limitMotion;
   const [stepFree, setStepFree] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -58,12 +99,15 @@ export default function App() {
     setIsNavigating(false);
     setArrived(false);
     setFloorLevel(1);
+    setCameraMode("floor");
   };
   useEffect(() => {
-    AccessibilityInfo.isReduceMotionEnabled().then(setReducedMotion);
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then(setSystemReducedMotion)
+      .catch(() => {});
     const subscription = AccessibilityInfo.addEventListener(
       "reduceMotionChanged",
-      setReducedMotion,
+      setSystemReducedMotion,
     );
     return () => subscription.remove();
   }, []);
@@ -71,7 +115,7 @@ export default function App() {
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
-        if (selectedPOI) {
+        if (selectedPOI && activeTab === "map") {
           closeDestination();
           return true;
         }
@@ -85,6 +129,9 @@ export default function App() {
     return () => subscription.remove();
   }, [selectedPOI, activeTab]);
   const selectPlace = (poi: POIItem) => {
+    places.remember(poi.id);
+    feedback();
+    setCameraMode("route");
     setSelectedPOI(poi);
     setFloorLevel(poi.floorLevel);
     setIsNavigating(false);
@@ -94,6 +141,8 @@ export default function App() {
   };
   const start = () => {
     if (!route) return;
+    setCameraMode("follow");
+    feedback();
     setIsNavigating(true);
     setArrived(false);
     setCurrentStepIndex(0);
@@ -106,15 +155,29 @@ export default function App() {
     if (next >= route.steps.length) {
       setIsNavigating(false);
       setArrived(true);
+      setCameraMode("route");
+      feedback("success");
+      AccessibilityInfo.announceForAccessibility(
+        "Demo journey complete. You are at " + selectedPOI!.name,
+      );
       setFloorLevel(selectedPOI!.floorLevel);
     } else {
       setCurrentStepIndex(next);
-      setFloorLevel(route.steps[next].floorLevel);
+      if (cameraMode === "follow") setFloorLevel(route.steps[next].floorLevel);
+      if (
+        route.steps[next].floorLevel !==
+        route.steps[currentStepIndex].floorLevel
+      )
+        feedback();
+      AccessibilityInfo.announceForAccessibility(
+        route.steps[next].floorName + ". " + route.steps[next].instruction,
+      );
     }
-    setRecenterKey((k) => k + 1);
   };
   const changeStepFree = (value: boolean) => {
     setStepFree(value);
+    feedback();
+    setCameraMode(selectedPOI ? "route" : "floor");
     if (isNavigating) {
       setIsNavigating(false);
       setCurrentStepIndex(0);
@@ -138,6 +201,16 @@ export default function App() {
                 reducedMotion={reducedMotion}
                 onSelectPOI={selectPlace}
                 hasSheet={!!selectedPOI}
+                cameraMode={cameraMode}
+                onPan={() => setCameraMode("manual")}
+                sheetHeight={sheetHeight}
+                topInset={isNavigating ? instructionHeight + 24 : 144}
+                nextPoint={
+                  route?.steps[currentStepIndex + 1]?.floorLevel ===
+                  positionFloor
+                    ? route.steps[currentStepIndex + 1].nodePoint
+                    : undefined
+                }
               />
               {!isNavigating && (
                 <FloatingSearchBar
@@ -149,9 +222,28 @@ export default function App() {
               <FloatingMapControls
                 theme={theme}
                 floorLevel={floorLevel}
-                onSelectFloor={setFloorLevel}
-                onRecenter={() => setRecenterKey((k) => k + 1)}
+                onSelectFloor={(level) => {
+                  if (level !== floorLevel) feedback();
+                  setFloorLevel(level);
+                  setCameraMode(selectedPOI ? "route" : "floor");
+                  AccessibilityInfo.announceForAccessibility(
+                    "Showing " +
+                      atlasSandtonVenue.floors.find((f) => f.level === level)!
+                        .name,
+                  );
+                }}
+                cameraMode={cameraMode}
+                controlsTop={isNavigating ? instructionHeight + 24 : 144}
+                onRecenter={() => {
+                  setFloorLevel(positionFloor);
+                  setCameraMode(
+                    isNavigating ? "follow" : selectedPOI ? "route" : "floor",
+                  );
+                  setRecenterKey((k) => k + 1);
+                }}
                 navigating={isNavigating}
+                sheetHeight={selectedPOI ? sheetHeight : 210}
+                hasDestination={!!selectedPOI}
               />
               {!selectedPOI && (
                 <View
@@ -210,11 +302,19 @@ export default function App() {
               )}
               {selectedPOI && !isNavigating && (
                 <DestinationSheet
+                  key={selectedPOI.id + String(arrived)}
                   theme={theme}
                   poi={selectedPOI}
                   route={route}
                   stepFree={stepFree}
                   arrived={arrived}
+                  saved={places.saved.includes(selectedPOI.id)}
+                  onToggleSaved={() => {
+                    places.toggleSaved(selectedPOI.id);
+                    feedback();
+                  }}
+                  storageIssue={places.storageIssue}
+                  onHeightChange={setSheetHeight}
                   onToggleStepFree={changeStepFree}
                   onStartNavigation={start}
                   onClose={closeDestination}
@@ -226,9 +326,22 @@ export default function App() {
                   destination={selectedPOI}
                   route={route}
                   currentStepIndex={currentStepIndex}
+                  onHeightChange={setSheetHeight}
+                  onInstructionHeightChange={setInstructionHeight}
+                  following={cameraMode === "follow"}
+                  onOverview={() => {
+                    setCameraMode("route");
+                    setRecenterKey((k) => k + 1);
+                  }}
+                  onFollow={() => {
+                    setCameraMode("follow");
+                    setFloorLevel(positionFloor);
+                    setRecenterKey((k) => k + 1);
+                  }}
                   onNextStep={nextStep}
                   onStopNavigation={() => {
                     setIsNavigating(false);
+                    setCameraMode("route");
                     setCurrentStepIndex(0);
                     setFloorLevel(selectedPOI.floorLevel);
                   }}
@@ -245,7 +358,10 @@ export default function App() {
               isDark={isDark}
               onToggleDark={setIsDark}
               reducedMotion={reducedMotion}
-              onToggleReducedMotion={setReducedMotion}
+              onToggleReducedMotion={setLimitMotion}
+              systemReducedMotion={systemReducedMotion}
+              haptics={haptics}
+              onToggleHaptics={setHaptics}
               stepFree={stepFree}
               onToggleStepFree={changeStepFree}
             />
@@ -256,6 +372,10 @@ export default function App() {
             onClose={() => setSearchVisible(false)}
             onSelectPOI={selectPlace}
             reducedMotion={reducedMotion}
+            savedIds={places.saved}
+            recentIds={places.recent}
+            onClearRecent={places.clearRecent}
+            storageIssue={places.storageIssue}
           />
           <BottomTabBar
             theme={theme}

@@ -4,7 +4,7 @@ Living checklist for the Indoor Spatial Navigation Platform, organized by system
 
 Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 
-**Last updated:** 2026-10-12 — native-only Atlas mobile foundation, UI polish and iOS compilation.
+**Last updated:** 2026-10-12 — native Atlas UX enhancements, place memory, camera modes and purposeful motion; final UX iOS simulator compilation passed.
 
 ---
 
@@ -35,7 +35,13 @@ Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 - [x] Destination preview, locally calculated per-destination demo routes and explicit navigation/arrival states
 - [x] Step-free preference selects lift transitions; 18 route/preference cases verified
 - [x] Appearance and reduced-motion preferences, including operating-system motion setting
-- [x] iOS Release simulator compilation verified through EAS (2026-10-12)
+- [x] Device-local saved places and five recent destinations, saved search scope and history clearing
+- [x] Explicit floor/overview/follow/manual camera modes; panning pauses framing and Resume restores it
+- [x] Next-instruction preview, completed/current route steps and primary actions pinned outside scrolling details
+- [x] Interruptible sheet/instruction/button/progress motion, OS-enforced reduced motion and optional event haptics
+- [x] Primary-source Google Maps/Waze/Apple Maps/Mapbox UX research, documented rationale and text-token contrast
+- [x] Place-memory recovery/pruning/ordering and camera-mode checks alongside 18 routing cases
+- [x] iOS Release simulator compilation verified through EAS (2026-10-12; final UX build f6359dda-0630-4c7f-9c17-ba9fc1ff83b8)
 - [~] Xcross verification: installed 2.0.2 was tried with generated iOS files; Flutter builder fails at missing pubspec.yaml. Working React Native command/wrapper remains unresolved.
 - [~] Native visual QA: Expo Go 2.31.2 startup fails on Android 37 and fresh API 34, including a minimal startup probe. Native visual/interaction QA remains unverified.
 - [ ] Live positioning, backend route integration, spoken guidance, persistent preferences and downloadable map packages

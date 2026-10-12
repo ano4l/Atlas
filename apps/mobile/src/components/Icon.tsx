@@ -21,8 +21,12 @@ export type IconName =
   | "locate"
   | "restroom"
   | "parking"
+  | "bookmark"
+  | "history"
   | "route";
 const paths: Record<IconName, string> = {
+  bookmark: "M6 3h12v18l-6-4-6 4V3z",
+  history: "M3 11a9 9 0 119 10 M3 4v7h7 M12 7v5l3 2",
   map: "M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2V5z M9 3v16 M15 5v16",
   compass: "M16 8l-3 5-5 3 3-5 5-3z",
   settings: "M4 6h16 M4 12h16 M4 18h16 M8 3v6 M16 9v6 M10 15v6",

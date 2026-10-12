@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { Platform, StyleSheet, Text, View } from "react-native";
 import MapView, {
   Circle,
@@ -12,6 +12,7 @@ import { Theme } from "../theme";
 import { atlasSandtonVenue, samplePOIs } from "../fixtures";
 import { MapPoint, POIItem } from "../map/types";
 import { Icon } from "./Icon";
+import { CameraMode, cameraPoints } from "../map/camera";
 import { DemoRoute } from "../map/demo-routing";
 
 type Props = {
@@ -25,6 +26,11 @@ type Props = {
   reducedMotion: boolean;
   onSelectPOI: (poi: POIItem) => void;
   hasSheet: boolean;
+  cameraMode: CameraMode;
+  onPan: () => void;
+  sheetHeight: number;
+  topInset: number;
+  nextPoint?: MapPoint;
 };
 const ORIGIN = { latitude: -26.10745, longitude: 28.05675 };
 const EXTENT = { latitude: 0.00235, longitude: 0.00205 };
@@ -44,23 +50,51 @@ export function IndoorMap({
   reducedMotion,
   onSelectPOI,
   hasSheet,
+  cameraMode,
+  onPan,
+  sheetHeight,
+  topInset,
+  nextPoint,
 }: Props) {
   const mapRef = useRef<MapView>(null);
   const floor = atlasSandtonVenue.floors.find((f) => f.level === floorLevel)!;
   const segment = route?.segments.find((s) => s.floorLevel === floorLevel);
-  const focus = () =>
-    mapRef.current?.fitToCoordinates(floor.plate.map(toCoordinate), {
-      edgePadding: {
-        top: 190,
-        right: 64,
-        bottom: hasSheet ? 300 : 190,
-        left: 32,
+  const focus = useCallback(() => {
+    if (cameraMode === "manual") return;
+    mapRef.current?.fitToCoordinates(
+      cameraPoints(
+        cameraMode,
+        floor.plate,
+        segment?.polyline,
+        position,
+        nextPoint,
+      ).map(toCoordinate),
+      {
+        edgePadding: {
+          top: topInset + 24,
+          right: 64,
+          bottom: hasSheet ? sheetHeight + 100 : 260,
+          left: 32,
+        },
+        animated: !reducedMotion,
       },
-      animated: !reducedMotion,
-    });
+    );
+  }, [
+    cameraMode,
+    floor,
+    segment,
+    position.x,
+    position.y,
+    nextPoint?.x,
+    nextPoint?.y,
+    reducedMotion,
+    hasSheet,
+    sheetHeight,
+    topInset,
+  ]);
   useEffect(() => {
     focus();
-  }, [recenterKey, floorLevel, hasSheet]);
+  }, [recenterKey, focus]);
   const backdrop = [
     { x: -2000, y: -2000 },
     { x: 2380, y: -2000 },
@@ -86,6 +120,7 @@ export function IndoorMap({
         rotateEnabled={false}
         pitchEnabled={false}
         onMapReady={focus}
+        onPanDrag={onPan}
         accessibilityLabel={"Illustrative indoor map, " + floor.name}
       >
         <Polygon
@@ -238,7 +273,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, overflow: "hidden" },
   place: {
     paddingHorizontal: 8,
-    paddingVertical: 6,
+    paddingVertical: 8,
+    minHeight: 44,
+    justifyContent: "center",
     borderWidth: 1,
     borderRadius: 8,
   },

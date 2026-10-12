@@ -31,7 +31,20 @@ The artifact is an iOS simulator app, not a signed physical-device/App Store bui
 - Expo dependency compatibility check passed.
 - iOS JavaScript/Hermes bundle export passed; this is separate from native compilation.
 
-## Android runtime
+## Further UX enhancement pass (2026-10-12)
+
+- Primary-source research and implementation rationale: docs/mobile-ux-research.md.
+- All workspace TypeScript checks and Expo dependency compatibility passed.
+- The mobile suite passed all 18 routing cases, place-history recovery/pruning/ordering/saving/clearing, and floor/route/follow/manual camera checks.
+- iOS JavaScript/Hermes export passed with the new native haptics and AsyncStorage integrations.
+- An isolated React 18.2 hook harness with mocked native storage passed early-action hydration, history clearing/saving merge, read-failure preservation, serialized writes and write-error recovery. This is not a native AsyncStorage/device test.
+- [Build 37628342](https://expo.dev/accounts/certi4no/projects/indoor-navigation-mobile/builds/37628342-1f62-474d-943e-99889684fa31) completed successfully, compiling the UX/motion pass with expo-haptics 13.0.1 and AsyncStorage 1.23.1.
+- [Final UX build f6359dda](https://expo.dev/accounts/certi4no/projects/indoor-navigation-mobile/builds/f6359dda-0630-4c7f-9c17-ba9fc1ff83b8) **FINISHED successfully**, including the failed-storage-read guard and Android back-navigation correction. [Download simulator application](https://expo.dev/artifacts/eas/gFc-Oua59PEKD1d4nSCIvI0RVr5MobSS0Du6SqmeS90.tar.gz).
+- The final iOS Hermes export also passed (1171 modules, 2.7 MB bundle).
+
+Native runtime verification is still outstanding. No simulator/device screenshot or physical haptic verification is claimed for this pass.
+
+## Android runtime details
 
 Actual rendering remains **unverified**. Expo Go 2.31.2 failed on both the installed Android 37 preview/16 KB emulator and a fresh stable API 34 emulator. The client/version match was checked against Expo's versions API: SDK 51, React Native 0.74.5, client 2.31.2.
 
