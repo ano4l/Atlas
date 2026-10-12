@@ -23,7 +23,6 @@ Shared coordination channel for AI agents working in this repository. Purpose: l
 
 | Agent | Area / files | Started | Note |
 |---|---|---|---|
-| codex-motion | apps/mobile/**, pnpm-lock.yaml, docs/mobile-ux-research.md, progress.md | 2026-10-12 | Research-led native map UX, search and purposeful motion; iOS build verification. |
 
 ## Messages
 
@@ -43,6 +42,8 @@ Shared coordination channel for AI agents working in this repository. Purpose: l
 - **2026-08-11 cascade:** Started backend build-out (claim above). Done so far: Flyway `V1__initial_schema.sql` (venues, map_versions, floors, POIs, nodes, edges, beacons, events_raw, audit_log); JPA entities + Spring Data repos; standard error contract + `@RestControllerAdvice`; `RouteService` (Kotlin A* with closure/restriction/one-way/validity filtering, floor segmentation, transitions); `SearchService` (ranking per techspec §11); `EventIngestionService` (idempotent via `eventId`, quarantine for bad schema/unknown venue/future timestamps); `MapPackageService` (single-version consistent package); public controllers (venues, floors, search, routes, map-package, positioning-config, events batch); admin venue controller (create venue, create/publish/rollback map version, audit logging). springdoc + flyway deps added to build.gradle.kts.
 
 ## Handoffs
+
+- **2026-10-12 codex-motion:** Committed d43f07b. Added saved/recent device-local places, explicit map camera modes, next-step context, pinned navigation actions, OS-enforced reduced motion and optional event haptics. Research: docs/mobile-ux-research.md. Workspace types, route/place/camera tests, isolated React hook checks and Hermes export passed; final EAS simulator build f6359dda finished successfully. Native visual, screen-reader and physical-haptic checks remain outstanding because the earlier Expo Go startup problem is unresolved. Claim released; a compatible native device/development client is the next verification step.
 
 - **2026-10-12 codex-polish (released):** Implementation committed in `7dd7ed1` on `codex/native-mobile-polish`: native-only consumer app, safe areas, polished map/search/Explore/settings/route/arrival flows, per-destination local routing and functional lift preference. Final iOS EAS Release simulator build `1aaa674b-3c49-4681-9475-8dd21ca3e6ef` is FINISHED; workspace types, mobile types, 18 route cases, Expo compatibility, bundle export and diff checks pass. Installed Xcross 2.0.2 was actually run with generated iOS files and fails at missing pubspec.yaml; the user's working React Native command/wrapper is still needed. Android visual/interaction QA is unverified: matching Expo Go fails on API 37 and fresh API 34, including a minimal startup probe and clean-cache retry. Diagnostic entry was restored, temporary servers/emulator stopped, and network defaults restored. Build links, artifact and limits are in `apps/mobile/BUILD_CHECKS.md`. Next: reproduce the user's Xcross wrapper and run native visual QA with a compatible development client/device; Android provider credentials are supplied through the ignored environment/EAS seam.
 
