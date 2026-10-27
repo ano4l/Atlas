@@ -4,15 +4,23 @@ Living checklist for the Indoor Spatial Navigation Platform, organized by system
 
 Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 
-**Last updated:** 2026-10-28 — commercial proof of concept, 12-week pilot plan and editable 36-month cashflow model completed; app implementation and field validation remain separate work.
+**Last updated:** 2026-10-28 — R100,000 / twelve-month fund application, premium ImageGen mobile concepts, two dashboard mockups and matching funding cash plan completed; application and field validation remain pending.
 
-## Commercial proof of concept (2026-10-28)
+## Current fund application (2026-10-28)
+
+- [x] Revised the proposal for R100,000 over twelve months; removed the earlier pilot-budget and expansion-funding ask from the 14-page PDF.
+- [x] Added two built-in ImageGen mobile plates covering map/search and route/guidance; generated images and exact prompts are saved under `docs/commercial-poc/mockups/imagegen/`.
+- [x] Added two full-page dashboard concepts with visibly illustrative analytics and advertising figures; editable HTML and PNG sources are in `docs/commercial-poc/mockups/`. Independent design review passed; no different-provider evaluator was available.
+- [x] Created `Atlas-12-Month-Fund-Plan.xlsx`: R86k direct spending, R14k unspent contingency, founder effort in kind, editable receipt/award assumptions; allocation, saved-file recalculation and delayed/no-award boundaries verified.
+- [x] Rendered and visually reviewed all fourteen PDF pages and the fund workbook views. No live data, device or deployed-product outcomes are inferred from these mockups.
+
+## Earlier exploratory commercial forecast (2026-10-28)
 
 - [x] Business proposal covering consumer navigation, venue spatial intelligence, sponsored search and route-preview advertising: `docs/commercial-poc/Atlas-Business-Proposal.md`; 16-page PDF in `output/pdf/Atlas-Commercial-Proposal.pdf`.
 - [x] Editable ZAR monthly forecast for November 2026-October 2029: `docs/commercial-poc/Atlas-36-Month-Cashflow.xlsx`, with one selector for downside/base/upside, revenue/cost/cash schedules, VAT, collections, media inventory/budgets and funding requirements.
 - [x] All three cases reconciled to independent calculations; exported workbook reopened and recalculated; input/zero/missing-data boundaries checked; six worksheet views and all PDF pages visually reviewed. Desktop Excel not executed.
 - [x] Defined one-venue pilot scope, proposed acceptance thresholds, approximately R800k initial funding gate and staged expansion decision. Assumptions remain commercially unvalidated; base full-horizon funding target R8.3m, with no three-month positive recurring earnings run inside the horizon.
-- [ ] Secure paid pilot scope, floorplan rights, reference counts, retailer intent and actual supplier quotes; implement and field-test analytics and advertising before claiming live outcomes.
+- [ ] Secure venue scope, floorplan rights, reference counts, retailer feedback and actual supplier quotes; implement and field-test analytics and advertising before claiming live outcomes.
 
 ---
 
