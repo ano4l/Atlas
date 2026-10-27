@@ -4,7 +4,15 @@ Living checklist for the Indoor Spatial Navigation Platform, organized by system
 
 Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 
-**Last updated:** 2026-10-12 — native Atlas UX enhancements, place memory, camera modes and purposeful motion; final UX iOS simulator compilation passed.
+**Last updated:** 2026-10-28 — commercial proof of concept, 12-week pilot plan and editable 36-month cashflow model completed; app implementation and field validation remain separate work.
+
+## Commercial proof of concept (2026-10-28)
+
+- [x] Business proposal covering consumer navigation, venue spatial intelligence, sponsored search and route-preview advertising: `docs/commercial-poc/Atlas-Business-Proposal.md`; 16-page PDF in `output/pdf/Atlas-Commercial-Proposal.pdf`.
+- [x] Editable ZAR monthly forecast for November 2026-October 2029: `docs/commercial-poc/Atlas-36-Month-Cashflow.xlsx`, with one selector for downside/base/upside, revenue/cost/cash schedules, VAT, collections, media inventory/budgets and funding requirements.
+- [x] All three cases reconciled to independent calculations; exported workbook reopened and recalculated; input/zero/missing-data boundaries checked; six worksheet views and all PDF pages visually reviewed. Desktop Excel not executed.
+- [x] Defined one-venue pilot scope, proposed acceptance thresholds, approximately R800k initial funding gate and staged expansion decision. Assumptions remain commercially unvalidated; base full-horizon funding target R8.3m, with no three-month positive recurring earnings run inside the horizon.
+- [ ] Secure paid pilot scope, floorplan rights, reference counts, retailer intent and actual supplier quotes; implement and field-test analytics and advertising before claiming live outcomes.
 
 ---
 
