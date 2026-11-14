@@ -67,36 +67,47 @@ indoor-navigation-platform/
 
 ## Prerequisites
 
-- Node.js 20+ and [pnpm](https://pnpm.io/) 9+
-- JDK 21+ and Gradle (wrapper included per service)
+- Node.js 22.13.0 with Corepack. The root `packageManager` pins pnpm 9.0.0.
+- JDK 21. Each Kotlin service includes a Gradle wrapper.
 - Docker (for local PostgreSQL/PostGIS)
-- Expo CLI (`npx expo`, installed on demand) and Xcode/Android Studio for device builds
+- Xcode or Android Studio for native builds. The mobile workspace includes Expo CLI.
 
 ## Local setup
 
 ```bash
 # 1. Install JS/TS workspace dependencies
-pnpm install
+corepack pnpm install --frozen-lockfile
 
 # 2. Start local PostGIS + supporting services
 docker compose -f infrastructure/local/docker-compose.yml up -d
 
-# 3. Run database migrations
-pnpm --filter platform-api migrate   # placeholder until Flyway/Liquibase wiring lands
+# 3. Start the platform API in a separate terminal. Flyway runs on startup.
+(cd services/platform-api && ./gradlew bootRun)
 
-# 4. Start the platform API
-cd services/platform-api && ./gradlew bootRun
-
-# 5. Start the venue dashboard
-pnpm --filter venue-dashboard dev
-
-# 6. Start the mobile app
-pnpm --filter mobile start
+# 4. Start either app from the repository root in its own terminal
+corepack pnpm --filter venue-dashboard dev
+corepack pnpm --filter mobile start
 ```
+
+On Windows, run `./gradlew.bat bootRun` from `services/platform-api`. Follow the [fictional venue setup](./apps/mobile/README.md#preview-a-connected-test-venue) to seed and publish a map for connected mobile navigation.
+
+## Workspace checks
+
+```bash
+corepack pnpm lint
+corepack pnpm build
+corepack pnpm typecheck
+corepack pnpm test
+(cd services/platform-api && ./gradlew check bootJar)
+```
+
+The platform API suite uses Docker for its PostGIS integration test. The workspace test command exercises fixture generation, map contracts, mobile navigation logic and deterministic positioning replay. The package-level test entries for `analytics-events`, `routing-core` and `positioning-core` are placeholders. Routing and positioning have coverage through the mobile and replay suites. Dashboard lint currently covers the dashboard. Native runtime and bundle checks are tracked in [mobile build checks](./apps/mobile/BUILD_CHECKS.md).
 
 ## Progress tracking
 
 See [`progress.md`](./progress.md) for the full per-feature/per-engine checklist, kept up to date after every implementation pass.
+
+The active development sequence is the [indoor navigation roadmap](./docs/indoor-navigation-roadmap.md): phased work through a synthetic-venue beta, including connected/offline routing, sensor recording, replay, positioning and recovery, without requiring a real venue map. It defines completion gates, the first iteration backlog and the later field-validation boundary.
 
 ## Phase 0 exit criteria (from `techspec.md` §17)
 

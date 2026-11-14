@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+node_modules.codex-*/
 .pnpm-store/
 
 # Build output
@@ -46,3 +47,7 @@ coverage/
 # Data (never commit production or raw movement data)
 infrastructure/local/data/
 *.dump
+
+# Marketing exports and third-party map references (kept local, out of git)
+outputs/
+apps/mobile/assets/sandton-reference.png

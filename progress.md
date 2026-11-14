@@ -4,7 +4,53 @@ Living checklist for the Indoor Spatial Navigation Platform, organized by system
 
 Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 
-**Last updated:** 2026-10-28 — R100,000 / twelve-month fund application, premium ImageGen mobile concepts, two dashboard mockups and matching funding cash plan completed; application and field validation remain pending.
+**Last updated:** 2026-11-13 — Verified route floor changes against mapped connections.
+
+## Active development roadmap (2026-11-12)
+
+The [indoor navigation roadmap](docs/indoor-navigation-roadmap.md) defines the immediate sequence through a synthetic-venue beta. Its P0–P6 execution stages map to the existing specification phases; this planning pass does not complete implementation milestones.
+
+- [x] Assessed current source and documented the map-free endpoint, dependencies, acceptance gates, provider evaluation and ordered first iteration backlog.
+- [x] Current mobile typecheck and regression suite passed: 284 schematic route combinations plus map viewport, camera and place-memory checks. All 32 map-package contract checks passed.
+- [x] First implementation slice: pinned root workspace commands to Corepack pnpm, generated 20 destinations and three starting entrances, and added a map/search/route preview backed by the published API contract. Client checks exercise version pinning, both floors, exact endpoints and invalid responses. Android JavaScript bundle export passed.
+- [x] Save a published fictional map and provide offline search and routing when the API is unreachable. Added client checks for saved package validation, alias search, restricted/closed/expired edges and one-way traversal.
+- [x] Connect the step-free preference to online and offline routes. Explicitly marked lift and walkway edges can participate. Both engines exclude stairs and escalators in this mode.
+- [x] Implement positioning observation types and deterministic replay with 12 seeded synthetic scenarios. Compare last-fix and step/heading estimates, including floor errors, manual correction and late observations.
+- [x] Add the platform-independent recorder with an injected monotonic clock, sample cap and unlabelled replay export. Mobile sensor integration remains open.
+- [x] Add an opt-in Settings recorder with motion permission handling, accelerometer and optional pressure capture, automatic foreground cleanup and JSON export. Physical-device capture and sharing remain to be tested.
+- [x] Record numbered checkpoint times and pair them with separately measured coordinates during replay. Tests verify ordering, invalid marks, and that measured checkpoints never become estimator fixes. Physical-device collection remains open.
+- [x] Replay a walk using a tester-provided start and direction schedule. A synthetic corner regression verifies lower endpoint error than the last-fix baseline while keeping the endpoint out of the estimator inputs. Independently measured walks remain open.
+- [x] Replay position estimates through the mobile route-progress engine. The report includes turns, floor confirmation decisions, uncertainty, remaining distance and arrival time. Tests verify early confirmation rejection, a retained floor prompt and arrival after a valid confirmation.
+- [x] Track motion and fix capture time during replay. Guidance rejects stale estimates and ignores duplicates. Tests exercise lost updates near arrival, recovery with fresh samples and off-route dwell.
+- [x] Report correction capture and receipt times and time to resume guidance. Synthetic checks cover a wrong floor, an off-route position, a delayed correction and a stale correction that does not recover.
+- [x] Add a repeatable offline routing benchmark using the published package. Reuse static graphs and index destinations and floor nodes. Scheduled edges still use request-time validity checks. The repeated 954-case PostGIS comparison passed after correcting the test to handle idempotent imports.
+- [x] Follow authored bends in the route overlay, distance, time estimate and simulated guidance. Added a curved corridor to the PostGIS matrix. All 1,074 comparisons agreed across nine conditions, including 130 expected no-route results.
+- [x] Add an initial corridor matcher to replay and test raw-estimate preservation, confidence, ambiguous parallel corridors and disconnected segments.
+- [x] Exercise bounded BLE corrections, radio outlier rejection and tentative floor suggestions in 18 synthetic scenarios on two seeds.
+- [x] Add a route progress engine and wire it into the fictional venue simulation. Tests cover turns, explicit floor confirmation, arrival, uncertain position and off-route recovery.
+- [x] Exercise automatic rerouting from a mapped node in the fictional missed-turn flow. Test network fallback, a closed branch, a one-way dead end and preservation of step-free routing.
+- [x] Follow curved branches in missed-turn simulation. Software checks cover authored geometry in either direction, branch eligibility, off-route dwell at the endpoint and offline recovery along the same corridor after a network failure.
+- [x] Hold route progress when nearby corridors are equally plausible. Limit forward and backward jumps while allowing gradual backtracking. Synthetic checks cover false arrival near a folded route's endpoint, sustained off-route evidence and recovery when the position becomes clear.
+- [x] Add manual position correction to a mapped entrance during the simulation. The selected entrance supplies both the floor and starting coordinates for the replacement route.
+- [x] Generate printable entrance checkpoints from the published package and wire QR scanning into the same simulated correction flow. Automated checks cover both floors, invalid codes and print output. Android and iOS JavaScript bundles export successfully.
+- [x] Add a CI workflow for workspace lint, type checking, tests and builds, API checks with PostGIS, and Git history secret scanning. Local actionlint, secret scan, workspace tests and eight API unit tests passed. The GitHub-hosted workflow still needs a run.
+- [x] Verify API and offline route parity against local PostGIS for the baseline, live lift closure and six generated variants. All 954 comparisons agreed, including 130 expected no-route results. The run restored the baseline map and reopened the lift. Hosted CI remains pending.
+- [x] Restore a custom-format backup into a fresh local PostGIS database and verify publication, closure and audit state. The API reused the restored package and returned the same two-floor route to Zara.
+- [x] Verify the mobile cache coordinator preserves the last valid snapshot after failed, invalid or cancelled writes using a test storage adapter. Baseline route parity still passed for 120 live PostGIS comparisons. Native storage restart remains unverified.
+- [x] Exercise the app's venue loader with a disk-backed test cache. Reopen offline, search by alias and plan a two-floor step-free route. Verify stale sync time, invalid and interrupted updates, successful publication and rollback, and rejection of corrupt or incompatible snapshots.
+- [x] Apply saved schedules to corridor and lift visibility and refresh route previews at availability changes. Software checks verify the inclusive opening and closing boundaries, including the same cutoff for simulated detours.
+- [x] Carry the earliest selected edge cutoff in API and offline routes. Pause simulated guidance when a selected route or detour expires and allow checkpoint correction to request a replacement. All 1,194 PostGIS comparisons agreed across ten conditions, including a step-free route that expires when its lift closes.
+- [x] Validate every floor change against the mapped endpoints, transition type, travel direction and step-free metadata. All 1,064 successful routes in the 1,194-case PostGIS matrix passed the mobile adapter. Focused tests cover shifted floor origins and invalid or restricted connections.
+- [~] Run the updated publish/search/route flow against local PostGIS and exercise it in the Android app. The backend flow passed against an isolated Windows PostgreSQL 16.16 and PostGIS 3.4.2 database. Android connected runtime verification remains open.
+- [~] P0: dashboard upgraded to Next.js 16 and aligned with the mobile workspace's React version. Frozen install, workspace lint, type checking, tests and production build passed in an isolated Windows workspace after clearing stale TypeScript launchers from the previous install. GitHub-hosted execution remains pending.
+- [~] P1: added deterministic variants for corridor and lift outages, a closed destination, one-way travel, step-free restrictions and a map update. Contract tests validate all six variants and reject the disconnected negative case. All six valid variants passed the live PostGIS scenario matrix.
+- [~] P2: added an authenticated operator CLI for map import, validation, publication, rollback and closures. All seven commands passed loopback HTTP verification. The live PostGIS flow verified import, publication, closures, rollback and route parity. Native offline restart and the Docker-based integration test remain open.
+- [~] P3: recording core, Settings capture/export and deterministic replay implemented. The recorder can derive a vertical signal from paired DeviceMotion readings, with an accelerometer fallback. OpenHPS reports a separate step count when vertical coverage is complete. The original comparison ran on six synthetic cases with two seeds. A measured phone walk and native adapter verification remain open.
+- [~] P4: initial step and heading estimator, manual fixes, corridor matching and bounded BLE/floor evidence exercised in replay. Hardware integration and measured evidence remain open.
+- [~] P5: estimate-driven progress, explicit floor confirmation, automatic rerouting and manual/QR correction implemented in the fictional venue simulation. Live guidance and physical-device scanning remain open.
+- [~] P6: API failures return a request reference that can be matched to service logs. The mobile Settings report keeps up to 40 failures or offline fallbacks in memory for 30 minutes, with opt-in capture, clearing and sharing controls. The [readiness report](docs/indoor-navigation-beta-readiness.md) records verified checks and the device walkthrough. Hosted CI, installable builds and device checks remain open.
+
+Workspace-wide typecheck hit a pnpm nested-install/no-TTY failure during this assessment; filtered mobile typecheck passed. Native Android interaction evidence is recorded in `apps/mobile/BUILD_CHECKS.md` through 6 November; physical iOS/Android positioning remains unverified. A real map is needed for site-specific field accuracy, not for this implementation sequence.
 
 ## Current fund application (2026-10-28)
 
@@ -33,8 +79,8 @@ Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 - [x] ADR 0001 — initial technology choices
 - [x] ADR 0002 — reference project survey
 - [x] Dependencies installed and workspace scripts running under pnpm
-- [ ] CI pipeline (lint, typecheck, unit tests, build) — not started
-- [ ] Secret-scanning check in CI — not started
+- [~] CI pipeline (lint, typecheck, unit tests, build) — workflow added and validated locally with actionlint. Hosted execution is pending.
+- [~] Secret-scanning check in CI — Gitleaks scanned 16 local commits and found no leaks. Hosted execution is pending.
 - [x] Gradle wrapper generated for `platform-api` and `analytics-worker`
 - [x] Local PostGIS verified end-to-end on isolated port 55432
 - [x] Local database/admin-key configuration documented in `services/platform-api/README.md` and `.env.example`
@@ -49,7 +95,7 @@ Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 - [x] Consistent blue/light and navy/dark design system, SVG icons and bottom tabs
 - [x] Search with typed queries, shared category filters and useful empty states
 - [x] Destination preview, locally calculated per-destination demo routes and explicit navigation/arrival states
-- [x] Step-free preference selects lift transitions; 18 route/preference cases verified
+- [x] Step-free preference selects lift transitions in the historical two-floor fixture; the current single-reference-level schematic has 284 route/preference checks. Physical accessibility is unverified.
 - [x] Appearance and reduced-motion preferences, including operating-system motion setting
 - [x] Device-local saved places and five recent destinations, saved search scope and history clearing
 - [x] Explicit floor/overview/follow/manual camera modes; panning pauses framing and Resume restores it
@@ -59,7 +105,7 @@ Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 - [x] Place-memory recovery/pruning/ordering and camera-mode checks alongside 18 routing cases
 - [x] iOS Release simulator compilation verified through EAS (2026-10-12; final UX build f6359dda-0630-4c7f-9c17-ba9fc1ff83b8)
 - [~] Xcross verification: installed 2.0.2 was tried with generated iOS files; Flutter builder fails at missing pubspec.yaml. Working React Native command/wrapper remains unresolved.
-- [~] Native visual QA: Expo Go 2.31.2 startup fails on Android 37 and fresh API 34, including a minimal startup probe. Native visual/interaction QA remains unverified.
+- [~] Native visual QA: newer SDK 58 Android Expo Go emulator interaction checks are recorded through 2026-11-06 in `apps/mobile/BUILD_CHECKS.md`. Physical-device sensor/navigation QA and current native iOS appearance remain unverified.
 - [ ] Live positioning, backend route integration, spoken guidance, persistent preferences and downloadable map packages
 
 ---
@@ -82,19 +128,19 @@ Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 ## 3. Positioning engine (`packages/positioning-core`, `techspec.md` §6)
 
 - [x] `PositionEstimate` / `PositionSource` / `ConfidenceLevel` types
-- [x] `StepDetectorConfig` + `detectSteps` stub (not implemented — returns `[]`)
+- [x] Deterministic step peak detector and step-count replay checks on synthetic traces
 - [x] BLE strategies: `nearestBeaconStrategy`, `weightedCentroidStrategy`, `trilaterationStrategy` (`src/ble.ts`)
 - [x] Fingerprint k-NN matcher (`src/fingerprint.ts`)
 - [x] Visual-positioning contract (`VisualPositioningProvider`, `src/visual.ts`) — contract only, no CV inference
-- [ ] Step detection — real peak-detection implementation (amplitude/periodicity scoring)
+- [~] Step detection — amplitude and interval rules implemented, physical-device tuning pending
 - [ ] Step-length estimation (cadence/variance/calibration-walk based)
 - [ ] Heading estimation (fused orientation baseline, gyro short-term rotation, magnetometer disturbance detection)
 - [ ] PDR (pedestrian dead reckoning) state integration
 - [ ] Floor detection (barometer/beacon/visual/user-confirmation fusion, multi-signal agreement rule)
-- [ ] Map matching (candidate edge scoring: perpendicular distance, direction, continuity, route compatibility, transition legality)
+- [~] Map matching: same-floor projection, direction, continuity and ambiguity tested in replay. Live integration and transition evaluation remain open.
 - [ ] Confidence model (decay + recovery rules, tunable thresholds)
 - [ ] Sensor/BLE abstraction interfaces for on-device sampling
-- [ ] Deterministic replay harness wiring (see `tooling/calibration-console`)
+- [x] Deterministic replay harness with baseline/candidate comparison (see `tooling/calibration-console`)
 - [ ] On-device native module decision for visual positioning (AprilTag vs. reference-image) — open decision, `techspec.md` §20
 
 ---
@@ -195,14 +241,14 @@ Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 - [x] `fixture-generator` package scaffold
 - [x] Real map-package schema validation — Zod structural schema + full semantic rule set (cross-entity refs, bounds, geometry, connectivity, transition groups) with stable error codes; CLI `validate`/`inspect`/`canonicalize` with exit codes; canonical JSON + SHA-256 checksum; contract documented in `docs/mapping/map-package-contract.md`
 - [x] Real deterministic two-floor venue generator — versioned package, admin-import payload, routable Zara + information POIs, escalator/lift transitions, invariant tests; passes map-importer validation with zero warnings
-- [ ] Real replay-fixture loader + comparison reporting
+- [x] Replay file loader, schema validation and baseline/candidate reports
 
 ---
 
 ## 10. Testing (`techspec.md` §14)
 
 - [ ] Unit tests: step detection, heading normalisation, coordinate transforms, graph/A* correctness, constraint handling, map-matching scoring, confidence decay/recovery, event-schema validation, campaign eligibility/impression dedup
-- [ ] Replay-test harness wired to `tests/positioning-replays`
+- [x] Replay tests for 13 synthetic scenarios on two seeds, documented in `tests/positioning-replays`
 - [~] Contract tests (`tests/contract`): map-package validation suite green (32 checks: valid fixture, broken refs, disconnected graph, invalid geometry, unroutable POI, missing metadata, structured issue shape, canonical JSON/checksum determinism, CLI exit codes). Remaining: API client vs. OpenAPI, event idempotency, privacy enforcement, dashboard authorisation, campaign accounting
 - [ ] End-to-end tests (`tests/end-to-end`): full navigation flow, confidence/correction flow, floor transition, offline recovery, closure-aware rerouting, sponsored-search labelling
 - [ ] Performance tests (`tests/performance`): route computation latency, ingestion throughput, map-package generation time
@@ -235,7 +281,7 @@ Legend: `[x]` done, `[~]` in progress / partial scaffold, `[ ]` not started.
 
 - **Phase 0 — Engineering foundation:** in progress (see §0 above). Dependencies, wrappers and local PostGIS are verified; CI remains outstanding.
 - **Phase 1 — Map, search, and static routing:** in progress. Package generation/validation/import, publication, search and backend multi-floor routing are verified; dashboard and mobile API integration remain.
-- **Phase 2 — Positioning research harness:** partially seeded (`positioning-core` has BLE/fingerprint algorithms and type contracts; no sensor abstraction, replay runner, or step/heading/PDR implementation yet).
+- **Phase 2 — Positioning research harness:** observation types, recorder core, replay runner and a synthetic step/heading estimate are implemented. Device capture, field evaluation, map matching and OpenHPS comparison remain open.
 - **Phase 3 — Beacon-assisted live navigation:** not started.
 - **Phase 4 — Integrated public pilot:** not started.
 
@@ -255,6 +301,8 @@ Status: **backend slice met**. A fresh PostGIS instance imports and publishes th
 4. Keep this file scoped to status tracking — design rationale belongs in `docs/architecture-decisions/`.
 
 ## Changelog
+
+- **2026-11-12 (map-free development planning):** Added `docs/indoor-navigation-roadmap.md` with P0–P6 execution stages, dependency order, completion gates, a software/device evidence matrix and first iteration backlog. Identified consumer-package/renderer contract differences, duplicated routing policies, missing positioning/replay implementations and workspace pnpm verification failure. Reconciled stale mobile QA summary with the newer native build log. No application behaviour or deployment changed.
 
 - **2026-10-12 (native-only mobile polish):** Removed the consumer browser target/frame and SVG web map fallback; added native safe areas, coherent light/dark tokens and line icons, shared search/category/directory rows, scroll-bounded destination and guidance panels, explicit arrival, and a native corridor map with selectable places. Fixed destination previews using Zara's route by calculating local schematic routes for each selected POI; step-free mode uses lifts and all 18 destination/preference cases pass. Removed fake voice, granted-permission, diagnostics and download controls. Hoisted pnpm dependencies fix Expo native prebuild/autolinking and iOS bundle resolution. Final EAS Release simulator build 1aaa674b passes, as do workspace types, Expo dependency checks and Hermes export. Xcross 2.0.2 was actually tried but its Flutter builder fails at missing pubspec.yaml; a working React Native wrapper/command remains needed. Android visual QA is unverified after Expo Go startup failures on both API 37 and fresh API 34, including a minimal startup probe. Details: apps/mobile/BUILD_CHECKS.md.
 

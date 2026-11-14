@@ -5,12 +5,15 @@
   "description": "Indoor Spatial Navigation Platform monorepo (mobile app, dashboard, shared packages, tooling).",
   "packageManager": "pnpm@9.0.0",
   "scripts": {
-    "build": "pnpm -r --if-present run build",
-    "lint": "pnpm -r --if-present run lint",
-    "test": "pnpm -r --if-present run test",
-    "typecheck": "pnpm -r --if-present run typecheck"
+    "build": "corepack pnpm -r --if-present run build",
+    "lint": "corepack pnpm -r --if-present run lint",
+    "test": "corepack pnpm -r --if-present run test",
+    "typecheck": "corepack pnpm -r --if-present run typecheck"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3"
   }
 }

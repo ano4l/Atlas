@@ -69,7 +69,7 @@ export function generateTwoFloorVenue(): SyntheticVenueFixture {
     version: 1,
     status: "validated",
     schemaVersion: 1,
-    contentHash: "synthetic-two-floor-v1",
+    contentHash: "synthetic-two-floor-v2",
     publishedAt: null,
     minimumAppVersion: "0.1.0",
   };
@@ -80,11 +80,11 @@ export function generateTwoFloorVenue(): SyntheticVenueFixture {
   const nodes: NavigationNode[] = [
     node(IDS.groundWest, IDS.ground, 8, 30, "entrance"),
     node(IDS.groundAtrium, IDS.ground, 35, 30),
-    node(IDS.groundEast, IDS.ground, 65, 30),
+    node(IDS.groundEast, IDS.ground, 65, 30, "entrance"),
     node(IDS.groundEscalator, IDS.ground, 38, 34, "transition", IDS.escalatorTransition),
     node(IDS.groundLift, IDS.ground, 32, 34, "transition", IDS.liftTransition),
     node(IDS.levelAtrium, IDS.levelOne, 35, 30),
-    node(IDS.levelEast, IDS.levelOne, 65, 30),
+    node(IDS.levelEast, IDS.levelOne, 65, 30, "entrance"),
     node(IDS.levelEscalator, IDS.levelOne, 38, 34, "transition", IDS.escalatorTransition),
     node(IDS.levelLift, IDS.levelOne, 32, 34, "transition", IDS.liftTransition),
     node(IDS.zaraDoor, IDS.levelOne, 78, 30, "entrance"),
@@ -106,11 +106,97 @@ export function generateTwoFloorVenue(): SyntheticVenueFixture {
     poi(IDS.zara, IDS.levelOne, "Zara", ["ZARA", "Zara clothing"], ["fashion", "clothes", "women", "men"], IDS.zaraDoor, [76, 22, 88, 29]),
     poi(IDS.information, IDS.ground, "Information desk", ["Help desk", "Guest services"], ["information", "help"], IDS.groundAtrium, [31, 25, 39, 29]),
   ];
+  const galleries = [
+    {
+      floorId: IDS.ground, atriumId: IDS.groundAtrium, eastId: IDS.groundEast,
+      names: ["Paper & Pine", "Juniper Cafe", "Petal Studio", "Market Hall", "Nook Books", "Cedar Gifts", "Stone Bakery", "Olive Table", "Lantern Workshop"],
+    },
+    {
+      floorId: IDS.levelOne, atriumId: IDS.levelAtrium, eastId: IDS.levelEast,
+      names: ["Orbit Games", "Forma Studio", "Birch Records", "Sable Shoes", "Mica Gallery", "Velvet Thread", "Stillwater Tea", "Dune Crafts", "Kite Toys"],
+    },
+  ];
+  galleries.forEach(({ floorId, atriumId, eastId, names }, galleryIndex) => {
+    let previous = atriumId as string;
+    names.forEach((name, index) => {
+      const sequence = galleryIndex * names.length + index;
+      const x = 14 + index * 9;
+      const corridor = node(fixtureId("3", 100 + sequence * 2), floorId, x, 14);
+      const entrance = node(fixtureId("3", 101 + sequence * 2), floorId, x, 9, "entrance");
+      nodes.push(corridor, entrance);
+      byId.set(corridor.id, corridor);
+      byId.set(entrance.id, entrance);
+
+      const link = edge(fixtureId("6", 100 + sequence * 2), byId, previous, corridor.id);
+      if (index === 0) link.directionality = "forward";
+      edges.push(link, edge(fixtureId("6", 101 + sequence * 2), byId, corridor.id, entrance.id));
+      pois.push(poi(fixtureId("5", 100 + sequence), floorId, name, [], ["shop"], entrance.id, [x - 3, 3, x + 3, 8]));
+      previous = corridor.id;
+    });
+    edges.push(edge(fixtureId("6", 200 + galleryIndex), byId, previous, eastId));
+  });
   return { venue, mapVersion, floors, nodes, edges, pois };
 }
 
-export function generateTwoFloorVenuePackage(): SyntheticVenuePackage {
+function fixtureId(group: string, index: number): string {
+  return `${group}0000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
+}
+
+export const syntheticVenueScenarios = [
+  "baseline", "closed-corridor", "unavailable-lift", "closed-destination",
+  "one-way-corridor", "inaccessible-route", "version-update", "invalid-disconnected", "curved-corridor",
+  "scheduled-route",
+] as const;
+export type SyntheticVenueScenario = typeof syntheticVenueScenarios[number];
+
+export function generateTwoFloorVenuePackage(scenario: SyntheticVenueScenario = "baseline"): SyntheticVenuePackage {
   const fixture = generateTwoFloorVenue();
+  if (scenario !== "baseline") {
+    const versionIndex = syntheticVenueScenarios.indexOf(scenario);
+    if (versionIndex < 1) throw new Error(`Unknown synthetic venue scenario: ${scenario}`);
+    const mapVersionId = fixtureId("1", 100 + versionIndex);
+    fixture.mapVersion = {
+      ...fixture.mapVersion, id: mapVersionId, version: 2, contentHash: `synthetic-two-floor-${scenario}`,
+    };
+    fixture.venue.defaultMapVersionId = mapVersionId;
+    const expired = "2026-08-12T00:00:00.000Z";
+    const westCorridor = fixture.edges.find((item) => item.fromNodeId === IDS.groundWest)!;
+    const lift = fixture.edges.find((item) => item.edgeType === "lift")!;
+    const zara = fixture.pois.find((item) => item.id === IDS.zara)!;
+    switch (scenario) {
+      case "closed-corridor":
+        westCorridor.validUntil = expired;
+        break;
+      case "unavailable-lift":
+        lift.validUntil = expired;
+        break;
+      case "closed-destination":
+        zara.openingStatus = "closed";
+        break;
+      case "one-way-corridor":
+        fixture.edges.find((item) => item.fromNodeId === IDS.groundAtrium &&
+          item.toNodeId === IDS.groundEast)!.directionality = "backward";
+        break;
+      case "inaccessible-route":
+        lift.isAccessible = false;
+        break;
+      case "version-update":
+        zara.aliases.push("New season");
+        break;
+      case "curved-corridor":
+        westCorridor.geometry = line([[8, 30], [18, 30], [18, 36], [30, 36], [35, 30]]);
+        westCorridor.distanceM = 28 + Math.hypot(5, 6);
+        westCorridor.estimatedTimeS = Math.ceil(westCorridor.distanceM / 1.2);
+        break;
+      case "scheduled-route":
+        westCorridor.validUntil = "2099-01-02T00:00:00.000Z";
+        lift.validUntil = "2099-01-01T00:00:00.000Z";
+        break;
+      case "invalid-disconnected":
+        fixture.nodes.push(node(fixtureId("3", 999), IDS.ground, 4, 4));
+        break;
+    }
+  }
   return {
     schemaVersion: 1,
     ...fixture,

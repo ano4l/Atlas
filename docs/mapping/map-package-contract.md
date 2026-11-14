@@ -25,9 +25,37 @@ corepack pnpm --filter @atlas/contract-tests generate-fixtures
 corepack pnpm --filter @atlas/contract-tests test
 ```
 
+Use `--scenario <name>` with the generator to create a specific test map. The venue, floor and destination source IDs stay stable across valid variants. Each variant has a distinct authoring map ID and checksum. The backend assigns the published version number on import.
+
+| Scenario | Change to the baseline |
+| --- | --- |
+| `closed-corridor` | Expire the west entrance corridor's validity window |
+| `unavailable-lift` | Expire the lift's validity window |
+| `closed-destination` | Close Zara |
+| `one-way-corridor` | Limit the direct ground-floor corridor to east-to-atrium travel. Atrium-to-east trips use the gallery. |
+| `inaccessible-route` | Keep the lift available to standard routes and mark it unsuitable for step-free routes |
+| `version-update` | Add a Zara search alias |
+| `curved-corridor` | Add bends to the west entrance corridor and test the route shape and walking distance |
+| `scheduled-route` | Give the west corridor and lift different closing times to verify the route expires at the earlier cutoff |
+| `invalid-disconnected` | Add an isolated graph node that fails validation with `NODE_UNREACHABLE` |
+
+The expiry variants use a fixed timestamp, 12 August 2026 at 00:00 UTC. Run those scenarios after that timestamp to exercise unavailable routes.
+
 ## Structure
 
 TypeScript source of truth: `packages/spatial-model/src/map-package.ts` (`MapPackageV1`), built from the §7.3 entity interfaces in `packages/spatial-model/src/index.ts`. Runtime schema: `tooling/map-importer/src/schema.ts` (Zod).
+
+### Consumer route preview
+
+The authoring package goes to the import endpoint. The mobile client reads the published response at `GET /v1/venues/{venueId}/map-package`, where nodes and edges are grouped under `graph` and each destination has one `entryPointNodeId`. The published response uses server IDs assigned at import. The mobile client validates this response at runtime and uses its `mapVersion.id` for both search and routing. Search result IDs resolve to that package's directory. Route segments must start at the selected entrance and finish at the destination's entrance node. Each floor change must join the mapped endpoints of a public connection with the declared type and permitted direction. Step-free previews and reroutes require a step-free connection. Closure and validity decisions use the API at request time or the saved package when routing offline.
+
+Floor bounds are `[minX, minY, maxX, maxY]` in local metres. The fictional fixture has positive X to the right and positive Y down. The renderer subtracts the floor's minimum X and Y and multiplies by two to get display coordinates. Requests send the original metre coordinates. Bounds and graph geometry may be JSON-encoded strings in the published response. Same-floor graph lines provide the fictional walkway drawing and entrance nodes provide destination dots. The authoring fixture's shop polygons are outside this consumer preview.
+
+The offline snapshot stores the complete published payload and its sync time in one AsyncStorage record. It requires every edge to carry a positive `baseCostM`, direction, closure state and nullable `validFrom`/`validUntil` bounds. Older API responses without these fields can still open online. Both route engines minimize edge cost and exclude restricted, closed and out-of-window edges for a standard public preview. For each selected same-floor edge they use its authored line in travel order, anchor the endpoints to the graph nodes and sum the lengths of the resulting segments. Missing or unusable geometry falls back to a straight line. The app applies saved validity windows to walkway and lift visibility, route previews and simulated detours. Both bounds are inclusive. The app refreshes the map when it returns to the foreground or crosses a saved boundary. Remote changes to closure state reach the app when it syncs.
+
+For `mode: "step_free"`, both route engines require affirmative accessibility metadata on every edge and exclude stairs and escalators. Import carries this through the source edge's `isAccessible` field and the published package exposes `isStepFree`. Older imports without that information require republication from a source package with accessibility data before step-free guidance is available.
+
+The optional route field `validUntilMs` is the earliest selected edge cutoff, as Unix epoch milliseconds. A missing or null value means no scheduled cutoff was reported. Atlas treats a route as expired after that timestamp, refreshes its preview, and pauses an active simulation until the user supplies a position for a replacement route.
 
 | Field | Type | Notes |
 |---|---|---|
