@@ -11,13 +11,17 @@ export function cameraPoints(
   if (mode === "manual") return [];
   if (mode === "route" && route?.length) return route;
   if (mode === "follow") {
-    const local = nextPoint ? [position, nextPoint] : [position];
-    // Minimum context stops one-point/short legs zooming into an illegible dot.
-    const xs = local.map((p) => p.x),
-      ys = local.map((p) => p.y);
-    const x = (Math.min(...xs) + Math.max(...xs)) / 2;
-    const y = (Math.min(...ys) + Math.max(...ys)) / 2;
-    return [...local, { x: x - 55, y: y - 65 }, { x: x + 55, y: y + 65 }];
+    // Keep the user central; a bounded look-ahead avoids zoom jumps on long legs.
+    const dx = (nextPoint?.x ?? position.x) - position.x;
+    const dy = (nextPoint?.y ?? position.y) - position.y;
+    const length = Math.hypot(dx, dy) || 1;
+    const ahead = Math.min(length, 80);
+    const x = position.x + (dx / length) * ahead * 0.25;
+    const y = position.y + (dy / length) * ahead * 0.25;
+    return [
+      { x: x - 190, y: y - 160 },
+      { x: x + 190, y: y + 160 },
+    ];
   }
   return floor;
 }

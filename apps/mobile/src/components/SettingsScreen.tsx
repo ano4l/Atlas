@@ -1,7 +1,11 @@
 import React from "react";
 import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { atlasSandtonVenue } from "../fixtures";
 import { Theme } from "../theme";
 import { Icon, IconName } from "./Icon";
+import { WalkRecorder } from "./WalkRecorder";
+import { NavigationDiagnostics } from "./NavigationDiagnostics";
+
 type Props = {
   theme: Theme;
   isDark: boolean;
@@ -14,6 +18,7 @@ type Props = {
   stepFree: boolean;
   onToggleStepFree: (value: boolean) => void;
 };
+
 function Preference({
   theme,
   icon,
@@ -32,7 +37,7 @@ function Preference({
   disabled?: boolean;
 }) {
   return (
-    <View style={[styles.row, { borderColor: theme.line }]}>
+    <View style={styles.row}>
       <View style={[styles.icon, { backgroundColor: theme.accentSoft }]}>
         <Icon name={icon} color={theme.accent} size={20} />
       </View>
@@ -44,15 +49,19 @@ function Preference({
       </View>
       <Switch
         accessibilityLabel={title}
+        accessibilityHint={description}
         value={value}
         disabled={disabled}
         onValueChange={onChange}
-        trackColor={{ true: theme.accent, false: theme.line }}
-        thumbColor="#FFFFFF"
+        hitSlop={8}
+        trackColor={{ true: theme.primary, false: theme.muted }}
+        ios_backgroundColor={theme.muted}
+        thumbColor={theme.isDark ? theme.primaryText : "#FFFFFF"}
       />
     </View>
   );
 }
+
 export function SettingsScreen({
   theme,
   isDark,
@@ -65,139 +74,162 @@ export function SettingsScreen({
   stepFree,
   onToggleStepFree,
 }: Props) {
+  const cardColors = { backgroundColor: theme.paper, borderColor: theme.line };
+  const dividerColor = { backgroundColor: theme.line };
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.bg }}
       contentContainerStyle={styles.scroll}
-      showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <Text style={[styles.eyebrow, { color: theme.muted }]}>
-          MAKE IT YOURS
+        <Text
+          accessibilityRole="header"
+          style={[styles.title, { color: theme.ink }]}
+        >
+          Settings
         </Text>
-        <Text style={[styles.title, { color: theme.ink }]}>
-          Your preferences
-        </Text>
-        <Text style={[styles.description, { color: theme.muted }]}>
-          A more comfortable way around.
+        <Text style={[styles.subtitle, { color: theme.inkSecondary }]}>
+          Adjust the map and walking directions.
         </Text>
       </View>
-      <Text style={[styles.sectionTitle, { color: theme.muted }]}>
-        NAVIGATION
-      </Text>
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: theme.paper, borderColor: theme.line },
-        ]}
-      >
-        <Preference
-          theme={theme}
-          icon="accessibility"
-          title="Step-free routes"
-          description="Use lifts when moving between floors."
-          value={stepFree}
-          onChange={onToggleStepFree}
-        />
-      </View>
-      <Text style={[styles.sectionTitle, { color: theme.muted }]}>
-        APPEARANCE
-      </Text>
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: theme.paper, borderColor: theme.line },
-        ]}
-      >
-        <Preference
-          theme={theme}
-          icon="moon"
-          title="Dark appearance"
-          description="Softer surfaces for low light."
-          value={isDark}
-          onChange={onToggleDark}
-        />
-        <Preference
-          theme={theme}
-          icon="layers"
-          title="Reduced motion"
-          description={
-            systemReducedMotion
-              ? "Enabled by your device accessibility settings."
-              : "Limit camera, sheet and button motion."
-          }
-          disabled={systemReducedMotion}
-          value={reducedMotion}
-          onChange={onToggleReducedMotion}
-        />
-        <Preference
-          theme={theme}
-          icon="check"
-          title="Touch feedback"
-          description="Gentle feedback for saves, floor changes and arrival."
-          value={haptics}
-          onChange={onToggleHaptics}
-        />
-      </View>
-      <Text style={[styles.sectionTitle, { color: theme.muted }]}>
-        YOUR VENUE
-      </Text>
-      <View
-        style={[
-          styles.venue,
-          { backgroundColor: theme.paper, borderColor: theme.line },
-        ]}
-      >
-        <Icon name="map" color={theme.accent} size={28} />
-        <Text style={[styles.rowTitle, { color: theme.ink }]}>
-          Sandton City demo
+
+      <View style={styles.section}>
+        <Text
+          accessibilityRole="header"
+          style={[styles.sectionTitle, { color: theme.ink }]}
+        >
+          Walking directions
         </Text>
-        <Text style={[styles.description, { color: theme.muted }]}>
-          The illustrative floor network and directory are included in the app.
-          Outdoor map tiles depend on the map provider.
-        </Text>
-        <View style={[styles.included, { backgroundColor: theme.accentSoft }]}>
-          <Icon name="check" color={theme.accent} size={16} />
-          <Text style={{ color: theme.accent, fontSize: 12 }}>
-            2 floors included
-          </Text>
+        <View style={[styles.card, cardColors]}>
+          <Preference
+            theme={theme}
+            icon="accessibility"
+            title="Prefer step-free routes"
+            description="Use lifts when a route changes floors. Step-free access at this venue is unverified."
+            value={stepFree}
+            onChange={onToggleStepFree}
+          />
         </View>
       </View>
-      <View style={styles.footer}>
-        <Text style={[styles.rowTitle, { color: theme.ink }]}>atlas</Text>
-        <Text style={[styles.description, { color: theme.muted }]}>
-          Mobile navigation · v0.1.0
+
+      <View style={styles.section}>
+        <Text
+          accessibilityRole="header"
+          style={[styles.sectionTitle, { color: theme.ink }]}
+        >
+          Display and feedback
         </Text>
-        <Text style={[styles.note, { color: theme.muted }]}>
-          Demo positioning. No live sensor tracking or diagnostics are active.
-          Preferences apply to this app session. Saved and recent places stay on
-          this device.
+        <View style={[styles.card, cardColors]}>
+          <Preference
+            theme={theme}
+            icon="moon"
+            title="Dark mode"
+            description="Use a darker map and interface."
+            value={isDark}
+            onChange={onToggleDark}
+          />
+          <View style={[styles.divider, dividerColor]} />
+          <Preference
+            theme={theme}
+            icon="layers"
+            title="Reduce motion"
+            description={
+              systemReducedMotion
+                ? "Enabled in your device accessibility settings."
+                : "Limit map movement and interface animations."
+            }
+            disabled={systemReducedMotion}
+            value={reducedMotion}
+            onChange={onToggleReducedMotion}
+          />
+          <View style={[styles.divider, dividerColor]} />
+          <Preference
+            theme={theme}
+            icon="locate"
+            title="Haptic feedback"
+            description="Feel a tap when saving a place or arriving."
+            value={haptics}
+            onChange={onToggleHaptics}
+          />
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text
+          accessibilityRole="header"
+          style={[styles.sectionTitle, { color: theme.ink }]}
+        >
+          About this map
+        </Text>
+        <View style={[styles.card, cardColors]}>
+          <View style={[styles.row, styles.aboutRow]}>
+            <View style={[styles.icon, { backgroundColor: theme.subtle }]}>
+              <Icon name="map" color={theme.inkSecondary} size={20} />
+            </View>
+            <View style={styles.copy}>
+              <Text style={[styles.rowTitle, { color: theme.ink }]}>
+                {atlasSandtonVenue.venueName} · Indoor demo
+              </Text>
+              <Text style={[styles.description, { color: theme.muted }]}>
+                Routes use a reference floor plan and a simulated starting
+                position. Store entrances and lifts are unverified.
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {(__DEV__ || process.env.EXPO_PUBLIC_ATLAS_WALK_RECORDER === "1") && <WalkRecorder theme={theme} />}
+      {Boolean(process.env.EXPO_PUBLIC_ATLAS_API_URL?.trim()) && <NavigationDiagnostics theme={theme} />}
+
+      <View style={[styles.footer, { borderColor: theme.line }]}>
+        <Text style={[styles.rowTitle, { color: theme.ink }]}>
+          Atlas · v0.1.0
+        </Text>
+        <Text style={[styles.description, { color: theme.muted }]}>
+          Preferences apply to this session. Saved and recent places are stored
+          on this device.
         </Text>
       </View>
     </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
-  scroll: { padding: 20, paddingTop: 24, paddingBottom: 112, gap: 16 },
-  header: { gap: 8, marginBottom: 16 },
-  eyebrow: { fontSize: 12, fontWeight: "600", letterSpacing: 1 },
-  title: { fontSize: 32, lineHeight: 38, fontWeight: "600", letterSpacing: -1 },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 1,
-    marginTop: 8,
-    marginLeft: 4,
+  scroll: {
+    width: "100%",
+    maxWidth: 680,
+    alignSelf: "center",
+    padding: 20,
+    paddingTop: 12,
+    paddingBottom: 40,
+    gap: 24,
   },
-  card: { borderRadius: 24, borderWidth: 1, overflow: "hidden" },
+  header: { gap: 8 },
+  title: {
+    fontSize: 34,
+    lineHeight: 40,
+    fontWeight: "700",
+    letterSpacing: -1.2,
+  },
+  subtitle: { fontSize: 16, lineHeight: 24 },
+  section: { gap: 8 },
+  sectionTitle: {
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "700",
+    paddingHorizontal: 4,
+  },
+  card: { borderRadius: 16, borderWidth: 1 },
   row: {
-    minHeight: 100,
-    padding: 16,
+    minHeight: 72,
+    padding: 12,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
+  aboutRow: { alignItems: "flex-start", paddingVertical: 16 },
   icon: {
     width: 40,
     height: 40,
@@ -206,18 +238,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   copy: { flex: 1, gap: 4 },
-  rowTitle: { fontSize: 16, fontWeight: "600" },
-  description: { fontSize: 16, lineHeight: 20 },
-  venue: { padding: 24, gap: 12, borderRadius: 24, borderWidth: 1 },
-  included: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
+  rowTitle: { fontSize: 16, lineHeight: 22, fontWeight: "700" },
+  description: { fontSize: 14, lineHeight: 20 },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: 64,
+    marginRight: 12,
   },
-  footer: { alignItems: "center", gap: 8, paddingTop: 16 },
-  note: { fontSize: 12, lineHeight: 18, textAlign: "center", maxWidth: 320 },
+  footer: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 16,
+    paddingHorizontal: 4,
+    gap: 4,
+  },
 });

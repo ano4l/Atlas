@@ -1,29 +1,15 @@
-# Atlas native mobile design
+# Atlas map-first UI
 
-Atlas is an iOS/Android React Native app. The primary task is choosing a destination, previewing an indoor route, and following a clearly labelled demo journey. The map remains the main surface.
+The mall overview puts Search, Directory, and Saved together in the bottom dock. Tap or drag the handle to reveal suggested places. The top bar shows the venue and opens map options.
 
-## Visual language
+Native regular Liquid Glass is reserved for floating controls and the menu on supported iOS devices. Other platforms use static surfaces. Reduced motion, reduced transparency and increased contrast use opaque fills. Slate typography and cobalt actions work in light and dark appearances. Search uses a dedicated screen with category filters and grouped results. The route preview puts the estimated time, walking steps and start action in the same card, with venue details available on demand.
 
-Light mode uses cool paper surfaces, navy text and a restrained blue accent. Dark mode translates these roles to navy surfaces and pale blue actions. Semantic tokens live in src/theme.ts. System typography, consistent SVG line icons, 4/8/12/16/20/24 spacing, soft shadows and rounded panels keep the interface coherent.
+The suggestions sheet tracks the drag and springs to its compact or expanded position on release. Floating controls follow it while the map holds its framing until release. Walking guidance interpolates the position, bearing and camera, with a stable zoom. Panning stops camera following while the demo continues, and recenter restores following. The map offers explicit zoom controls during manual exploration and accessibility zoom actions.
 
-The map uses react-native-maps with an illustrative corridor network, context zones, selectable places and a conventional blue route/position marker. The synthetic coordinates are anchored near Sandton for the native map camera; they do not describe surveyed mall architecture. Ground Floor and Level 1 labels agree across map controls, directory, preview and guidance.
+Settings and the directory have an explicit Back to map control. The demo label stays visible in the main flow. The floor plan, route lengths and entrances are approximate, and the position marker represents the simulated walk.
 
-## Layout and interaction
+## Navigation screen references
 
-The app fills the device and respects native safe areas. Search sits above venue/floor controls. Bottom navigation remains fixed; destination and guidance cards sit above it and scroll when their content exceeds half the screen. Primary actions sit in the lower thumb area and remain visible outside scrolling details. Category filters and directory rows share the same components across search and Explore.
-
-Search supports typed queries, category filtering, device-local saved places, clearable recent-place suggestions and a useful empty state. Native modal dismissal, Android back, floor selection, map panning/zooming, recentering, destination selection, route preview and arrival are wired. Step-free routing uses the fixture's lift core. Light/dark appearance and reduced motion work during the current session; the operating-system motion preference always takes precedence. Touch feedback is independently optional.
-
-Map camera modes distinguish floor browsing, route overview, following and manual exploration. Panning suspends automatic framing; Resume restores the current demo position/floor. Overlay heights feed map padding, and short map areas use a horizontal floor control. Navigation previews the next instruction and makes the instruction card open written steps.
-
-New sheets and instructions use a 220 ms, 12-point entrance. Prominent button presses use 0.98 scale, and route-step progress uses a 180 ms transform. Motion is interruptible and disabled with reduced motion. There are no looping map effects. See [research and rationale](../../docs/mobile-ux-research.md) for primary sources, token contrast and runtime validation limits.
-
-## Prototype boundaries
-
-Routes are calculated locally over the illustrative corridor graph and terminate at the selected place. Distance and walking time are demo estimates. Navigation advances through explicit demo steps rather than pretending to track motion. The app does not claim live BLE positioning, spoken guidance, granted sensor permissions, downloaded map packages or transmitted diagnostics.
-
-The bundled directory and floor network remain local. Native provider initialization and outdoor tile availability depend on platform/provider configuration. Standalone Android requires an Android-restricted Google Maps key, supplied through GOOGLE_MAPS_API_KEY rather than committed source.
-
-## Verification
-
-The routing test covers all destinations with both accessibility preferences, exact endpoints, floor changes and unreachable floors. Native iOS compilation uses the EAS simulator profile. Android screenshots and interaction checks are recorded in artifacts and the build-check document when available. A JavaScript bundle export is not native compilation or simulator execution.
+- **Waze** uses a high-contrast maneuver panel above the map and groups arrival and travel totals below. Its search screen keeps categories and recent places close to the field. Atlas uses the same separation of tasks for indoor walking. [Published screens](https://apps.apple.com/us/app/waze-navigation-live-traffic/id323229106) · [Search guide](https://support.google.com/waze/answer/6262563?hl=en)
+- **Google Maps** gives the highlighted route and upcoming maneuver priority, with map controls grouped along the edge and trip totals in a compact card. Atlas uses dots for walking previews, a solid path during guidance, and a labeled Follow route control after exploring the map. [Published screens](https://apps.apple.com/us/app/google-maps/id585027354) · [Navigation guide](https://support.google.com/maps/answer/3273406?hl=en)
+- **Apple Maps** keeps the destination visible around its place cards and adds indoor detail with zoom. Atlas uses a compact place card, offers walking steps before starting, and reveals unconfirmed unit references at close zoom. [Indoor map guidance](https://developer.apple.com/design/human-interface-guidelines/maps/) · [Walking directions](https://support.apple.com/en-gb/guide/iphone/iph8eae299d1/27/ios/27)

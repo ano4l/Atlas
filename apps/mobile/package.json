@@ -4,6 +4,9 @@
   "private": true,
   "description": "Consumer indoor-navigation mobile application (techspec.md §5).",
   "main": "index.ts",
+  "engines": {
+    "node": "^22.13.0 || ^24.3.0 || >=26.0.0"
+  },
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -11,28 +14,40 @@
     "prebuild:ios": "expo prebuild --platform ios --no-install",
     "build:ios:simulator": "eas build --platform ios --profile ios-simulator",
     "typecheck": "tsc --noEmit",
-    "test": "node scripts/test-mobile-ux.cjs"
+    "test": "node scripts/test-mobile-ux.cjs",
+    "checkpoints": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/print-checkpoints.cjs"
   },
   "dependencies": {
     "@atlas/api-client": "workspace:*",
     "@atlas/map-rendering": "workspace:*",
     "@atlas/positioning-core": "workspace:*",
+    "@atlas/routing-core": "workspace:*",
     "@atlas/shared-types": "workspace:*",
     "@atlas/spatial-model": "workspace:*",
-    "@babel/runtime": "7.24.0",
-    "@react-native-async-storage/async-storage": "1.23.1",
-    "expo": "~51.0.0",
-    "expo-haptics": "~13.0.1",
-    "expo-status-bar": "~1.12.0",
-    "react": "18.2.0",
-    "react-native": "0.74.5",
-    "react-native-maps": "1.14.0",
-    "react-native-safe-area-context": "4.10.5",
-    "react-native-svg": "15.2.0"
+    "@babel/runtime": "7.29.7",
+    "@expo/dom-webview": "~58.0.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "expo": "~58.0.23",
+    "expo-camera": "58.0.14",
+    "expo-file-system": "58.0.13",
+    "expo-glass-effect": "~58.0.5",
+    "expo-haptics": "~58.0.7",
+    "expo-sensors": "58.0.4",
+    "expo-sharing": "58.0.22",
+    "expo-status-bar": "~58.0.4",
+    "react": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-gesture-handler": "~3.3.0",
+    "react-native-reanimated": "4.7.1",
+    "react-native-safe-area-context": "~5.11.1",
+    "react-native-svg": "15.16.0",
+    "react-native-worklets": "0.13.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.24.0",
-    "@types/react": "~18.2.0",
-    "typescript": "^5.3.3"
+    "@babel/core": "^7.29.7",
+    "@react-native/metro-config": "0.88.1",
+    "@types/react": "~19.3.0",
+    "qrcode": "1.5.4",
+    "typescript": "~6.0.3"
   }
 }

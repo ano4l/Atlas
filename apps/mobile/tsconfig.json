@@ -6,5 +6,5 @@
       "@atlas/*": ["../../packages/*/src"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": ["App.tsx", "index.ts", "app.config.ts", "src/**/*.ts", "src/**/*.tsx"]
 }

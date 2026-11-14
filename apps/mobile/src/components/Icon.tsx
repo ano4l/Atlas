@@ -2,11 +2,20 @@ import React from "react";
 import Svg, { Circle, Path } from "react-native-svg";
 
 export type IconName =
+  | "atlas"
+  | "fit"
+  | "steps"
+  | "menu"
+  | "play"
+  | "pause"
   | "map"
   | "compass"
   | "settings"
   | "search"
   | "arrow"
+  | "chevron-right"
+  | "chevron-down"
+  | "walking"
   | "back"
   | "close"
   | "pin"
@@ -23,8 +32,22 @@ export type IconName =
   | "parking"
   | "bookmark"
   | "history"
+  | "straight"
+  | "turn-left"
+  | "turn-right"
+  | "escalator"
   | "route";
 const paths: Record<IconName, string> = {
+  atlas: "M3.5 20L12 3.5L20.5 20M7 14.5H17M12 9V10.5",
+  fit: "M8 4H4V8M16 4H20V8M4 16V20H8M20 16V20H16M8 15L11 12L13 13L16 9",
+  steps: "M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01",
+  menu: "M4 6h16 M4 12h16 M4 18h16",
+  play: "M7 3l14 9-14 9V3z",
+  pause: "M8 4v16 M16 4v16",
+  straight: "M12 21V3 M5 10l7-7 7 7",
+  "turn-left": "M17 21V11a4 4 0 00-4-4H3 M8 2L3 7l5 5",
+  "turn-right": "M7 21V11a4 4 0 014-4h10 M16 2l5 5-5 5",
+  escalator: "M3 18h5l8-12h5 M3 22h7L18 10h3 M4 9V5 M4 2h.01",
   bookmark: "M6 3h12v18l-6-4-6 4V3z",
   history: "M3 11a9 9 0 119 10 M3 4v7h7 M12 7v5l3 2",
   map: "M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2V5z M9 3v16 M15 5v16",
@@ -32,6 +55,9 @@ const paths: Record<IconName, string> = {
   settings: "M4 6h16 M4 12h16 M4 18h16 M8 3v6 M16 9v6 M10 15v6",
   search: "M16 16l5 5",
   arrow: "M5 12h14 M13 6l6 6-6 6",
+  "chevron-right": "m9 6 6 6-6 6",
+  "chevron-down": "m6 9 6 6 6-6",
+  walking: "m7 21 3-5m4 5-1-6-3-3 2-5m-6 5 2-3 4-2 2 4 4 1",
   back: "M19 12H5 M11 6l-6 6 6 6",
   close: "M6 6l12 12 M6 18L18 6",
   pin: "M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1114 0z M12 7v6 M9 10h6",
@@ -73,6 +99,7 @@ export function Icon({
       {name === "search" && (
         <Circle cx="10" cy="10" r="7" stroke={color} strokeWidth="1.7" />
       )}
+      {name === "walking" && <Circle cx="14" cy="3" r="1.6" fill={color} />}
       {name === "locate" && (
         <>
           <Circle cx="12" cy="12" r="6" stroke={color} strokeWidth="1.7" />

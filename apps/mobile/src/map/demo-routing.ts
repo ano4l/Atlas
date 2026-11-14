@@ -23,14 +23,12 @@ export function buildDemoRoute(
 ): DemoRoute | null {
   const segments: Segment[] = atlasSandtonVenue.floors.flatMap((floor) =>
     (floor.corridorPaths ?? []).flatMap((path) =>
-      path
-        .slice(1)
-        .map((b, i) => ({
-          floor: floor.level,
-          a: path[i],
-          b,
-          cuts: [path[i], b],
-        })),
+      path.slice(1).map((b, i) => ({
+        floor: floor.level,
+        a: path[i],
+        b,
+        cuts: [path[i], b],
+      })),
     ),
   );
   const graph = new Map<string, Node>();
@@ -40,6 +38,7 @@ export function buildDemoRoute(
     return id;
   };
   const connect = (a: string, b: string, cost: number) => {
+    if (a === b) return;
     graph.get(a)!.edges.set(b, cost);
     graph.get(b)!.edges.set(a, cost);
   };
@@ -199,25 +198,72 @@ export function buildDemoRoute(
     )
       segment.polyline.push(node.point);
   }
-  const steps: NavigationStep[] = result.flatMap((segment) => {
-    const points = segment.polyline;
-    const travel = points
-      .slice(1)
-      .reduce((sum, p, i) => sum + distance(points[i], p), 0);
-    const base: NavigationStep[] = [
-      {
-        id: `walk-${segment.floorLevel}`,
-        instruction: `Follow the path on ${floorName(segment.floorLevel)}`,
-        subInstruction: segment.transitionAt
-          ? `Continue to the ${segment.transitionType}`
-          : `Continue toward ${destination.name}`,
-        distanceM: Math.round(travel * 0.5),
-        icon: "straight",
+  const steps: NavigationStep[] = result.flatMap((segment, floorIndex) => {
+    // Keep actual corners while removing graph splits on a straight concourse.
+    const points = segment.polyline.filter((point, i, list) => {
+      if (i === 0 || i === list.length - 1) return true;
+      const a = list[i - 1],
+        b = list[i + 1];
+      return (
+        Math.abs(
+          (point.x - a.x) * (b.y - point.y) - (point.y - a.y) * (b.x - point.x),
+        ) > 0.001
+      );
+    });
+    const base: NavigationStep[] = points.slice(0, -1).map((point, i) => {
+      const target = points[i + 1];
+      const previous = points[i - 1];
+      const cross = previous
+        ? (point.x - previous.x) * (target.y - point.y) -
+          (point.y - previous.y) * (target.x - point.x)
+        : 0;
+      const icon =
+        !previous || Math.abs(cross) < 0.001
+          ? "straight"
+          : cross > 0
+            ? "turn-right"
+            : "turn-left";
+      const finalLeg = i === points.length - 2;
+      const toward = finalLeg
+        ? segment.transitionAt
+          ? `toward the ${segment.transitionType}`
+          : `toward ${destination.name}`
+        : "along the gallery";
+      const instruction =
+        i === 0
+          ? floorIndex > 0
+            ? "Exit onto the gallery"
+            : "Follow the gallery"
+          : `${icon === "turn-right" ? "Turn right" : icon === "turn-left" ? "Turn left" : "Continue"} ${toward}`;
+      const localFloor = atlasSandtonVenue.floors.find(
+        (f) => f.level === segment.floorLevel,
+      )!;
+      const midpoint = {
+        x: (point.x + target.x) / 2,
+        y: (point.y + target.y) / 2,
+      };
+      const nearby = localFloor.rooms.find(
+        (room) =>
+          room.label &&
+          room.labelMode !== "detail" &&
+          distance(room.label, midpoint) <= 55,
+      );
+      return {
+        id: `walk-${segment.floorLevel}-${i}`,
+        instruction,
+        icon,
+        subInstruction:
+          finalLeg && !segment.transitionAt
+            ? destination.entranceInfo
+            : nearby
+              ? `Pass near ${nearby.name}`
+              : "Stay on the mapped gallery",
+        distanceM: Math.max(1, Math.round(distance(point, target) * 0.5)),
         floorLevel: segment.floorLevel,
         floorName: floorName(segment.floorLevel),
-        nodePoint: points[0],
-      },
-    ];
+        nodePoint: point,
+      };
+    });
     if (segment.transitionAt)
       base.push({
         id: `change-${segment.floorLevel}`,
@@ -233,7 +279,9 @@ export function buildDemoRoute(
   });
   steps.push({
     id: "arrive",
-    instruction: `You’re at ${destination.name}`,
+    instruction: destination.id.startsWith("unit-")
+      ? `Approach to ${destination.name}`
+      : `You’re at ${destination.name}`,
     subInstruction: destination.entranceInfo,
     distanceM: 0,
     icon: "arrive",

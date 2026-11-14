@@ -9,81 +9,77 @@ import {
 import { shadows, Theme } from "../theme";
 import { atlasSandtonVenue } from "../fixtures";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, {
+  SharedValue,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 import { CameraMode } from "../map/camera";
-import { floorName } from "../map/demo-routing";
+import { GlassSurface } from "./GlassSurface";
 import { Icon } from "./Icon";
+import { MotionPressable } from "./Motion";
+
 type Props = {
   theme: Theme;
   floorLevel: number;
   onSelectFloor: (level: number) => void;
   onRecenter: () => void;
-  navigating?: boolean;
+  navigating: boolean;
+  previewing: boolean;
   sheetHeight: number;
-  hasDestination: boolean;
+  liveSheetHeight?: SharedValue<number>;
   cameraMode: CameraMode;
   controlsTop: number;
 };
+
 export function FloatingMapControls({
   theme,
   floorLevel,
   onSelectFloor,
   onRecenter,
   navigating,
+  previewing,
   cameraMode,
   controlsTop,
   sheetHeight,
-  hasDestination,
+  liveSheetHeight,
 }: Props) {
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const compact =
-    height - insets.top - insets.bottom - 84 - sheetHeight - controlsTop < 216;
+  const available =
+    height - insets.top - insets.bottom - sheetHeight - controlsTop;
+  const following = cameraMode === "follow";
+  const showFollowLabel = navigating && !following;
+  const floating = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: sheetHeight - (liveSheetHeight?.value ?? sheetHeight) },
+    ],
+  }));
   return (
-    <View
+    <Animated.View
       pointerEvents="box-none"
-      style={[styles.overlay, { top: controlsTop }]}
+      style={[styles.overlay, { bottom: sheetHeight + 12 }, floating]}
     >
-      {!hasDestination && !compact && (
-        <View
-          style={[
-            styles.venue,
-            { backgroundColor: theme.paper, maxWidth: 200 },
-          ]}
-        >
-          <Icon name="pin" color={theme.accent} size={18} />
-          <View style={{ flexShrink: 1 }}>
-            <Text style={[styles.name, { color: theme.ink }]}>
-              Sandton City
-            </Text>
-            <Text style={[styles.meta, { color: theme.muted }]}>
-              {floorName(floorLevel)} · Demo map
-            </Text>
-          </View>
-        </View>
-      )}
-      <View style={[styles.controls, compact && { flexDirection: "row" }]}>
+      {atlasSandtonVenue.floors.length > 1 && (
         <View
           style={[
             styles.floors,
-            compact && { flexDirection: "row", padding: 4 },
-            { backgroundColor: theme.paper, borderColor: theme.line },
+            available < 280 && styles.floorRow,
             shadows.soft,
+            { backgroundColor: theme.paper, borderColor: theme.line },
           ]}
         >
-          {!compact && <Icon name="layers" color={theme.muted} size={18} />}
-          {[...atlasSandtonVenue.floors].reverse().map((f) => (
+          {[...atlasSandtonVenue.floors].reverse().map((floor) => (
             <Pressable
-              key={f.id}
+              key={floor.id}
               accessibilityRole="button"
-              accessibilityLabel={"Show " + f.name}
-              accessibilityState={{ selected: floorLevel === f.level }}
-              onPress={() => onSelectFloor(f.level)}
-              style={({ pressed }) => [
-                styles.floor,
+              accessibilityLabel={`Show ${floor.name}`}
+              accessibilityState={{ selected: floorLevel === floor.level }}
+              onPress={() => onSelectFloor(floor.level)}
+              style={[
+                styles.control,
                 {
                   backgroundColor:
-                    floorLevel === f.level ? theme.accentSoft : theme.paper,
-                  opacity: pressed ? 0.7 : 1,
+                    floorLevel === floor.level ? theme.accentSoft : theme.paper,
                 },
               ]}
             >
@@ -91,80 +87,77 @@ export function FloatingMapControls({
                 style={[
                   styles.floorLabel,
                   {
-                    color: floorLevel === f.level ? theme.accent : theme.muted,
+                    color:
+                      floorLevel === floor.level ? theme.accent : theme.muted,
                   },
                 ]}
               >
-                {f.shortLabel}
+                {floor.shortLabel}
               </Text>
             </Pressable>
           ))}
         </View>
-        <Pressable
+      )}
+      <GlassSurface theme={theme} style={styles.recenter}>
+        <MotionPressable
           accessibilityRole="button"
           accessibilityLabel={
-            navigating ? "Resume following demo position" : "Recenter map"
+            navigating
+              ? "Recenter on demo walk"
+              : previewing
+                ? "Fit walking route"
+                : "Show demo start"
           }
-          accessibilityState={{ selected: cameraMode === "follow" }}
+          accessibilityState={{
+            selected: following || (previewing && cameraMode === "route"),
+          }}
           onPress={onRecenter}
           style={({ pressed }) => [
+            styles.control,
             styles.recenter,
-            {
-              backgroundColor:
-                cameraMode === "follow" ? theme.accentSoft : theme.paper,
-              borderColor: theme.line,
-              opacity: pressed ? 0.7 : 1,
-            },
-            shadows.soft,
+            showFollowLabel && styles.followButton,
+            (following || pressed) && { backgroundColor: theme.accentSoft },
           ]}
         >
-          <Icon name="locate" color={theme.accent} />
-        </Pressable>
-      </View>
-    </View>
+          <Icon
+            name={previewing ? "fit" : "locate"}
+            color={following ? theme.accent : theme.ink}
+            size={22}
+          />
+          {showFollowLabel && (
+            <Text style={[styles.followLabel, { color: theme.ink }]}>
+              Follow route
+            </Text>
+          )}
+        </MotionPressable>
+      </GlassSurface>
+    </Animated.View>
   );
 }
+
 const styles = StyleSheet.create({
-  overlay: {
-    position: "absolute",
-    left: 20,
-    right: 20,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "flex-end",
-  },
-  venue: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-    padding: 12,
-    borderRadius: 16,
-  },
-  name: { fontSize: 16, fontWeight: "600" },
-  meta: { fontSize: 12, marginTop: 4 },
-  controls: { gap: 12, marginLeft: "auto" },
+  overlay: { position: "absolute", right: 16, alignItems: "flex-end", gap: 8 },
   floors: {
-    borderWidth: 1,
-    borderRadius: 20,
-    padding: 4,
-    paddingTop: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 18,
+    padding: 3,
     alignItems: "center",
-    gap: 4,
   },
-  floor: {
-    width: 44,
-    minHeight: 44,
+  floorRow: { flexDirection: "row" },
+  control: {
+    width: 48,
+    minHeight: 48,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },
-  floorLabel: { fontSize: 16, fontWeight: "600" },
-  recenter: {
-    width: 52,
-    height: 52,
-    borderRadius: 20,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
+  floorLabel: { fontSize: 15, fontWeight: "700" },
+  recenter: { borderRadius: 24 },
+  followButton: {
+    width: "auto",
+    flexDirection: "row",
+    paddingHorizontal: 12,
+    gap: 6,
   },
+  followLabel: { fontSize: 13, fontWeight: "700" },
 });

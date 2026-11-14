@@ -1,323 +1,418 @@
-import { IndoorMapData, MapPoint, POIItem } from "./map/types";
+import {
+  IndoorFloor,
+  IndoorMapData,
+  MapPoint,
+  MapRoom,
+  POIItem,
+} from "./map/types";
 
-const rect = (x: number, y: number, width: number, height: number): MapPoint[] => [
+/** Hand-traced from the user's schematic. One reference level; no surveyed scale or live tenant data. */
+const p = (x: number, y: number): MapPoint => ({ x: x * 2, y: y * 2 });
+const path = (coords: number[][]) => coords.map(([x, y]) => p(x, y));
+export const rect = (
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): MapPoint[] => [
   { x, y },
   { x: x + width, y },
   { x: x + width, y: y + height },
   { x, y: y + height },
 ];
+const box = (x: number, y: number, w: number, h: number) =>
+  rect(x * 2, y * 2, w * 2, h * 2);
 
-export const searchCategories = [
-  { id: "all", label: "All Places", icon: "❖" },
-  { id: "fashion", label: "Fashion", icon: "🛍" },
-  { id: "food", label: "Food & Drinks", icon: "☕️" },
-  { id: "restrooms", label: "Restrooms", icon: "🚻" },
-  { id: "info", label: "Information", icon: "ℹ️" },
-  { id: "parking", label: "Parking", icon: "🅿️" },
-  { id: "accessibility", label: "Accessibility", icon: "♿️" },
+// Centre lines follow the white galleries in the reference. The west marker is the demo origin.
+const corridorPaths = [
+  path([
+    [166, 190],
+    [216, 190],
+    [330, 190],
+    [342, 198],
+    [354, 214],
+    [359, 232],
+    [367, 246],
+    [367, 548],
+  ]),
+  path([
+    [216, 190],
+    [216, 438],
+    [173, 438],
+    [173, 450],
+  ]),
+  path([
+    [216, 430],
+    [367, 430],
+  ]),
+  path([
+    [216, 380],
+    [273, 380],
+    [273, 430],
+  ]),
+  path([
+    [240, 430],
+    [240, 503],
+  ]),
+  path([
+    [216, 461],
+    [240, 461],
+  ]),
 ];
-
-export const samplePOIs: POIItem[] = [
-  {
-    id: "zara",
-    name: "ZARA",
-    category: "Fashion & Clothing",
-    floorLevel: 2,
-    floorName: "Level 1",
-    walkTimeMin: 3,
-    distanceM: 180,
-    openingStatus: "Open until 21:00",
-    entranceInfo: "Main Concourse Entrance",
-    sponsored: false,
-    accessible: true,
-    point: { x: 318, y: 96 },
-    description: "Flagship women's, men's & kids' contemporary fashion and accessories.",
+const snapToWalkway = (point: MapPoint) => {
+  let best = { point, distance: Infinity };
+  for (const points of corridorPaths)
+    for (let i = 1; i < points.length; i++) {
+      const a = points[i - 1],
+        b = points[i];
+      const dx = b.x - a.x,
+        dy = b.y - a.y;
+      const t = Math.max(
+        0,
+        Math.min(
+          1,
+          ((point.x - a.x) * dx + (point.y - a.y) * dy) / (dx * dx + dy * dy),
+        ),
+      );
+      const projection = { x: a.x + t * dx, y: a.y + t * dy };
+      const distance = Math.hypot(
+        point.x - projection.x,
+        point.y - projection.y,
+      );
+      if (distance < best.distance) best = { point: projection, distance };
+    }
+  return best.point;
+};
+const rooms: MapRoom[] = [];
+const directory: POIItem[] = [];
+function addUnit(
+  points: MapPoint[],
+  identity?: {
+    id: string;
+    name: string;
+    category: string;
+    point: MapPoint;
+    label?: MapPoint;
   },
-  {
-    id: "zara-home",
-    name: "ZARA Home",
-    category: "Home & Decor",
-    floorLevel: 2,
-    floorName: "Level 1",
-    walkTimeMin: 4,
-    distanceM: 220,
-    openingStatus: "Open until 21:00",
-    entranceInfo: "East Wing Entrance",
-    sponsored: true,
-    accessible: true,
-    point: { x: 340, y: 140 },
-    description: "Promoted · Curated homeware, luxury bedding, and interior accents.",
-  },
-  {
-    id: "apple",
-    name: "Apple Store",
-    category: "Electronics",
+) {
+  const index = rooms.length + 1;
+  const unitLabel = `S${String(index).padStart(3, "0")}`;
+  const xs = points.map((point) => point.x),
+    ys = points.map((point) => point.y);
+  const label = identity?.label || {
+    x: (Math.min(...xs) + Math.max(...xs)) / 2,
+    y: (Math.min(...ys) + Math.max(...ys)) / 2,
+  };
+  const id = identity?.id || `unit-${unitLabel.toLowerCase()}`;
+  const name = identity?.name || `Unit ${unitLabel}`;
+  const category = identity?.category || "Unconfirmed tenant";
+  rooms.push({
+    id,
+    name,
+    category,
+    points,
+    label,
+    labelMode: identity ? "always" : "detail",
+  });
+  // Unconfirmed units end at the closest mapped gallery, rather than inventing a shop door through a wall.
+  const point = identity?.point || snapToWalkway(label);
+  directory.push({
+    id,
+    name,
+    category,
     floorLevel: 1,
-    floorName: "Ground Floor",
-    walkTimeMin: 2,
-    distanceM: 110,
-    openingStatus: "Open until 20:00",
-    entranceInfo: "Atrium East Concourse",
-    sponsored: false,
-    accessible: true,
-    point: { x: 324, y: 141 },
-    description: "iPhone, Mac, iPad, Apple Watch and Genius Bar support.",
+    floorName: "Reference level",
+    point,
+    unitLabel,
+    distanceM: 0,
+    walkTimeMin: 0,
+    openingStatus: identity
+      ? "Name visible in reference"
+      : "Tenant unconfirmed",
+    entranceInfo: identity
+      ? "Mapped approach via the gallery. Confirm the entrance on site."
+      : "The demo ends on the nearest gallery. The shop entrance is unverified.",
+    description: identity
+      ? "Store name from the reference map. Current tenancy, hours and access are unverified."
+      : "This unit has a demo reference code. The tenant is unverified.",
+  });
+}
+const unit = (x: number, y: number, w: number, h: number) =>
+  addUnit(box(x, y, w, h));
+const stack = (x: number, y: number, w: number, heights: number[]) => {
+  let top = y;
+  heights.forEach((h) => {
+    unit(x, top, w, h);
+    top += h + 1;
+  });
+};
+const row = (x: number, y: number, widths: number[], h: number) => {
+  let left = x;
+  widths.forEach((w) => {
+    unit(left, y, w, h);
+    left += w + 1;
+  });
+};
+
+// West perimeter and its narrow shop frontages.
+unit(130, 104, 31, 147);
+unit(170, 131, 15, 31);
+row(170, 164, [15, 7, 7, 7], 14);
+stack(170, 201, 15, [17, 10, 9, 8]);
+stack(186, 201, 23, [7, 9, 9, 7, 9]);
+unit(130, 252, 39, 49);
+stack(170, 253, 14, [12, 12, 9, 12]);
+stack(186, 253, 23, [8, 9, 8, 9, 10]);
+unit(130, 311, 39, 50);
+unit(130, 363, 39, 39);
+stack(170, 311, 39, [14, 12, 11, 11, 11, 10]);
+row(170, 389, [7, 31], 14);
+addUnit(
+  path([
+    [133, 417],
+    [145, 406],
+    [155, 406],
+    [167, 421],
+    [166, 437],
+    [166, 486],
+    [160, 499],
+    [148, 502],
+    [129, 487],
+  ]),
+);
+unit(170, 420, 39, 15);
+unit(170, 461, 9, 20);
+unit(180, 462, 8, 20);
+unit(170, 483, 18, 19);
+unit(197, 463, 10, 19);
+unit(208, 463, 17, 19);
+row(197, 484, [13, 14], 18);
+
+// North wing and central island. Small divisions preserve the rhythm of the supplied plan.
+row(280, 170, [14, 14, 15], 14);
+row(220, 200, [10, 10, 10, 13], 20);
+stack(220, 222, 35, [14, 10, 11, 10, 11, 11, 10, 10, 9, 9, 10]);
+row(226, 358, [8, 8, 8, 9], 13);
+unit(257, 222, 38, 46);
+unit(257, 270, 51, 69);
+unit(257, 341, 25, 15);
+row(265, 200, [13, 14, 14], 21);
+unit(297, 222, 11, 46);
+stack(310, 200, 23, [10, 12, 28]);
+stack(310, 256, 51, [14, 13, 14]);
+stack(329, 301, 27, [8, 8, 10, 10]);
+unit(310, 301, 17, 38);
+unit(284, 341, 21, 32);
+unit(307, 341, 20, 28);
+unit(329, 341, 27, 28);
+unit(286, 375, 19, 22);
+unit(307, 371, 20, 26);
+unit(329, 371, 19, 16);
+unit(349, 371, 7, 27);
+row(226, 398, [9, 9, 8, 9], 21);
+row(282, 399, [9, 8, 8, 8, 8, 8, 8, 8], 20);
+
+// East gallery and south wing.
+unit(380, 255, 64, 31);
+unit(380, 290, 64, 18);
+unit(380, 311, 64, 17);
+stack(377, 373, 21, [13, 10, 10, 10]);
+unit(429, 350, 15, 54);
+unit(430, 405, 14, 17);
+stack(377, 438, 21, [8, 8, 9, 9, 10, 12]);
+unit(445, 442, 8, 77);
+unit(430, 470, 14, 49);
+unit(380, 534, 73, 13);
+stack(255, 442, 19, [18, 12, 13, 13]);
+row(277, 442, [9, 9, 9, 9], 50);
+stack(318, 442, 35, [18, 13, 13, 21, 10, 11, 11]);
+
+addUnit(
+  path([
+    [186, 131],
+    [327, 131],
+    [344, 166],
+    [328, 169],
+    [279, 169],
+    [279, 178],
+    [186, 178],
+  ]),
+  {
+    id: "edgars",
+    name: "Edgars",
+    category: "Department Store",
+    point: p(250, 178),
+    label: p(254, 154),
   },
+);
+addUnit(box(380, 330, 48, 42), {
+  id: "mr-price",
+  name: "Mr Price",
+  category: "Fashion & Clothing",
+  point: p(380, 360),
+  label: p(404, 350),
+});
+addUnit(
+  path([
+    [399, 405],
+    [427, 405],
+    [427, 423],
+    [444, 423],
+    [444, 469],
+    [399, 469],
+  ]),
   {
     id: "woolworths",
     name: "Woolworths",
     category: "Department Store",
-    floorLevel: 1,
-    floorName: "Ground Floor",
-    walkTimeMin: 2,
-    distanceM: 95,
-    openingStatus: "Open until 20:00",
-    entranceInfo: "West Atrium Entrance",
-    sponsored: false,
-    accessible: true,
-    point: { x: 58, y: 52 },
-    description: "Food market, fashion, beauty, and homeware.",
+    point: p(399, 430),
+    label: p(421.5, 444),
   },
-  {
-    id: "nike",
-    name: "Nike Store",
-    category: "Sportswear",
-    floorLevel: 1,
-    floorName: "Ground Floor",
-    walkTimeMin: 3,
-    distanceM: 140,
-    openingStatus: "Open until 20:00",
-    entranceInfo: "South Concourse",
-    sponsored: true,
-    accessible: true,
-    point: { x: 53, y: 131 },
-    description: "Promoted · Performance footwear, running apparel & training gear.",
-  },
-  {
-    id: "food-court",
-    name: "Atrium Food Court",
-    category: "Dining & Cafes",
-    floorLevel: 1,
-    floorName: "Ground Floor",
-    walkTimeMin: 3,
-    distanceM: 160,
-    openingStatus: "Open until 22:00",
-    entranceInfo: "Lower Concourse Hub",
-    sponsored: false,
-    accessible: true,
-    point: { x: 74, y: 499 },
-    description: "Variety of artisanal coffee, fast casual dining, and outdoor seating.",
-  },
-  {
-    id: "cinema",
-    name: "Ster-Kinekor Cinema",
-    category: "Entertainment",
-    floorLevel: 2,
-    floorName: "Level 1",
-    walkTimeMin: 5,
-    distanceM: 290,
-    openingStatus: "Open until 23:00",
-    entranceInfo: "Upper Entertainment Wing",
-    sponsored: false,
-    accessible: true,
-    point: { x: 306, y: 501 },
-    description: "IMAX 3D cinema, luxury seats, and snack bar.",
-  },
-  {
-    id: "restrooms-l1",
-    name: "Central Restrooms",
-    category: "Restrooms & Baby Care",
-    floorLevel: 1,
-    floorName: "Ground Floor",
-    walkTimeMin: 1,
-    distanceM: 45,
-    openingStatus: "Available 24/7",
-    entranceInfo: "Behind Information Desk",
-    sponsored: false,
-    accessible: true,
-    point: { x: 176, y: 326 },
-    description: "Accessible stalls, baby changing tables, and touchless sinks.",
-  },
-  {
-    id: "info-desk",
-    name: "Information Desk",
-    category: "Guest Services",
-    floorLevel: 1,
-    floorName: "Ground Floor",
-    walkTimeMin: 1,
-    distanceM: 30,
-    openingStatus: "Staffed until 20:00",
-    entranceInfo: "Central Atrium Plaza",
-    sponsored: false,
-    accessible: true,
-    point: { x: 142, y: 356 },
-    description: "Venue maps, wheelchair rentals, lost & found, gift cards.",
-  },
-];
+);
+addUnit(box(170, 504, 146, 43), {
+  id: "checkers",
+  name: "Checkers Hyper",
+  category: "Food Market",
+  point: p(240, 504),
+  label: p(241, 524),
+});
+addUnit(box(379, 501, 49, 20), {
+  id: "clicks",
+  name: "Clicks",
+  category: "Health & Beauty",
+  point: p(379, 511),
+  label: p(404, 511),
+});
 
-const commonRooms = [
-  { id: "woolworths", name: "WOOLWORTHS", points: rect(12, 16, 92, 72), label: { x: 58, y: 52 }, entrance: { from: { x: 50, y: 88 }, to: { x: 66, y: 88 } } },
-  { id: "lego", name: "LEGO", points: rect(116, 18, 62, 48), label: { x: 147, y: 42 }, entrance: { from: { x: 140, y: 66 }, to: { x: 154, y: 66 } } },
-  { id: "nike", name: "NIKE", points: rect(12, 102, 82, 58), label: { x: 53, y: 131 }, entrance: { from: { x: 94, y: 131 }, to: { x: 94, y: 145 } } },
-  { id: "apple", name: "APPLE", points: rect(282, 112, 84, 58), label: { x: 324, y: 141 }, entrance: { from: { x: 282, y: 141 }, to: { x: 282, y: 155 } } },
-  { id: "cotton", name: "COTTON ON", points: rect(10, 170, 86, 66), label: { x: 53, y: 203 }, entrance: { from: { x: 96, y: 203 }, to: { x: 96, y: 217 } } },
-  { id: "dischem", name: "DIS-CHEM", points: rect(286, 190, 82, 70), label: { x: 327, y: 225 }, entrance: { from: { x: 286, y: 225 }, to: { x: 286, y: 239 } } },
-  { id: "hm", name: "H&M", points: rect(12, 278, 84, 62), label: { x: 54, y: 309 }, entrance: { from: { x: 96, y: 309 }, to: { x: 96, y: 323 } } },
-  { id: "checkers", name: "CHECKERS", points: rect(284, 286, 84, 80), label: { x: 326, y: 326 }, entrance: { from: { x: 284, y: 326 }, to: { x: 284, y: 340 } } },
-  { id: "nandos", name: "NANDO'S", points: rect(14, 380, 84, 62), label: { x: 56, y: 411 }, entrance: { from: { x: 98, y: 411 }, to: { x: 98, y: 425 } } },
-  { id: "typo", name: "TYPO", points: rect(282, 390, 86, 58), label: { x: 325, y: 419 }, entrance: { from: { x: 282, y: 419 }, to: { x: 282, y: 433 } } },
-  { id: "food", name: "FOOD COURT", points: rect(18, 472, 112, 54), label: { x: 74, y: 499 }, entrance: { from: { x: 74, y: 472 }, to: { x: 88, y: 472 } } },
-  { id: "cinema", name: "STER-KINEKOR", points: rect(244, 476, 124, 50), label: { x: 306, y: 501 }, entrance: { from: { x: 306, y: 476 }, to: { x: 320, y: 476 } } },
+// Fictional testing layer. Stable unit IDs keep saved places and route approaches intact.
+const conceptTenants = [
+  ["unit-s001", "Nook", "Home & Living"],
+  ["unit-s016", "Paper & Pine", "Books & Stationery"],
+  ["unit-s026", "Juniper Cafe", "Dining & Coffee"],
+  ["unit-s027", "Petal Studio", "Flowers & Gifts"],
+  ["unit-s036", "Market Hall", "Dining & Food"],
+  ["unit-s067", "Orbit", "Electronics"],
+  ["unit-s068", "Forma", "Fashion & Clothing"],
+  ["unit-s104", "Olive Table", "Dining & Restaurant"],
 ];
+for (const [id, name, category] of conceptTenants) {
+  const room = rooms.find((item) => item.id === id)!;
+  const place = directory.find((item) => item.id === id)!;
+  Object.assign(room, { name, category, demo: true, labelMode: "always" });
+  Object.assign(place, {
+    name,
+    category,
+    demo: true,
+    openingStatus: "Fictional demo tenant",
+    description: `${name}: a fictional tenant for visual testing.`,
+    entranceInfo:
+      "Demo gallery approach. Entrance is illustrative.",
+  });
+}
 
-export const atlasSandtonVenue: IndoorMapData = {
-  venueName: "Sandton City",
-  start: { x: 190, y: 438 },
-  startFloorLevel: 1,
-  destination: samplePOIs[0],
-  floors: [
-    {
-      id: "sandton-l1",
-      level: 1,
-      name: "Ground Floor",
-      shortLabel: "G",
-      bounds: { width: 380, height: 550 },
-      plate: rect(4, 4, 372, 542),
-      concourses: [],
-      contextZones: [rect(18, 26, 112, 132), rect(260, 30, 98, 146), rect(18, 360, 106, 142), rect(268, 372, 88, 130)],
-      corridorPaths: [
-        [{ x: 190, y: 438 }, { x: 190, y: 364 }, { x: 174, y: 338 }, { x: 194, y: 306 }, { x: 204, y: 274 }],
-        [{ x: 190, y: 22 }, { x: 190, y: 528 }],
-        [{ x: 28, y: 276 }, { x: 352, y: 276 }],
-        [{ x: 45, y: 118 }, { x: 112, y: 164 }, { x: 190, y: 196 }, { x: 274, y: 170 }, { x: 340, y: 116 }],
-        [{ x: 42, y: 430 }, { x: 110, y: 374 }, { x: 190, y: 346 }, { x: 270, y: 382 }, { x: 344, y: 442 }],
-      ],
-      rooms: [],
-      facilities: [
-        { id: "info-l1", kind: "information", point: { x: 142, y: 356 }, label: "Information" },
-        { id: "escalator-l1", kind: "escalator", point: { x: 204, y: 274 }, label: "E2 Escalator" },
-        { id: "lift-l1", kind: "lift", point: { x: 252, y: 274 }, label: "Lift 1" },
-        { id: "wc-l1", kind: "restroom", point: { x: 176, y: 326 }, label: "WC" },
-      ],
-      labels: [
-        { id: "entrance-l1", text: "Entrance", point: { x: 190, y: 514 }, prominent: true },
-        { id: "central-l1", text: "Central Walk", point: { x: 190, y: 222 }, prominent: true },
-        { id: "north-l1", text: "North Wing", point: { x: 88, y: 105 } },
-        { id: "services-l1", text: "Services", point: { x: 304, y: 420 } },
-        { id: "level-l1", text: "Ground Floor", point: { x: 42, y: 530 } },
-      ],
-      closure: { x: 106, y: 252 },
-    },
-    {
-      id: "sandton-l2",
-      level: 2,
-      name: "Level 1",
-      shortLabel: "L1",
-      bounds: { width: 380, height: 550 },
-      plate: rect(4, 4, 372, 542),
-      concourses: [],
-      contextZones: [rect(18, 22, 105, 142), rect(266, 20, 92, 132), rect(22, 370, 98, 132), rect(270, 378, 86, 122)],
-      corridorPaths: [
-        [{ x: 204, y: 274 }, { x: 226, y: 236 }, { x: 252, y: 210 }, { x: 290, y: 174 }, { x: 318, y: 122 }, { x: 318, y: 96 }],
-        [{ x: 204, y: 524 }, { x: 204, y: 274 }, { x: 236, y: 224 }, { x: 318, y: 96 }, { x: 342, y: 42 }],
-        [{ x: 34, y: 274 }, { x: 346, y: 274 }],
-        [{ x: 42, y: 126 }, { x: 118, y: 178 }, { x: 204, y: 196 }, { x: 286, y: 164 }],
-        [{ x: 38, y: 438 }, { x: 118, y: 370 }, { x: 204, y: 342 }, { x: 288, y: 390 }, { x: 348, y: 448 }],
-      ],
-      rooms: [],
-      facilities: [
-        { id: "escalator-l2", kind: "escalator", point: { x: 204, y: 274 }, label: "E2 Escalator" },
-        { id: "lift-l2", kind: "lift", point: { x: 252, y: 274 }, label: "Lift 1" },
-        { id: "wc-l2", kind: "restroom", point: { x: 176, y: 326 }, label: "WC" },
-      ],
-      labels: [
-        { id: "zara-label", text: "Zara", point: { x: 322, y: 76 }, prominent: true },
-        { id: "central-l2", text: "Central Walk", point: { x: 204, y: 222 }, prominent: true },
-        { id: "north-l2", text: "North Wing", point: { x: 84, y: 104 } },
-        { id: "parking-l2", text: "Parking Link", point: { x: 302, y: 446 } },
-        { id: "level-l2", text: "Level 1", point: { x: 42, y: 530 } },
-      ],
-    },
+const floor: IndoorFloor = {
+  id: "sandton-reference",
+  level: 1,
+  name: "Reference level",
+  shortLabel: "D",
+  bounds: { width: 1242, height: 1306 },
+  plate: path([
+    [130, 104],
+    [161, 104],
+    [161, 130],
+    [326, 130],
+    [346, 179],
+    [373, 179],
+    [389, 198],
+    [400, 253],
+    [445, 253],
+    [445, 404],
+    [454, 404],
+    [454, 547],
+    [170, 547],
+    [170, 504],
+    [145, 504],
+    [129, 488],
+    [129, 417],
+    [130, 403],
+  ]),
+  overviewPoints: path([
+    [89, 32],
+    [511, 637],
+  ]),
+  siteBoundary: path([
+    [116, 46],
+    [471, 185],
+    [498, 248],
+    [489, 594],
+    [453, 625],
+    [115, 567],
+    [105, 425],
+    [105, 78],
+  ]),
+  contextRoad:
+    "M 232 92 L 942 370 Q 958 376 995 496 L 978 1170 Q 955 1234 904 1250 L 230 1134 Q 208 846 210 156 Q 208 112 232 92 Z",
+  contextLabels: [
+    { id: "rivonia", text: "Rivonia Rd", point: p(306, 117), rotate: 22 },
+    { id: "fifth", text: "5th St", point: p(106, 295), rotate: -90 },
+    { id: "sandton", text: "Sandton Dr", point: p(489, 404), rotate: -88 },
+    { id: "alice", text: "Alice Ln", point: p(282, 593), rotate: 10 },
   ],
-  route: [
+  concourses: [],
+  corridorPaths,
+  rooms,
+  facilities: [],
+  courts: [{ point: p(354, 216), radius: 48 }],
+  labels: [
     {
-      floorId: "sandton-l1",
-      floorLevel: 1,
-      polyline: [
-        { x: 190, y: 438 },
-        { x: 190, y: 364 },
-        { x: 174, y: 338 },
-        { x: 194, y: 306 },
-        { x: 204, y: 274 },
-      ],
-      transitionAt: { x: 204, y: 274 },
-      transitionType: "escalator",
-      transitionToFloorId: "sandton-l2",
-      transitionToLevel: 2,
+      id: "west-gallery",
+      text: "West gallery",
+      point: p(216, 310),
+      rotate: -90,
     },
     {
-      floorId: "sandton-l2",
-      floorLevel: 2,
-      polyline: [
-        { x: 204, y: 274 },
-        { x: 226, y: 236 },
-        { x: 252, y: 210 },
-        { x: 290, y: 174 },
-        { x: 318, y: 122 },
-        { x: 318, y: 96 },
-      ],
-    },
-  ],
-  steps: [
-    {
-      id: "step-1",
-      instruction: "Head north along Mandela Concourse",
-      subInstruction: "Pass the Information Desk on your left",
-      distanceM: 75,
-      icon: "straight",
-      floorLevel: 1,
-      floorName: "Ground Floor",
-      nodePoint: { x: 190, y: 438 },
-    },
-    {
-      id: "step-2",
-      instruction: "Turn right toward Escalator E2",
-      subInstruction: "Central Atrium Plaza",
-      distanceM: 40,
-      icon: "turn-right",
-      floorLevel: 1,
-      floorName: "Ground Floor",
-      nodePoint: { x: 194, y: 306 },
-    },
-    {
-      id: "step-3",
-      instruction: "Take Escalator E2 to Level 1",
-      subInstruction: "Ascend to Upper Fashion Gallery",
-      distanceM: 20,
-      icon: "escalator",
-      floorLevel: 1,
-      floorName: "Ground Floor → Level 1",
-      nodePoint: { x: 204, y: 274 },
-    },
-    {
-      id: "step-4",
-      instruction: "Follow concourse toward ZARA",
-      subInstruction: "Upper Fashion Gallery",
-      distanceM: 45,
-      icon: "straight",
-      floorLevel: 2,
-      floorName: "Level 1",
-      nodePoint: { x: 252, y: 210 },
-    },
-    {
-      id: "step-5",
-      instruction: "Arrive at ZARA",
-      subInstruction: "Main Entrance on your right",
-      distanceM: 0,
-      icon: "arrive",
-      floorLevel: 2,
-      floorName: "Level 1",
-      nodePoint: { x: 318, y: 96 },
+      id: "east-gallery",
+      text: "East gallery",
+      point: p(367, 350),
+      rotate: -90,
     },
   ],
 };
+const anchorIds = ["checkers", "edgars", "woolworths", "mr-price", "clicks"];
+const start = p(173, 450);
+directory.push({
+  id: "west-start",
+  name: "West demo entrance",
+  category: "Map landmark",
+  floorLevel: 1,
+  floorName: floor.name,
+  point: start,
+  distanceM: 0,
+  walkTimeMin: 0,
+  openingStatus: "Demo start",
+  entranceInfo:
+    "Demo origin beside the red marker in the supplied schematic. Entrance position is illustrative.",
+});
+export const samplePOIs = directory.sort(
+  (a, b) =>
+    (anchorIds.indexOf(a.id) < 0 ? 999 : anchorIds.indexOf(a.id)) -
+    (anchorIds.indexOf(b.id) < 0 ? 999 : anchorIds.indexOf(b.id)),
+);
+export const atlasSandtonVenue: IndoorMapData = {
+  venueName: "Sandton Mall",
+  floors: [floor],
+  start,
+  startFloorLevel: 1,
+  destination: samplePOIs.find((poi) => poi.id === "checkers")!,
+  route: [],
+  steps: [],
+};
+export const namedStoreCount = anchorIds.length;
+export const mapUnitCount = rooms.length;
+export const venueSubtitle = "Reference schematic · Demo routes";
+export const searchCategories = [
+  { id: "all", label: "All places", icon: "compass" },
+  { id: "anchors", label: "Named stores", icon: "shop" },
+  { id: "units", label: "Other units", icon: "layers" },
+  { id: "landmarks", label: "Map points", icon: "pin" },
+];

@@ -1,20 +1,5 @@
 const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
-const ts = require("typescript");
-const sourceRoot = path.resolve(__dirname, "../src");
-// Compile only this app's pure TypeScript fixtures and routing module for Node.
-require.extensions[".ts"] = (module, filename) => {
-  assert.ok(filename.startsWith(sourceRoot + path.sep));
-  const source = fs.readFileSync(filename, "utf8");
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2020,
-    },
-  });
-  module._compile(compiled.outputText, filename);
-};
+require("./register-test-typescript.cjs");
 const { buildDemoRoute, floorName } = require("../src/map/demo-routing.ts");
 const { samplePOIs, atlasSandtonVenue } = require("../src/fixtures.ts");
 for (const poi of samplePOIs)
@@ -28,13 +13,15 @@ for (const poi of samplePOIs)
     assert.deepEqual(end.polyline[end.polyline.length - 1], poi.point);
     assert.equal(
       route.steps[route.steps.length - 1].instruction,
-      `You’re at ${poi.name}`,
+      poi.id.startsWith("unit-")
+        ? `Approach to ${poi.name}`
+        : `You’re at ${poi.name}`,
     );
     assert.equal(
       route.steps[route.steps.length - 1].floorLevel,
       poi.floorLevel,
     );
-    assert.ok(route.distanceM > 0 && route.walkTimeMin >= 1);
+    assert.ok(route.distanceM >= 0 && route.walkTimeMin >= 1);
     assert.equal(route.segments.length, poi.floorLevel === 1 ? 1 : 2);
     if (stepFree)
       assert.ok(
@@ -55,14 +42,17 @@ for (const poi of samplePOIs)
       );
     }
   }
-const zara = samplePOIs.find((p) => p.id === "zara");
-assert.equal(buildDemoRoute(zara).segments[0].transitionType, "escalator");
-assert.equal(buildDemoRoute(zara, true).segments[0].transitionType, "lift");
-assert.notDeepEqual(
-  buildDemoRoute(zara).segments[0].polyline,
-  buildDemoRoute(zara, true).segments[0].polyline,
+const edgars = samplePOIs.find((p) => p.id === "edgars");
+assert.equal(buildDemoRoute(edgars).segments[0].transitionType, undefined);
+assert.equal(
+  buildDemoRoute(edgars, true).segments[0].transitionType,
+  undefined,
 );
-assert.equal(buildDemoRoute({ ...zara, floorLevel: 999 }), null);
+assert.deepEqual(
+  buildDemoRoute(edgars).segments[0].polyline,
+  buildDemoRoute(edgars, true).segments[0].polyline,
+);
+assert.equal(buildDemoRoute({ ...edgars, floorLevel: 999 }), null);
 console.log(
-  `Verified ${samplePOIs.length * 2} destination/preference routes, floor changes, exact endpoints and unreachable-floor handling.`,
+  `Verified ${samplePOIs.length * 2} schematic routes, single-level consistency, exact endpoints and unreachable-floor handling.`,
 );

@@ -1,52 +1,69 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   AccessibilityInfo,
-  BackHandler,
+  AppState,
+  Modal,
   Pressable,
-  StyleSheet,
+  ScrollView,
   Text,
+  BackHandler,
+  Platform,
+  StyleSheet,
   View,
+  useColorScheme,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useSharedValue } from "react-native-reanimated";
 import { StatusBar } from "expo-status-bar";
 import {
   ActiveNavigationPanel,
-  BottomTabBar,
   DestinationSheet,
   ExploreScreen,
   FloatingMapControls,
-  FloatingSearchBar,
   IndoorMap,
   SearchOverlay,
   SettingsScreen,
 } from "./src/components";
-import { FeedbackContext, useFeedback } from "./src/components/Motion";
+import {
+  FeedbackContext,
+  MotionPressable,
+  useFeedback,
+} from "./src/components/Motion";
+import { GlassSurface } from "./src/components/GlassSurface";
 import { usePlaceMemory } from "./src/usePlaceMemory";
 import { CameraMode } from "./src/map/camera";
 import { Icon } from "./src/components/Icon";
-import { TabKey } from "./src/components/BottomTabBar";
-import { atlasSandtonVenue, samplePOIs } from "./src/fixtures";
+import { atlasSandtonVenue } from "./src/fixtures";
 import { POIItem } from "./src/map/types";
 import { buildDemoRoute } from "./src/map/demo-routing";
-import { darkTheme, lightTheme, shadows } from "./src/theme";
+import { darkTheme, lightTheme, Theme } from "./src/theme";
+import { MapHomeSheet } from "./src/components/MapHomeSheet";
+import { ConnectedVenueScreen, connectedVenueEnabled } from "./src/components/ConnectedVenueScreen";
+
+type TabKey = "map" | "explore" | "settings" | "test-venue";
+const initialFloor = atlasSandtonVenue.startFloorLevel;
+const initialSheetHeight = 140;
 
 export default function App() {
   const [systemReducedMotion, setSystemReducedMotion] = useState(true);
   const [limitMotion, setLimitMotion] = useState(false);
   const [haptics, setHaptics] = useState(true);
   return (
-    <FeedbackContext.Provider
-      value={{ reducedMotion: systemReducedMotion || limitMotion, haptics }}
-    >
-      <AtlasApp
-        systemReducedMotion={systemReducedMotion}
-        setSystemReducedMotion={setSystemReducedMotion}
-        limitMotion={limitMotion}
-        setLimitMotion={setLimitMotion}
-        haptics={haptics}
-        setHaptics={setHaptics}
-      />
-    </FeedbackContext.Provider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <FeedbackContext.Provider
+        value={{ reducedMotion: systemReducedMotion || limitMotion, haptics }}
+      >
+        <AtlasApp
+          systemReducedMotion={systemReducedMotion}
+          setSystemReducedMotion={setSystemReducedMotion}
+          limitMotion={limitMotion}
+          setLimitMotion={setLimitMotion}
+          haptics={haptics}
+          setHaptics={setHaptics}
+        />
+      </FeedbackContext.Provider>
+    </GestureHandlerRootView>
   );
 }
 function AtlasApp({
@@ -67,18 +84,30 @@ function AtlasApp({
   const places = usePlaceMemory();
   const feedback = useFeedback();
   const [cameraMode, setCameraMode] = useState<CameraMode>("floor");
-  const [sheetHeight, setSheetHeight] = useState(300);
+  const [sheetHeight, setSheetHeight] = useState(initialSheetHeight);
+  const liveHomeSheetHeight = useSharedValue(initialSheetHeight);
+  const [headerHeight, setHeaderHeight] = useState(60);
   const [instructionHeight, setInstructionHeight] = useState(108);
   const [activeTab, setActiveTab] = useState<TabKey>("map");
-  const [isDark, setIsDark] = useState(false);
-  const [floorLevel, setFloorLevel] = useState(1);
+  const [darkPreference, setDarkPreference] = useState<boolean | null>(null);
+  const colorScheme = useColorScheme();
+  const isDark = darkPreference ?? colorScheme === "dark";
+  const [floorLevel, setFloorLevel] = useState(initialFloor);
   const [recenterKey, setRecenterKey] = useState(0);
-  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchScope, setSearchScope] = useState<"all" | "saved" | null>(null);
+  const searchVisible = searchScope !== null;
   const [selectedPOI, setSelectedPOI] = useState<POIItem | null>(null);
   const reducedMotion = systemReducedMotion || limitMotion;
   const [stepFree, setStepFree] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const pendingMenuAction = useRef<(() => void) | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [walking, setWalking] = useState(false);
+  const [legProgress, setLegProgress] = useState(0);
+  const [appActive, setAppActive] = useState(
+    AppState.currentState === "active",
+  );
   const [arrived, setArrived] = useState(false);
   const theme = isDark ? darkTheme : lightTheme;
   const route = useMemo(
@@ -86,20 +115,44 @@ function AtlasApp({
     [selectedPOI, stepFree],
   );
   const currentStep = isNavigating ? route?.steps[currentStepIndex] : undefined;
+  const nextNode = route?.steps[currentStepIndex + 1]?.nodePoint;
+  const movingPosition =
+    currentStep && nextNode
+      ? {
+          x:
+            currentStep.nodePoint.x +
+            (nextNode.x - currentStep.nodePoint.x) * legProgress,
+          y:
+            currentStep.nodePoint.y +
+            (nextNode.y - currentStep.nodePoint.y) * legProgress,
+        }
+      : currentStep?.nodePoint;
   const position =
     arrived && selectedPOI
       ? selectedPOI.point
-      : (currentStep?.nodePoint ?? atlasSandtonVenue.start);
+      : (movingPosition ?? atlasSandtonVenue.start);
   const positionFloor =
     arrived && selectedPOI
       ? selectedPOI.floorLevel
       : (currentStep?.floorLevel ?? atlasSandtonVenue.startFloorLevel);
   const closeDestination = () => {
+    liveHomeSheetHeight.value = initialSheetHeight;
     setSelectedPOI(null);
     setIsNavigating(false);
     setArrived(false);
-    setFloorLevel(1);
+    setCurrentStepIndex(0);
+    setFloorLevel(initialFloor);
     setCameraMode("floor");
+    setWalking(false);
+    setLegProgress(0);
+  };
+  const stop = () => {
+    setIsNavigating(false);
+    setWalking(false);
+    setLegProgress(0);
+    setCameraMode("route");
+    setCurrentStepIndex(0);
+    if (selectedPOI) setFloorLevel(selectedPOI.floorLevel);
   };
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled()
@@ -116,7 +169,8 @@ function AtlasApp({
       "hardwareBackPress",
       () => {
         if (selectedPOI && activeTab === "map") {
-          closeDestination();
+          if (isNavigating) stop();
+          else closeDestination();
           return true;
         }
         if (activeTab !== "map") {
@@ -127,7 +181,7 @@ function AtlasApp({
       },
     );
     return () => subscription.remove();
-  }, [selectedPOI, activeTab]);
+  }, [selectedPOI, activeTab, isNavigating]);
   const selectPlace = (poi: POIItem) => {
     places.remember(poi.id);
     feedback();
@@ -136,11 +190,15 @@ function AtlasApp({
     setFloorLevel(poi.floorLevel);
     setIsNavigating(false);
     setCurrentStepIndex(0);
+    setLegProgress(0);
+    setWalking(false);
     setArrived(false);
     setActiveTab("map");
   };
   const start = () => {
     if (!route) return;
+    setLegProgress(0);
+    setWalking(true);
     setCameraMode("follow");
     feedback();
     setIsNavigating(true);
@@ -150,15 +208,17 @@ function AtlasApp({
     setRecenterKey((k) => k + 1);
   };
   const nextStep = () => {
+    setLegProgress(0);
     if (!route) return;
     const next = currentStepIndex + 1;
     if (next >= route.steps.length) {
       setIsNavigating(false);
       setArrived(true);
+      setWalking(false);
       setCameraMode("route");
       feedback("success");
       AccessibilityInfo.announceForAccessibility(
-        "Demo journey complete. You are at " + selectedPOI!.name,
+        "Demo walk complete. " + selectedPOI!.name,
       );
       setFloorLevel(selectedPOI!.floorLevel);
     } else {
@@ -174,6 +234,49 @@ function AtlasApp({
       );
     }
   };
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) =>
+      setAppActive(state === "active"),
+    );
+    return () => sub.remove();
+  }, []);
+  useEffect(() => {
+    if (
+      !isNavigating ||
+      !walking ||
+      !appActive ||
+      activeTab !== "map" ||
+      searchVisible ||
+      menuVisible ||
+      !currentStep
+    )
+      return;
+    // Accelerated schematic walkthrough. Advance along each straight gallery leg.
+    const length = nextNode
+      ? Math.hypot(
+          nextNode.x - currentStep.nodePoint.x,
+          nextNode.y - currentStep.nodePoint.y,
+        )
+      : 0;
+    const timer = setInterval(
+      () =>
+        setLegProgress((value) => Math.min(1, value + 6 / Math.max(6, length))),
+      500,
+    );
+    return () => clearInterval(timer);
+  }, [
+    isNavigating,
+    walking,
+    appActive,
+    activeTab,
+    searchVisible,
+    menuVisible,
+    currentStep,
+    nextNode,
+  ]);
+  useEffect(() => {
+    if (isNavigating && walking && legProgress >= 1) nextStep();
+  }, [legProgress, walking, isNavigating]);
   const changeStepFree = (value: boolean) => {
     setStepFree(value);
     feedback();
@@ -183,10 +286,34 @@ function AtlasApp({
       setCurrentStepIndex(0);
     }
   };
+  const openSearch = () => setSearchScope("all");
+  const topInset = isNavigating
+    ? instructionHeight + 20
+    : selectedPOI
+      ? 68
+      : headerHeight + 20;
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
-        <StatusBar style={isDark ? "light" : "dark"} />
+      {Platform.OS === "android" && (
+        <SafeAreaView
+          edges={["top"]}
+          style={{ backgroundColor: theme.chrome }}
+        />
+      )}
+      <SafeAreaView
+        edges={
+          Platform.OS === "android"
+            ? ["left", "right", "bottom"]
+            : ["top", "left", "right", "bottom"]
+        }
+        style={[
+          styles.safeArea,
+          { backgroundColor: activeTab === "map" ? theme.mapBg : theme.bg },
+        ]}
+      >
+        <StatusBar
+          style={isDark || Platform.OS === "android" ? "light" : "dark"}
+        />
         <View style={styles.container}>
           {activeTab === "map" && (
             <View style={styles.container}>
@@ -199,12 +326,15 @@ function AtlasApp({
                 positionFloor={positionFloor}
                 recenterKey={recenterKey}
                 reducedMotion={reducedMotion}
+                navigating={isNavigating}
+                arrived={arrived}
                 onSelectPOI={selectPlace}
                 hasSheet={!!selectedPOI}
                 cameraMode={cameraMode}
                 onPan={() => setCameraMode("manual")}
                 sheetHeight={sheetHeight}
-                topInset={isNavigating ? instructionHeight + 24 : 144}
+                liveSheetHeight={!selectedPOI ? liveHomeSheetHeight : undefined}
+                topInset={topInset}
                 nextPoint={
                   route?.steps[currentStepIndex + 1]?.floorLevel ===
                   positionFloor
@@ -212,12 +342,39 @@ function AtlasApp({
                     : undefined
                 }
               />
-              {!isNavigating && (
-                <FloatingSearchBar
+              {!selectedPOI && (
+                <MapHeader
                   theme={theme}
-                  value={selectedPOI?.name ?? ""}
-                  onPress={() => setSearchVisible(true)}
+                  onHeightChange={setHeaderHeight}
+                  onMenu={() => setMenuVisible(true)}
                 />
+              )}
+              {selectedPOI && !isNavigating && (
+                <View pointerEvents="box-none" style={styles.mapHeader}>
+                  <GlassSurface theme={theme} style={styles.roundSurface}>
+                    <MotionPressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Back to map"
+                      onPress={closeDestination}
+                      style={({ pressed }) => [
+                        styles.roundButton,
+                        pressed && { backgroundColor: theme.subtle },
+                      ]}
+                    >
+                      <Icon name="back" color={theme.ink} size={21} />
+                    </MotionPressable>
+                  </GlassSurface>
+                  <GlassSurface
+                    theme={theme}
+                    pointerEvents="none"
+                    style={styles.previewBadge}
+                  >
+                    <Icon name="walking" color={theme.accent} size={17} />
+                    <Text style={[styles.shortLabel, { color: theme.ink }]}>
+                      {arrived ? "Indoor demo" : "Walking preview"}
+                    </Text>
+                  </GlassSurface>
+                </View>
               )}
               <FloatingMapControls
                 theme={theme}
@@ -233,72 +390,35 @@ function AtlasApp({
                   );
                 }}
                 cameraMode={cameraMode}
-                controlsTop={isNavigating ? instructionHeight + 24 : 144}
+                controlsTop={topInset}
                 onRecenter={() => {
-                  setFloorLevel(positionFloor);
+                  setFloorLevel(
+                    !isNavigating && selectedPOI
+                      ? selectedPOI.floorLevel
+                      : positionFloor,
+                  );
                   setCameraMode(
-                    isNavigating ? "follow" : selectedPOI ? "route" : "floor",
+                    !isNavigating && selectedPOI ? "route" : "follow",
                   );
                   setRecenterKey((k) => k + 1);
                 }}
                 navigating={isNavigating}
-                sheetHeight={selectedPOI ? sheetHeight : 210}
-                hasDestination={!!selectedPOI}
+                previewing={!!selectedPOI && !isNavigating}
+                sheetHeight={sheetHeight}
+                liveSheetHeight={!selectedPOI ? liveHomeSheetHeight : undefined}
               />
               {!selectedPOI && (
-                <View
-                  style={[
-                    styles.welcome,
-                    { backgroundColor: theme.paper, borderColor: theme.line },
-                    shadows.soft,
-                  ]}
-                >
-                  <Text style={[styles.welcomeTitle, { color: theme.ink }]}>
-                    Find your way.
-                  </Text>
-                  <Text style={[styles.meta, { color: theme.muted }]}>
-                    Browse a place to preview your route.
-                  </Text>
-                  <View style={styles.quickRow}>
-                    {[
-                      { id: "zara", label: "ZARA", icon: "shop" as const },
-                      {
-                        id: "food-court",
-                        label: "Food court",
-                        icon: "coffee" as const,
-                      },
-                      {
-                        id: "restrooms-l1",
-                        label: "Restrooms",
-                        icon: "restroom" as const,
-                      },
-                    ].map((item) => (
-                      <Pressable
-                        key={item.id}
-                        accessibilityRole="button"
-                        accessibilityLabel={
-                          "Preview " +
-                          samplePOIs.find((p) => p.id === item.id)!.name
-                        }
-                        onPress={() =>
-                          selectPlace(samplePOIs.find((p) => p.id === item.id)!)
-                        }
-                        style={({ pressed }) => [
-                          styles.quick,
-                          {
-                            backgroundColor: theme.subtle,
-                            opacity: pressed ? 0.7 : 1,
-                          },
-                        ]}
-                      >
-                        <Icon name={item.icon} color={theme.accent} size={20} />
-                        <Text style={[styles.quickText, { color: theme.ink }]}>
-                          {item.label}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
+                <MapHomeSheet
+                  theme={theme}
+                  savedIds={places.saved}
+                  recentIds={places.recent}
+                  onSelect={selectPlace}
+                  onSearch={openSearch}
+                  onExplore={() => setActiveTab("explore")}
+                  onSaved={() => setSearchScope("saved")}
+                  onHeightChange={setSheetHeight}
+                  liveSheetHeight={liveHomeSheetHeight}
+                />
               )}
               {selectedPOI && !isNavigating && (
                 <DestinationSheet
@@ -338,25 +458,45 @@ function AtlasApp({
                     setFloorLevel(positionFloor);
                     setRecenterKey((k) => k + 1);
                   }}
+                  walking={walking}
+                  legProgress={legProgress}
+                  onToggleWalking={() => setWalking((v) => !v)}
                   onNextStep={nextStep}
-                  onStopNavigation={() => {
-                    setIsNavigating(false);
-                    setCameraMode("route");
-                    setCurrentStepIndex(0);
-                    setFloorLevel(selectedPOI.floorLevel);
-                  }}
+                  onStopNavigation={stop}
                 />
               )}
             </View>
           )}
+          {activeTab !== "map" && (
+            <Pressable
+              onPress={() => setActiveTab("map")}
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.backHeader,
+                pressed && { backgroundColor: theme.subtle },
+              ]}
+            >
+              <Icon name="back" color={theme.ink} size={22} />
+              <Text
+                style={{ color: theme.ink, fontSize: 16, fontWeight: "600" }}
+              >
+                Back to map
+              </Text>
+            </Pressable>
+          )}
           {activeTab === "explore" && (
-            <ExploreScreen theme={theme} onSelectPOI={selectPlace} />
+            <ExploreScreen
+              theme={theme}
+              onSelectPOI={selectPlace}
+              savedIds={places.saved}
+              onSearch={() => openSearch()}
+            />
           )}
           {activeTab === "settings" && (
             <SettingsScreen
               theme={theme}
               isDark={isDark}
-              onToggleDark={setIsDark}
+              onToggleDark={setDarkPreference}
               reducedMotion={reducedMotion}
               onToggleReducedMotion={setLimitMotion}
               systemReducedMotion={systemReducedMotion}
@@ -366,52 +506,254 @@ function AtlasApp({
               onToggleStepFree={changeStepFree}
             />
           )}
-          <SearchOverlay
-            theme={theme}
-            visible={searchVisible}
-            onClose={() => setSearchVisible(false)}
-            onSelectPOI={selectPlace}
-            reducedMotion={reducedMotion}
-            savedIds={places.saved}
-            recentIds={places.recent}
-            onClearRecent={places.clearRecent}
-            storageIssue={places.storageIssue}
-          />
-          <BottomTabBar
-            theme={theme}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
+          {activeTab === "test-venue" && (
+            <ConnectedVenueScreen theme={theme} reducedMotion={reducedMotion} stepFree={stepFree} />
+          )}
+          {searchVisible && (
+            <SearchOverlay
+              theme={theme}
+              onClose={() => setSearchScope(null)}
+              onSelectPOI={selectPlace}
+              reducedMotion={reducedMotion}
+              savedIds={places.saved}
+              recentIds={places.recent}
+              onClearRecent={places.clearRecent}
+              storageIssue={places.storageIssue}
+              initialSavedOnly={searchScope === "saved"}
+              focusSearch={searchScope === "all"}
+            />
+          )}
+          <Modal
+            visible={menuVisible}
+            onDismiss={() => {
+              pendingMenuAction.current?.();
+              pendingMenuAction.current = null;
+            }}
+            transparent
+            animationType={reducedMotion ? "none" : "fade"}
+            onRequestClose={() => setMenuVisible(false)}
+          >
+            <View style={styles.menuOverlay}>
+              <Pressable
+                style={StyleSheet.absoluteFill}
+                onPress={() => setMenuVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Dismiss menu"
+              />
+              <GlassSurface
+                theme={theme}
+                variant="panel"
+                style={styles.menuSheet}
+              >
+                <View style={styles.pageHeader}>
+                  <Text
+                    style={{
+                      flex: 1,
+                      color: theme.ink,
+                      fontSize: 24,
+                      fontWeight: "600",
+                    }}
+                  >
+                    Map options
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Close menu"
+                    onPress={() => setMenuVisible(false)}
+                    style={styles.roundButton}
+                  >
+                    <Icon name="close" color={theme.ink} />
+                  </Pressable>
+                </View>
+                <ScrollView>
+                  {(
+                    [
+                      {
+                        title: "Map overview",
+                        icon: "map",
+                        action: () => {
+                          setCameraMode("floor");
+                          setRecenterKey((k) => k + 1);
+                        },
+                      },
+                      {
+                        title: "Settings",
+                        icon: "settings",
+                        action: () => setActiveTab("settings"),
+                      },
+                      ...(connectedVenueEnabled ? [{
+                        title: "Fictional test venue",
+                        icon: "layers" as const,
+                        action: () => setActiveTab("test-venue"),
+                      }] : []),
+                    ] as const
+                  ).map((item) => (
+                    <Pressable
+                      key={item.title}
+                      accessibilityRole="button"
+                      onPress={() => {
+                        setMenuVisible(false);
+                        if (Platform.OS === "ios")
+                          pendingMenuAction.current = item.action;
+                        else item.action();
+                      }}
+                      style={styles.menuItem}
+                    >
+                      <Icon name={item.icon} color={theme.accent} />
+                      <Text style={{ color: theme.ink, fontSize: 17 }}>
+                        {item.title}
+                      </Text>
+                      <View style={{ flex: 1 }} />
+                      <Icon name="arrow" color={theme.muted} size={18} />
+                    </Pressable>
+                  ))}
+                  <Text
+                    style={{ color: theme.muted, fontSize: 12, padding: 16 }}
+                  >
+                    Sandton schematic · Demo position
+                  </Text>
+                </ScrollView>
+              </GlassSurface>
+            </View>
+          </Modal>
         </View>
       </SafeAreaView>
     </SafeAreaProvider>
   );
 }
+function MapHeader({
+  theme,
+  onHeightChange,
+  onMenu,
+}: {
+  theme: Theme;
+  onHeightChange: (height: number) => void;
+  onMenu: () => void;
+}) {
+  return (
+    <View
+      pointerEvents="box-none"
+      onLayout={(event) => onHeightChange(event.nativeEvent.layout.height)}
+      style={styles.mapHeader}
+    >
+      <GlassSurface theme={theme} pointerEvents="none" style={styles.venue}>
+        <View style={[styles.venueMark, { backgroundColor: theme.accentSoft }]}>
+          <Icon name="atlas" color={theme.accent} size={22} />
+        </View>
+        <View style={styles.venueCopy}>
+          <Text
+            accessibilityRole="header"
+            style={[styles.venueName, { color: theme.ink }]}
+          >
+            {atlasSandtonVenue.venueName}
+          </Text>
+          <Text style={[styles.venueMeta, { color: theme.muted }]}>
+            Demo venue
+          </Text>
+        </View>
+      </GlassSurface>
+      <GlassSurface theme={theme} style={styles.roundSurface}>
+        <MotionPressable
+          accessibilityRole="button"
+          accessibilityLabel="Map options"
+          onPress={onMenu}
+          style={({ pressed }) => [
+            styles.roundButton,
+            pressed && { backgroundColor: theme.subtle },
+          ]}
+        >
+          <Icon name="settings" color={theme.ink} size={21} />
+        </MotionPressable>
+      </GlassSurface>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
-  container: { flex: 1 },
-  welcome: {
+  mapHeader: {
     position: "absolute",
-    left: 12,
-    right: 12,
-    bottom: 84,
-    borderRadius: 28,
-    padding: 20,
-    borderWidth: 1,
-    gap: 8,
+    top: 10,
+    left: 16,
+    right: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 10,
   },
-  welcomeTitle: { fontSize: 24, fontWeight: "600", letterSpacing: -0.5 },
-  meta: { fontSize: 16, lineHeight: 20 },
-  quickRow: { flexDirection: "row", gap: 8, marginTop: 8 },
-  quick: {
-    flex: 1,
-    minHeight: 64,
-    borderRadius: 16,
-    flexDirection: "column",
+  venue: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexShrink: 1,
+    gap: 9,
+    paddingVertical: 7,
+    paddingLeft: 7,
+    paddingRight: 15,
+    borderRadius: 20,
+  },
+  venueMark: {
+    width: 37,
+    height: 37,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    padding: 8,
   },
-  quickText: { fontSize: 12, fontWeight: "600" },
+  venueCopy: { flexShrink: 1, gap: 2 },
+  venueName: { fontSize: 15, fontWeight: "700", letterSpacing: -0.2 },
+  venueMeta: { fontSize: 12, fontWeight: "500" },
+  roundSurface: { borderRadius: 25 },
+  shortLabel: { fontSize: 13, fontWeight: "700" },
+  previewBadge: {
+    minHeight: 40,
+    borderRadius: 20,
+    flexShrink: 1,
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  roundButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pageHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    gap: 8,
+  },
+  backHeader: {
+    minHeight: 52,
+    paddingHorizontal: 20,
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderRadius: 16,
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(8,20,30,0.25)",
+    justifyContent: "center",
+    padding: 24,
+  },
+  menuSheet: {
+    width: "100%",
+    maxWidth: 400,
+    maxHeight: "100%",
+    alignSelf: "center",
+    borderRadius: 24,
+    padding: 12,
+  },
+  menuItem: {
+    minHeight: 60,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    paddingHorizontal: 16,
+  },
+  safeArea: { flex: 1 },
+  container: { flex: 1 },
 });

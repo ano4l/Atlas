@@ -1,67 +1,58 @@
 // Graph construction and route rules. See techspec.md §7.4.
-// Routing pipeline: apply constraints -> build valid edge set -> A* shortest
+// Routing pipeline: apply constraints -> build valid edge set -> shortest
 // valid route -> apply commercial routing policy (isolated, see routing-core
 // should NOT itself implement commercial influence; see services/platform-api).
 
 import type { NavigationEdge, NavigationNode } from "@atlas/spatial-model";
 
-export interface NavigationGraph {
-  nodes: Map<string, NavigationNode>;
-  edges: Map<string, NavigationEdge[]>; // adjacency list keyed by fromNodeId
+type GraphNode = Pick<NavigationNode, "id" | "floorId" | "x" | "y">;
+type GraphEdge = Pick<NavigationEdge, "fromNodeId" | "toNodeId" | "distanceM" | "estimatedTimeS" | "directionality" | "isRestricted">;
+
+export interface NavigationGraph<Edge extends GraphEdge = NavigationEdge> {
+  nodes: Map<string, GraphNode>;
+  edges: Map<string, RouteSegment<Edge>[]>;
 }
 
-export function buildGraph(nodes: NavigationNode[], edges: NavigationEdge[]): NavigationGraph {
+export function buildGraph<Edge extends GraphEdge>(nodes: GraphNode[], edges: Edge[]): NavigationGraph<Edge> {
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
-  const adjacency = new Map<string, NavigationEdge[]>();
+  const adjacency = new Map<string, RouteSegment<Edge>[]>();
+  const add = (edge: Edge, fromNodeId: string, toNodeId: string) => {
+    const segments = adjacency.get(fromNodeId) ?? [];
+    segments.push({ edge, fromNodeId, toNodeId });
+    adjacency.set(fromNodeId, segments);
+  };
 
   for (const edge of edges) {
-    if (edge.isRestricted) continue;
-    const list = adjacency.get(edge.fromNodeId) ?? [];
-    list.push(edge);
-    adjacency.set(edge.fromNodeId, list);
-
-    if (edge.directionality === "bidirectional") {
-      const reverse = adjacency.get(edge.toNodeId) ?? [];
-      reverse.push(edge);
-      adjacency.set(edge.toNodeId, reverse);
-    }
+    if (edge.isRestricted || !Number.isFinite(edge.distanceM) || edge.distanceM <= 0 ||
+        !nodeMap.has(edge.fromNodeId) || !nodeMap.has(edge.toNodeId)) continue;
+    if (edge.directionality !== "backward") add(edge, edge.fromNodeId, edge.toNodeId);
+    if (edge.directionality !== "forward") add(edge, edge.toNodeId, edge.fromNodeId);
   }
 
   return { nodes: nodeMap, edges: adjacency };
 }
 
-export interface RouteSegment {
-  edge: NavigationEdge;
+export interface RouteSegment<Edge extends GraphEdge = NavigationEdge> {
+  edge: Edge;
   fromNodeId: string;
   toNodeId: string;
 }
 
-export interface RouteResult {
-  segments: RouteSegment[];
+export interface RouteResult<Edge extends GraphEdge = NavigationEdge> {
+  segments: RouteSegment<Edge>[];
   distanceM: number;
   estimatedTimeS: number;
 }
 
-/**
- * A* shortest path using straight-line distance as the admissible heuristic.
- * Placeholder implementation for Phase 0/1 scaffolding — to be exercised
- * against the synthetic two-floor fixture (techspec.md §17 Phase 1).
- */
-export function findShortestRoute(
-  graph: NavigationGraph,
+/** Dijkstra search: routing costs may be lower than coordinate distance. */
+export function findShortestRoute<Edge extends GraphEdge>(
+  graph: NavigationGraph<Edge>,
   startNodeId: string,
   destinationNodeId: string
-): RouteResult | null {
+): RouteResult<Edge> | null {
+  if (!graph.nodes.has(startNodeId) || !graph.nodes.has(destinationNodeId)) return null;
   const distances = new Map<string, number>([[startNodeId, 0]]);
-  const previous = new Map<string, RouteSegment>();
-  const visited = new Set<string>();
-
-  const heuristic = (nodeId: string) => {
-    const a = graph.nodes.get(nodeId);
-    const b = graph.nodes.get(destinationNodeId);
-    if (!a || !b) return 0;
-    return Math.hypot(a.x - b.x, a.y - b.y);
-  };
+  const previous = new Map<string, RouteSegment<Edge>>();
 
   const frontier = new Set<string>([startNodeId]);
 
@@ -69,8 +60,8 @@ export function findShortestRoute(
     let current: string | null = null;
     let bestScore = Infinity;
     for (const nodeId of frontier) {
-      const score = (distances.get(nodeId) ?? Infinity) + heuristic(nodeId);
-      if (score < bestScore) {
+      const score = distances.get(nodeId) ?? Infinity;
+      if (score < bestScore || (score === bestScore && current !== null && nodeId < current)) {
         bestScore = score;
         current = nodeId;
       }
@@ -79,15 +70,12 @@ export function findShortestRoute(
     frontier.delete(current);
 
     if (current === destinationNodeId) break;
-    if (visited.has(current)) continue;
-    visited.add(current);
-
-    for (const edge of graph.edges.get(current) ?? []) {
-      const neighborId = edge.fromNodeId === current ? edge.toNodeId : edge.fromNodeId;
-      const candidateDistance = (distances.get(current) ?? Infinity) + edge.distanceM;
+    for (const segment of graph.edges.get(current) ?? []) {
+      const neighborId = segment.toNodeId;
+      const candidateDistance = bestScore + segment.edge.distanceM;
       if (candidateDistance < (distances.get(neighborId) ?? Infinity)) {
         distances.set(neighborId, candidateDistance);
-        previous.set(neighborId, { edge, fromNodeId: current, toNodeId: neighborId });
+        previous.set(neighborId, segment);
         frontier.add(neighborId);
       }
     }
@@ -95,7 +83,7 @@ export function findShortestRoute(
 
   if (!distances.has(destinationNodeId)) return null;
 
-  const segments: RouteSegment[] = [];
+  const segments: RouteSegment<Edge>[] = [];
   let cursor = destinationNodeId;
   while (cursor !== startNodeId) {
     const segment = previous.get(cursor);

@@ -1,56 +1,110 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Theme, shadows } from "../theme";
-import { Icon } from "./Icon";
+import { Icon, IconName } from "./Icon";
+import { atlasSandtonVenue } from "../fixtures";
+
+const shortcuts: { id: string; label: string; icon: IconName }[] = [
+  { id: "anchors", label: "Named stores", icon: "shop" },
+  { id: "units", label: "All units", icon: "layers" },
+  { id: "landmarks", label: "Demo start", icon: "pin" },
+];
 export function FloatingSearchBar({
   theme,
   onPress,
+  onCategory,
+  onSaved,
   value = "",
 }: {
   theme: Theme;
   onPress: () => void;
+  onCategory: (category: string) => void;
+  onSaved: () => void;
   value?: string;
 }) {
   return (
     <View style={styles.container} pointerEvents="box-none">
-      <View style={styles.header}>
-        <View style={styles.brand}>
-          <Icon name="compass" color={theme.accent} size={28} />
-          <Text style={[styles.wordmark, { color: theme.ink }]}>atlas</Text>
-        </View>
-        <View style={[styles.demo, { backgroundColor: theme.paper }]}>
-          <Text style={[styles.demoText, { color: theme.inkSecondary }]}>
-            Demo venue
-          </Text>
-        </View>
-      </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Search destinations"
-        onPress={onPress}
-        style={({ pressed }) => [
+      <View
+        style={[
           styles.search,
-          shadows.soft,
-          {
-            backgroundColor: theme.paper,
-            borderColor: theme.cardBorder,
-            opacity: pressed ? 0.8 : 1,
-          },
+          { backgroundColor: theme.paper, borderColor: theme.cardBorder },
+          shadows.medium,
         ]}
       >
-        <Icon name="search" color={theme.accent} />
-        <View style={styles.copy}>
-          <Text numberOfLines={1} style={[styles.title, { color: theme.ink }]}>
-            {value || "Where to?"}
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.muted }]}>
-            Shops, food & facilities
-          </Text>
-        </View>
-        <View style={[styles.arrow, { backgroundColor: theme.subtle }]}>
-          <Icon name="arrow" size={18} color={theme.inkSecondary} />
-        </View>
-      </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Search destinations"
+          onPress={onPress}
+          style={({ pressed }) => [
+            styles.searchAction,
+            { opacity: pressed ? 0.7 : 1 },
+          ]}
+        >
+          <View style={[styles.brand, { backgroundColor: theme.chrome }]}>
+            <Icon name="compass" color={theme.highlight} size={28} />
+          </View>
+          <View style={styles.copy}>
+            <Text style={[styles.eyebrow, { color: theme.muted }]}>
+              {atlasSandtonVenue.venueName.toUpperCase()}{" "}
+              <Text style={{ color: theme.accent }}> / DEMO</Text>
+            </Text>
+            <Text
+              numberOfLines={1}
+              style={[styles.title, { color: theme.ink }]}
+            >
+              {value || "Where to?"}
+            </Text>
+          </View>
+          <Icon name="search" color={theme.ink} size={22} />
+        </Pressable>
+        <View style={[styles.divider, { backgroundColor: theme.line }]} />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open saved places"
+          onPress={onSaved}
+          style={styles.saved}
+        >
+          <Icon name="bookmark" color={theme.accent} size={22} />
+        </Pressable>
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.shortcuts}
+      >
+        {shortcuts.map((item) => (
+          <Pressable
+            key={item.id}
+            accessibilityRole="button"
+            accessibilityLabel={`Find ${item.label.toLowerCase()}`}
+            onPress={() => onCategory(item.id)}
+            style={({ pressed }) => [
+              styles.chip,
+              shadows.soft,
+              {
+                backgroundColor: theme.paper,
+                borderColor: theme.cardBorder,
+                opacity: pressed ? 0.75 : 1,
+              },
+            ]}
+          >
+            <Icon
+              name={item.icon}
+              color={
+                item.id === "food"
+                  ? theme.foodInk
+                  : item.id === "services"
+                    ? theme.facilityInk
+                    : theme.shoppingInk
+              }
+              size={18}
+            />
+            <Text style={[styles.chipText, { color: theme.ink }]}>
+              {item.label}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -58,38 +112,54 @@ const styles = StyleSheet.create({
   container: {
     position: "absolute",
     top: 12,
-    left: 20,
-    right: 20,
+    left: 0,
+    right: 0,
     zIndex: 20,
-    gap: 16,
+    gap: 8,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  brand: { flexDirection: "row", gap: 6, alignItems: "center" },
-  wordmark: { fontSize: 32, fontWeight: "600", letterSpacing: -1.2 },
-  demo: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20 },
-  demoText: { fontSize: 12, fontWeight: "600" },
   search: {
-    minHeight: 64,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 20,
+    marginHorizontal: 16,
+    minHeight: 76,
+    borderRadius: 26,
     borderWidth: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    paddingRight: 4,
   },
-  copy: { flex: 1, gap: 2 },
-  title: { fontSize: 16, fontWeight: "600" },
-  subtitle: { fontSize: 12 },
-  arrow: {
-    width: 32,
-    height: 32,
-    borderRadius: 12,
+  searchAction: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 12,
+    paddingRight: 8,
+  },
+  brand: {
+    width: 44,
+    height: 48,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },
+  copy: { flex: 1, gap: 3 },
+  eyebrow: { fontSize: 12, fontWeight: "600", letterSpacing: 0.6 },
+  title: { fontSize: 24, fontWeight: "600", letterSpacing: -0.8 },
+  divider: { width: 1, height: 28 },
+  saved: {
+    width: 44,
+    minHeight: 52,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  shortcuts: { gap: 8, paddingHorizontal: 16, paddingBottom: 8 },
+  chip: {
+    minHeight: 44,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderRadius: 24,
+    borderWidth: 1,
+  },
+  chipText: { fontSize: 12, fontWeight: "600" },
 });

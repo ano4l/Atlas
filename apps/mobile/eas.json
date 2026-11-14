@@ -4,7 +4,7 @@
     "ios-simulator": {
       "distribution": "internal",
       "ios": { "simulator": true, "buildConfiguration": "Release" },
-      "node": "20.19.4",
+      "node": "22.13.0",
       "pnpm": "9.0.0"
     }
   }

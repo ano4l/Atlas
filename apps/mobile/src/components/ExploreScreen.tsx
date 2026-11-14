@@ -1,117 +1,257 @@
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { Theme } from "../theme";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { atlasSandtonVenue } from "../fixtures";
 import { POIItem } from "../map/types";
+import { Theme } from "../theme";
+import { Icon } from "./Icon";
 import {
+  categories,
   CategoryPicker,
   EmptyPlaces,
   filterPlaces,
   PlaceRow,
 } from "./PlaceList";
-import { Icon } from "./Icon";
+
 export function ExploreScreen({
   theme,
   onSelectPOI,
+  savedIds,
+  onSearch,
 }: {
   theme: Theme;
   onSelectPOI: (poi: POIItem) => void;
+  savedIds: string[];
+  onSearch: () => void;
 }) {
   const [category, setCategory] = useState("all");
-  const places = filterPlaces("", category);
+  const [savedOnly, setSavedOnly] = useState(false);
+  const places = savedOnly
+    ? filterPlaces("", "all").filter((place) => savedIds.includes(place.id))
+    : filterPlaces("", category);
+  const heading = savedOnly
+    ? "Saved places"
+    : (categories.find((item) => item.id === category)?.label ?? "All places");
+
   return (
-    <ScrollView
+    <FlatList
       style={{ flex: 1, backgroundColor: theme.bg }}
       contentContainerStyle={styles.scroll}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.header}>
-        <Text style={[styles.eyebrow, { color: theme.muted }]}>
-          SANDTON CITY
-        </Text>
-        <Text style={[styles.title, { color: theme.ink }]}>
-          A place for everything.
-        </Text>
-        <Text style={[styles.subtitle, { color: theme.muted }]}>
-          Find your next stop, one floor at a time.
-        </Text>
-      </View>
-      <CategoryPicker theme={theme} value={category} onChange={setCategory} />
-      <View style={[styles.guide, { backgroundColor: theme.accentSoft }]}>
-        <Icon name="map" color={theme.accent} size={24} />
-        <View style={{ flex: 1, gap: 4 }}>
-          <Text style={[styles.guideTitle, { color: theme.ink }]}>
-            Your venue, at a glance
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.muted }]}>
-            2 floors · Shops, dining & useful facilities
-          </Text>
-        </View>
-      </View>
-      <View style={styles.listHeading}>
-        <Text style={[styles.section, { color: theme.ink }]}>
-          Explore places
-        </Text>
-        <Text style={[styles.subtitle, { color: theme.muted }]}>
-          {places.length} places
-        </Text>
-      </View>
-      <View
-        style={[
-          styles.list,
-          { backgroundColor: theme.paper, borderColor: theme.line },
-        ]}
-      >
-        {places.map((p) => (
+      data={places}
+      keyExtractor={(item) => item.id}
+      initialNumToRender={10}
+      renderItem={({ item, index }) => (
+        <View style={styles.listRow}>
           <PlaceRow
-            key={p.id}
             theme={theme}
-            poi={p}
-            onPress={() => onSelectPOI(p)}
+            poi={item}
+            first={index === 0}
+            last={index === places.length - 1}
+            saved={!savedOnly && savedIds.includes(item.id)}
+            onPress={() => onSelectPOI(item)}
           />
-        ))}
-        {!places.length && (
-          <EmptyPlaces theme={theme} onReset={() => setCategory("all")} />
-        )}
-      </View>
-      <Text style={[styles.note, { color: theme.muted }]}>
-        Demo directory · Names and locations are illustrative.
-      </Text>
-    </ScrollView>
+        </View>
+      )}
+      ListHeaderComponent={
+        <View style={styles.header}>
+          <View style={styles.gutter}>
+            <Text
+              accessibilityRole="header"
+              style={[styles.title, { color: theme.ink }]}
+            >
+              Directory
+            </Text>
+            <View style={styles.venue}>
+              <Icon name="pin" color={theme.accent} size={18} />
+              <Text style={[styles.meta, { color: theme.inkSecondary }]}>
+                {atlasSandtonVenue.venueName} · Indoor demo
+              </Text>
+            </View>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Search stores and units"
+            onPress={onSearch}
+            style={({ pressed }) => [
+              styles.search,
+              {
+                backgroundColor: pressed ? theme.subtle : theme.paper,
+                borderColor: theme.line,
+              },
+            ]}
+          >
+            <Icon name="search" color={theme.accent} size={20} />
+            <Text style={[styles.searchLabel, { color: theme.inkSecondary }]}>
+              Search stores and units
+            </Text>
+            <Icon name="chevron-right" color={theme.muted} size={18} />
+          </Pressable>
+          <View style={[styles.segment, { backgroundColor: theme.subtle }]}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ selected: !savedOnly }}
+              onPress={() => setSavedOnly(false)}
+              style={({ pressed }) => [
+                styles.segmentOption,
+                !savedOnly && { backgroundColor: theme.paper },
+                pressed && { opacity: 0.72 },
+              ]}
+            >
+              <Icon
+                name="map"
+                color={!savedOnly ? theme.accent : theme.muted}
+                size={18}
+              />
+              <Text
+                style={[
+                  styles.label,
+                  { color: !savedOnly ? theme.ink : theme.muted },
+                ]}
+              >
+                Browse
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Saved places, ${savedIds.length}`}
+              accessibilityState={{ selected: savedOnly }}
+              onPress={() => setSavedOnly(true)}
+              style={({ pressed }) => [
+                styles.segmentOption,
+                savedOnly && { backgroundColor: theme.paper },
+                pressed && { opacity: 0.72 },
+              ]}
+            >
+              <Icon
+                name="bookmark"
+                color={savedOnly ? theme.accent : theme.muted}
+                size={18}
+              />
+              <Text
+                style={[
+                  styles.label,
+                  { color: savedOnly ? theme.ink : theme.muted },
+                ]}
+              >
+                Saved{savedIds.length > 0 ? ` · ${savedIds.length}` : ""}
+              </Text>
+            </Pressable>
+          </View>
+          {!savedOnly && (
+            <CategoryPicker
+              theme={theme}
+              value={category}
+              onChange={setCategory}
+            />
+          )}
+          <View style={styles.listHeading}>
+            <Text
+              accessibilityRole="header"
+              style={[styles.section, { color: theme.ink }]}
+            >
+              {heading}
+            </Text>
+            <Text style={[styles.meta, { color: theme.muted }]}>
+              {places.length} {places.length === 1 ? "place" : "places"}
+            </Text>
+          </View>
+        </View>
+      }
+      ListEmptyComponent={
+        <EmptyPlaces
+          theme={theme}
+          icon={savedOnly ? "bookmark" : undefined}
+          title={savedOnly ? "No saved places yet" : undefined}
+          message={
+            savedOnly
+              ? "Open a place and tap its bookmark to find it here later."
+              : undefined
+          }
+          onReset={() => {
+            setSavedOnly(false);
+            setCategory("all");
+          }}
+        />
+      }
+      ListFooterComponent={
+        places.length > 0 ? (
+          <Text style={[styles.note, { color: theme.muted }]}>
+            Places and routes are based on a reference floor plan.
+          </Text>
+        ) : undefined
+      }
+    />
   );
 }
+
 const styles = StyleSheet.create({
-  scroll: { paddingTop: 24, paddingBottom: 112, gap: 24 },
-  header: { paddingHorizontal: 24, gap: 8 },
-  eyebrow: { fontSize: 12, fontWeight: "600", letterSpacing: 1 },
+  scroll: {
+    paddingTop: 12,
+    paddingBottom: 40,
+    width: "100%",
+    maxWidth: 680,
+    alignSelf: "center",
+  },
+  header: { gap: 16, paddingBottom: 12 },
+  gutter: { paddingHorizontal: 16, gap: 8 },
   title: {
-    fontSize: 32,
-    lineHeight: 38,
-    letterSpacing: -1,
-    fontWeight: "600",
-    maxWidth: 300,
+    fontSize: 34,
+    lineHeight: 40,
+    fontWeight: "700",
+    letterSpacing: -1.2,
   },
-  subtitle: { fontSize: 16, lineHeight: 20 },
-  guide: {
-    marginHorizontal: 20,
-    borderRadius: 24,
-    padding: 20,
+  venue: { flexDirection: "row", alignItems: "center", gap: 8 },
+  meta: { fontSize: 14, lineHeight: 20, flexShrink: 1 },
+  search: {
+    marginHorizontal: 16,
+    minHeight: 52,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    borderWidth: 1,
     flexDirection: "row",
-    gap: 16,
     alignItems: "center",
+    gap: 12,
   },
-  guideTitle: { fontSize: 16, fontWeight: "600" },
+  searchLabel: { flex: 1, fontSize: 16, lineHeight: 22 },
+  segment: {
+    marginHorizontal: 16,
+    padding: 4,
+    gap: 4,
+    borderRadius: 16,
+    flexDirection: "row",
+  },
+  segmentOption: {
+    flex: 1,
+    minHeight: 44,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  label: { fontSize: 14, fontWeight: "600", flexShrink: 1 },
   listHeading: {
-    marginHorizontal: 24,
+    marginHorizontal: 16,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "baseline",
+    flexWrap: "wrap",
+    gap: 8,
   },
-  section: { fontSize: 24, fontWeight: "600", letterSpacing: -0.5 },
-  list: {
-    marginHorizontal: 20,
-    borderRadius: 24,
-    borderWidth: 1,
-    overflow: "hidden",
+  section: {
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: "700",
+    letterSpacing: -0.4,
   },
-  note: { fontSize: 12, textAlign: "center", marginHorizontal: 24 },
+  listRow: { marginHorizontal: 16 },
+  note: {
+    marginHorizontal: 16,
+    marginTop: 20,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+  },
 });

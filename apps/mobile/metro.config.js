@@ -1,15 +1,12 @@
-const path = require("path");
 const { getDefaultConfig } = require("expo/metro-config");
 
-const projectRoot = __dirname;
-const workspaceRoot = path.resolve(projectRoot, "../..");
-const config = getDefaultConfig(projectRoot);
-
-config.watchFolders = [workspaceRoot];
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, "node_modules"),
-  path.resolve(workspaceRoot, "node_modules"),
+const config = getDefaultConfig(__dirname);
+// Dependency recovery folders can contain old copies of the entire app tree.
+// Keep them outside Metro's source index while retaining Expo's monorepo defaults.
+const blockList = config.resolver.blockList;
+config.resolver.blockList = [
+  ...(Array.isArray(blockList) ? blockList : blockList ? [blockList] : []),
+  /[/\\]node_modules\.codex-[^/\\]+(?:[/\\]|$)/,
+  /[/\\]node_modules[/\\]\.cache(?:[/\\]|$)/,
 ];
-config.resolver.unstable_enableSymlinks = true;
-
 module.exports = config;
