@@ -78,14 +78,17 @@ function centeredLabelFont(fontSize: number) {
   };
 }
 
+// Units are the figure and the corridor is the ground: every fill sits clearly
+// below the corridor's lightness, and tints stay distinguishable from the
+// neutral used for units whose tenant is not confirmed.
 export function storeFill(category: string, dark: boolean) {
-  if (category === "Unconfirmed tenant") return dark ? "#34414A" : "#E4E7E2";
-  if (/Dining|Food/.test(category)) return dark ? "#493A32" : "#F9EBD9";
-  if (/Health/.test(category)) return dark ? "#30483F" : "#E4F0E7";
-  if (/Electronics/.test(category)) return dark ? "#274253" : "#E2EEF6";
+  if (category === "Unconfirmed tenant") return dark ? "#36444E" : "#DCE1DB";
+  if (/Dining|Food/.test(category)) return dark ? "#5A4636" : "#F7DDBB";
+  if (/Health/.test(category)) return dark ? "#35574A" : "#CFE8D6";
+  if (/Electronics/.test(category)) return dark ? "#2C4F66" : "#CFE3F3";
   if (/Home|Entertainment|Books/.test(category))
-    return dark ? "#3B3850" : "#EEE7F5";
-  return dark ? "#354154" : "#E4EBF6";
+    return dark ? "#4A4566" : "#E1D5F0";
+  return dark ? "#3E4E69" : "#D3DFF3";
 }
 
 function NameLine({
@@ -793,7 +796,7 @@ export const MapCanvas = memo(function MapCanvas({
         />
         <Polygon
           points={points(floor.plate)}
-          fill={theme.isDark ? "#26323A" : "#F6F3EC"}
+          fill={theme.mapCorridor}
           stroke={theme.mapStroke}
           strokeWidth={1.8}
           strokeLinejoin="round"
@@ -941,13 +944,7 @@ export const MapCanvas = memo(function MapCanvas({
                       { x: b.x + 1, y: b.y + depth },
                       { x: a.x + 1, y: a.y + depth },
                     ])}
-                    fill={
-                      theme.isDark
-                        ? "#24323B"
-                        : b.y > a.y
-                          ? "#D1DAD4"
-                          : "#DBE1D8"
-                    }
+                    fill={b.y > a.y ? theme.mapWall : theme.mapWallLit}
                   />
                 );
               })}
@@ -966,15 +963,13 @@ export const MapCanvas = memo(function MapCanvas({
               stroke={
                 destinationId === room.id
                   ? theme.accent
-                  : theme.isDark
-                    ? theme.mapStroke
-                    : "#CDD6CF"
+                  : theme.mapUnitStroke
               }
               strokeWidth={
                 destinationId === room.id
                   ? 3
                   : room.labelMode === "detail"
-                    ? 0.65
+                    ? 0.8
                     : 1.2
               }
               strokeLinejoin="round"
