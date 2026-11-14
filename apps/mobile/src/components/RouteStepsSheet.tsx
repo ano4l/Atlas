@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { DemoRoute } from "../map/demo-routing";
 import { Theme } from "../theme";
 import { Icon } from "./Icon";
@@ -37,6 +37,8 @@ export function RouteStepsSheet({
       animationType={reducedMotion ? "none" : "slide"}
       onRequestClose={onClose}
     >
+      {/* A modal is its own native window, so it needs its own inset provider. */}
+      <SafeAreaProvider>
       <SafeAreaView style={[styles.screen, { backgroundColor: theme.paper }]}>
         <View style={[styles.header, { borderBottomColor: theme.line }]}>
           <View style={styles.copy}>
@@ -159,6 +161,7 @@ export function RouteStepsSheet({
           </MotionPressable>
         </View>
       </SafeAreaView>
+      </SafeAreaProvider>
     </Modal>
   );
 }

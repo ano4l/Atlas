@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Modal, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import type { Theme } from "../theme";
 import { useFeedback, MotionPressable } from "./Motion";
 import { radius, space, textSize } from "../theme";
@@ -34,6 +34,8 @@ export function CheckpointScanner({ foreground, onClose, onScan, theme }: {
 
   return (
     <Modal onRequestClose={onClose} animationType="slide">
+      {/* A modal is its own native window, so it needs its own inset provider. */}
+      <SafeAreaProvider>
       <SafeAreaView style={[styles.screen, { backgroundColor: theme.bg }]}>
         <Text accessibilityRole="header" style={[styles.heading, { color: theme.ink }]}>Scan checkpoint</Text>
         <Text style={{ color: theme.inkSecondary }}>Point the camera at a printed checkpoint for this fictional map.</Text>
@@ -71,6 +73,7 @@ export function CheckpointScanner({ foreground, onClose, onScan, theme }: {
           <Text style={{ color: theme.ink }}>Close scanner</Text>
         </MotionPressable>
       </SafeAreaView>
+      </SafeAreaProvider>
     </Modal>
   );
 }
