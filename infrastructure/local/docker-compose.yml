@@ -7,6 +7,11 @@ services:
       POSTGRES_USER: atlas
       POSTGRES_PASSWORD: atlas
       POSTGRES_DB: indoor_navigation
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "atlas", "-d", "indoor_navigation"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
     ports:
       - "${POSTGRES_PORT:-55432}:5432"
     volumes:

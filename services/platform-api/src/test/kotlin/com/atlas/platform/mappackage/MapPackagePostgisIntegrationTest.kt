@@ -36,7 +36,13 @@ class MapPackagePostgisIntegrationTest {
     fun `fresh PostGIS imports publishes searches and routes across two floors`() {
         val openApi = restTemplate.getForEntity(url("/v1/api-docs"), JsonNode::class.java)
         assertThat(openApi.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(openApi.headers.getFirst("X-Request-Id")).isNotBlank()
         assertThat(openApi.body!!["paths"].has("/v1/admin/map-packages/import")).isTrue()
+        val unauthorized = restTemplate.getForEntity(url("/v1/admin/venues"), JsonNode::class.java)
+        assertThat(unauthorized.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+        val deniedReference = unauthorized.headers.getFirst("X-Request-Id")
+        assertThat(deniedReference).isNotBlank()
+        assertThat(unauthorized.body!!["requestId"].asText()).isEqualTo(deniedReference)
 
         val emptyVenue = restTemplate.exchange(
             url("/v1/admin/venues"),
@@ -57,6 +63,9 @@ class MapPackagePostgisIntegrationTest {
             JsonNode::class.java,
         )
         assertThat(blockedPublication.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+        val publicationReference = blockedPublication.headers.getFirst("X-Request-Id")
+        assertThat(publicationReference).isNotBlank()
+        assertThat(blockedPublication.body!!["requestId"].asText()).isEqualTo(publicationReference)
 
         val original = packageRequest("atlas-integration-mall", "map-v1")
         val imported = importPackage(original)
@@ -124,12 +133,56 @@ class MapPackagePostgisIntegrationTest {
         assertThat(route.body!!["floors"].size()).isEqualTo(2)
         assertThat(route.body!!["transitions"].size()).isEqualTo(1)
         assertThat(route.body!!["distanceM"].asDouble()).isGreaterThan(0.0)
+        val liftId = first.mappings.edges.getValue("edge-lift")
+        val closureUrl = url("/v1/admin/closures/edges/$liftId")
+        val closed = restTemplate.exchange(
+            closureUrl, HttpMethod.POST, adminEntity(mapOf("closureState" to "closed")), JsonNode::class.java,
+        )
+        assertThat(closed.statusCode).isEqualTo(HttpStatus.OK)
+        val closedPackage = restTemplate.getForEntity(url("/v1/venues/${first.venueId}/map-package"), JsonNode::class.java)
+        val closedLift = closedPackage.body!!["graph"]["edges"].first { it["id"].asText() == liftId.toString() }
+        assertThat(closedLift["closureState"].asText()).isEqualTo("closed")
+        val routeWithClosure = restTemplate.postForEntity(
+            url("/v1/venues/${first.venueId}/routes"), routeRequest, JsonNode::class.java,
+        )
+        assertThat(routeWithClosure.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+        val reopened = restTemplate.exchange(
+            closureUrl, HttpMethod.POST, adminEntity(mapOf("closureState" to "open")), JsonNode::class.java,
+        )
+        assertThat(reopened.statusCode).isEqualTo(HttpStatus.OK)
 
         val secondPackage = packageRequest("atlas-integration-mall", "map-v2").copy(
             pois = original.pois.map { if (it.name == "Zara") it.copy(keywords = it.keywords + "new-season") else it }
         )
         val second = importPackage(secondPackage).body!!
         assertThat(second.mapVersion).isEqualTo(2)
+        val draftPackage = restTemplate.getForEntity(
+            url("/v1/venues/${first.venueId}/map-package?mapVersionId=${second.mapVersionId}"),
+            JsonNode::class.java,
+        )
+        assertThat(draftPackage.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+        val mismatchedPackage = restTemplate.getForEntity(
+            url("/v1/venues/${emptyVenue["id"].asText()}/map-package?mapVersionId=${first.mapVersionId}"),
+            JsonNode::class.java,
+        )
+        assertThat(mismatchedPackage.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+        val adminVersions = "/v1/admin/venues/${first.venueId}/map-versions"
+        val validation = restTemplate.exchange(
+            url("$adminVersions/${second.mapVersionId}/validation"),
+            HttpMethod.GET,
+            adminEntity(null),
+            JsonNode::class.java,
+        )
+        assertThat(validation.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(validation.body!!["valid"].asBoolean()).isTrue()
+        val rejectedRollback = restTemplate.exchange(
+            url("$adminVersions/${second.mapVersionId}/rollback"),
+            HttpMethod.POST,
+            adminEntity(null),
+            JsonNode::class.java,
+        )
+        assertThat(rejectedRollback.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+
         val secondPublished = restTemplate.exchange(
             url("/v1/admin/venues/${second.venueId}/map-versions/${second.mapVersionId}/publish"),
             HttpMethod.POST,
@@ -140,6 +193,18 @@ class MapPackagePostgisIntegrationTest {
 
         val venue = restTemplate.getForEntity(url("/v1/venues/${first.venueId}"), JsonNode::class.java).body!!
         assertThat(venue["publishedMapVersionId"].asText()).isEqualTo(second.mapVersionId.toString())
+        val versions = restTemplate.exchange(url(adminVersions), HttpMethod.GET, adminEntity(null), JsonNode::class.java)
+        assertThat(versions.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(versions.body!!.map { it["status"].asText() }).containsExactly("published", "retired")
+        val rollback = restTemplate.exchange(
+            url("$adminVersions/${first.mapVersionId}/rollback"),
+            HttpMethod.POST,
+            adminEntity(null),
+            JsonNode::class.java,
+        )
+        assertThat(rollback.statusCode).isEqualTo(HttpStatus.OK)
+        val restored = restTemplate.getForEntity(url("/v1/venues/${first.venueId}/map-package"), JsonNode::class.java)
+        assertThat(restored.body!!["mapVersion"]["id"].asText()).isEqualTo(first.mapVersionId.toString())
     }
 
     private fun importPackage(request: MapPackageImportRequest) = restTemplate.exchange(

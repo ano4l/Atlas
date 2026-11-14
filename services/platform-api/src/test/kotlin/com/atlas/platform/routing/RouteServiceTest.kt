@@ -26,6 +26,45 @@ class RouteServiceTest {
     private val floorId = UUID.randomUUID()
 
     @Test
+    fun `corridor points follow travel direction and anchor to nodes`() {
+        val start = node(0.0, 0.0)
+        val end = node(5.0, 0.0)
+        val authored = """{"type":"LineString","coordinates":[[0.5,0],[1,2],[4,2],[5,0]]}"""
+        val expected = listOf(listOf(0.0, 0.0), listOf(1.0, 2.0), listOf(4.0, 2.0), listOf(5.0, 0.0))
+        assertEquals(expected, edgePoints(authored, start, end))
+        assertEquals(expected.reversed(), edgePoints(authored, end, start))
+        for (geometry in listOf(null, "{", "[[0,0],[1,2],[99,0]]", """[[0,0],["1",2],[5,0]]""")) {
+            assertEquals(listOf(expected.first(), expected.last()), edgePoints(geometry, start, end))
+        }
+    }
+
+    @Test
+    fun `step free edges require evidence and exclude stairs and escalators`() {
+        val start = node(0.0, 0.0)
+        val end = node(2.0, 0.0)
+        val routeEdge = edge(start, end, 2.0)
+        assertEquals(false, routeEdge.isStepFree())
+        routeEdge.accessibilityMetadata = """{"stepFree":"true"}"""
+        assertEquals(false, routeEdge.isStepFree())
+        routeEdge.accessibilityMetadata = """{"stepFree":true}"""
+        routeEdge.edgeType = "lift"
+        assertEquals(true, routeEdge.isStepFree())
+        routeEdge.edgeType = "escalator"
+        assertEquals(false, routeEdge.isStepFree())
+    }
+
+    @Test
+    fun `route costs can be lower than coordinate distance`() {
+        val start = node(0.0, 0.0)
+        val detour = node(100.0, 0.0)
+        val goal = node(1.0, 0.0)
+        val nodes = listOf(start, detour, goal)
+        val edges = listOf(edge(start, goal, 5.0), edge(start, detour, 1.0), edge(detour, goal, 1.0))
+
+        assertEquals(listOf(start.id, detour.id, goal.id), service.aStar(nodes, edges, start.id, goal.id))
+    }
+
+    @Test
     fun `a star chooses the lower cost path`() {
         val start = node(0.0, 0.0)
         val expensive = node(1.0, 0.0)

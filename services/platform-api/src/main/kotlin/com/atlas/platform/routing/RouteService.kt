@@ -18,8 +18,8 @@ import java.util.PriorityQueue
 import java.util.UUID
 import kotlin.math.hypot
 
-// Route calculation per techspec.md §7.4: A* over the navigation graph with
-// a straight-line (Euclidean) admissible heuristic. Constraint resolution
+// Route calculation uses Dijkstra over edge costs, which can be lower than
+// coordinate distance. Constraint resolution
 // (restricted edges, closures, one-way, validity windows) happens at graph
 // load time, before search — mirroring packages/routing-core TS logic.
 
@@ -60,6 +60,7 @@ data class RouteResponse(
     val commerciallyInfluenced: Boolean,
     val floors: List<RouteFloorSegment>,
     val transitions: List<RouteFloorTransition>,
+    val validUntilMs: Long? = null,
 )
 
 @Service
@@ -104,16 +105,18 @@ class RouteService(
             .filter { !it.restricted || request.constraints.contains("allow_restricted") }
             .filter { it.validFrom == null || !it.validFrom!!.isAfter(now) }
             .filter { it.validUntil == null || !it.validUntil!!.isBefore(now) }
+            .filter { request.mode != "step_free" || it.isStepFree() }
 
         val startNode = nearestNode(nodes.values, request.start.floorId, request.start.x, request.start.y)
             ?: throw BadRequestException("No navigable node near the requested start position")
         val destinationNode = nodes[destinationNodeId]
             ?: throw BadRequestException("Destination entry node is not part of this map version")
 
-        val pathNodeIds = aStar(nodes.values, edges, startNode.id, destinationNode.id)
+        val adjacency = buildAdjacency(edges)
+        val pathNodeIds = findPath(nodes, adjacency, startNode.id, destinationNode.id)
             ?: throw BadRequestException("No route found between the requested points")
 
-        return buildResponse(request.mapVersionId, pathNodeIds, nodes, edges)
+        return buildResponse(request.mapVersionId, pathNodeIds, nodes, adjacency)
     }
 
     private fun nearestNode(
@@ -123,7 +126,7 @@ class RouteService(
         y: Double,
     ): NavigationNode? = nodes
         .filter { it.floorId == floorId }
-        .minByOrNull { hypot(it.x - x, it.y - y) }
+        .minWithOrNull(compareBy<NavigationNode> { hypot(it.x - x, it.y - y) }.thenBy { it.id.toString() })
 
     private fun buildAdjacency(
         edges: List<NavigationEdge>,
@@ -143,16 +146,21 @@ class RouteService(
         edges: List<NavigationEdge>,
         startId: UUID,
         goalId: UUID,
+    ): List<UUID>? = findPath(nodes.associateBy { it.id }, buildAdjacency(edges), startId, goalId)
+
+    private fun findPath(
+        nodesById: Map<UUID, NavigationNode>,
+        adjacency: Map<UUID, List<Pair<UUID, NavigationEdge>>>,
+        startId: UUID,
+        goalId: UUID,
     ): List<UUID>? {
-        val nodesById = nodes.associateBy { it.id }
-        val goal = nodesById[goalId] ?: return null
-        val adjacency = buildAdjacency(edges)
+        if (startId !in nodesById || goalId !in nodesById) return null
 
         data class QueueEntry(val nodeId: UUID, val fScore: Double)
 
         val gScore = mutableMapOf<UUID, Double>().withDefault { Double.POSITIVE_INFINITY }
         val cameFrom = mutableMapOf<UUID, UUID>()
-        val openSet = PriorityQueue<QueueEntry>(compareBy { it.fScore })
+        val openSet = PriorityQueue<QueueEntry>(compareBy<QueueEntry> { it.fScore }.thenBy { it.nodeId.toString() })
         val closed = mutableSetOf<UUID>()
 
         gScore[startId] = 0.0
@@ -164,16 +172,14 @@ class RouteService(
             if (current.nodeId == goalId) return reconstructPath(cameFrom, goalId)
             closed.add(current.nodeId)
 
-            val currentNode = nodesById[current.nodeId] ?: continue
             for ((neighbourId, edge) in adjacency[current.nodeId].orEmpty()) {
                 if (neighbourId in closed) continue
-                val neighbour = nodesById[neighbourId] ?: continue
+                if (neighbourId !in nodesById) continue
                 val tentative = gScore.getValue(current.nodeId) + edge.baseCostM
                 if (tentative < gScore.getValue(neighbourId)) {
                     gScore[neighbourId] = tentative
                     cameFrom[neighbourId] = current.nodeId
-                    val h = hypot(neighbour.x - goal.x, neighbour.y - goal.y)
-                    openSet.add(QueueEntry(neighbourId, tentative + h))
+                    openSet.add(QueueEntry(neighbourId, tentative))
                 }
             }
         }
@@ -194,54 +200,47 @@ class RouteService(
         mapVersionId: UUID,
         pathNodeIds: List<UUID>,
         nodes: Map<UUID, NavigationNode>,
-        edges: List<NavigationEdge>,
+        adjacency: Map<UUID, List<Pair<UUID, NavigationEdge>>>,
     ): RouteResponse {
-        val pathNodes = pathNodeIds.mapNotNull { nodes[it] }
-        val distance = pathNodes.zipWithNext { a, b -> hypot(b.x - a.x, b.y - a.y) }.sum()
-
+        val pathNodes = pathNodeIds.map(nodes::getValue)
         val floorSegments = mutableListOf<RouteFloorSegment>()
         val transitions = mutableListOf<RouteFloorTransition>()
-
-        var currentFloor: UUID? = null
-        var currentPolyline = mutableListOf<List<Double>>()
-
-        for (node in pathNodes) {
-            if (currentFloor == null) {
-                currentFloor = node.floorId
+        val start = pathNodes.first()
+        var currentPolyline = mutableListOf(listOf(start.x, start.y))
+        var distance = 0.0
+        var validUntilMs: Long? = null
+        val byCostAndId = compareBy<NavigationEdge> { it.baseCostM }.thenBy { it.id.toString() }
+        for ((from, to) in pathNodes.zipWithNext()) {
+            val edge = adjacency.getValue(from.id).asSequence()
+                .filter { (neighbourId, _) -> neighbourId == to.id }
+                .map { (_, edge) -> edge }
+                .minWithOrNull(byCostAndId)!!
+            edge.validUntil?.toInstant()?.toEpochMilli()?.let { expiry ->
+                validUntilMs = minOf(validUntilMs ?: expiry, expiry)
             }
-            if (node.floorId != currentFloor) {
-                floorSegments.add(RouteFloorSegment(currentFloor!!, currentPolyline.toList()))
-                currentPolyline = mutableListOf()
-                currentFloor = node.floorId
-            }
-            currentPolyline.add(listOf(node.x, node.y))
-        }
-        if (currentFloor != null && currentPolyline.isNotEmpty()) {
-            floorSegments.add(RouteFloorSegment(currentFloor!!, currentPolyline.toList()))
-        }
-
-        // Detect floor transitions from the path (nodes on different floors
-        // connected via transition edges).
-        val nodeById = pathNodeIds.mapNotNull { id -> nodes[id]?.let { id to it } }.toMap()
-        for (i in 0 until pathNodeIds.size - 1) {
-            val from = nodeById[pathNodeIds[i]] ?: continue
-            val to = nodeById[pathNodeIds[i + 1]] ?: continue
             if (from.floorId != to.floorId) {
-                val edge = edges.firstOrNull { e ->
-                    (e.fromNodeId == from.id && e.toNodeId == to.id) ||
-                        (e.fromNodeId == to.id && e.toNodeId == from.id)
-                }
-                val transitionType = edge?.edgeType ?: "unknown"
+                distance += hypot(to.x - from.x, to.y - from.y)
+                floorSegments.add(RouteFloorSegment(from.floorId, currentPolyline))
+                currentPolyline = mutableListOf(listOf(to.x, to.y))
                 transitions.add(
                     RouteFloorTransition(
                         fromFloorId = from.floorId,
                         toFloorId = to.floorId,
-                        transitionType = transitionType,
-                        instruction = "Take the $transitionType to continue",
+                        transitionType = edge.edgeType,
+                        instruction = "Take the ${edge.edgeType} to continue",
                     )
                 )
+            } else {
+                val points = edgePoints(edge.geometry, from, to)
+                for (index in 1 until points.size) {
+                    val (previousX, previousY) = points[index - 1]
+                    val (x, y) = points[index]
+                    distance += hypot(x - previousX, y - previousY)
+                    currentPolyline.add(points[index])
+                }
             }
         }
+        floorSegments.add(RouteFloorSegment(pathNodes.last().floorId, currentPolyline))
 
         return RouteResponse(
             routeId = UUID.randomUUID(),
@@ -251,6 +250,7 @@ class RouteService(
             commerciallyInfluenced = false,
             floors = floorSegments,
             transitions = transitions,
+            validUntilMs = validUntilMs,
         )
     }
 

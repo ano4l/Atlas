@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
-import { generateTwoFloorVenuePackage } from "@atlas/fixture-generator";
+import { generateTwoFloorVenuePackage, syntheticVenueScenarios } from "@atlas/fixture-generator";
 import { canonicalPackageJson, checksumPackage, validateMapPackage } from "@atlas/map-importer";
 
 let failures = 0;
@@ -116,6 +116,19 @@ if (generatedResult.package) {
 }
 
 // --- CLI exit codes (spawns the compiled CLI) ---
+const scenarioChecksums = new Set<string>();
+for (const scenario of syntheticVenueScenarios) {
+  const validation = validateMapPackage(generateTwoFloorVenuePackage(scenario));
+  if (scenario === "invalid-disconnected") {
+    check("disconnected generated scenario is invalid",
+      !validation.valid && validation.errors.some((issue) => issue.code === "NODE_UNREACHABLE"));
+  } else {
+    check(`${scenario} is a valid authoring scenario`, validation.valid);
+    if (validation.package) scenarioChecksums.add(checksumPackage(validation.package).value);
+  }
+}
+check("valid scenario checksums are distinct", scenarioChecksums.size === syntheticVenueScenarios.length - 1);
+
 const cliPath = join(__dirname, "..", "..", "..", "tooling", "map-importer", "dist", "cli.js");
 function runCli(args: string[]): { status: number } {
   try {

@@ -13,6 +13,7 @@ import jakarta.validation.Valid
 import jakarta.validation.constraints.NotNull
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -41,6 +42,7 @@ class AdminClosureController(
     @Operation(summary = "Open, close, or temporarily close an edge (urgent-closure path)")
     @PostMapping("/edges/{edgeId}")
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','MAPPING_OPERATOR','VENUE_ADMIN')")
+    @Transactional
     fun setEdgeClosure(
         @PathVariable edgeId: UUID,
         @Valid @RequestBody request: ClosureRequest,

@@ -11,13 +11,21 @@ import com.atlas.platform.domain.PointOfInterest
 import com.atlas.platform.domain.PoiCategory
 import com.atlas.platform.domain.RawEvent
 import com.atlas.platform.domain.Venue
+import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import java.util.Optional
 import java.util.UUID
 
 interface VenueRepository : JpaRepository<Venue, UUID> {
     fun findByActiveTrue(): List<Venue>
     fun findBySlug(slug: String): Optional<Venue>
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select venue from Venue venue where venue.id = :id")
+    fun lockById(@Param("id") id: UUID): Optional<Venue>
 }
 
 interface MapVersionRepository : JpaRepository<MapVersion, UUID> {

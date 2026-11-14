@@ -1,5 +1,6 @@
 package com.atlas.platform.mappackage
 
+import com.atlas.platform.domain.MapVersionStatus
 import com.atlas.platform.errors.BadRequestException
 import com.atlas.platform.errors.NotFoundException
 import com.atlas.platform.repo.BeaconRepository
@@ -9,6 +10,7 @@ import com.atlas.platform.repo.NavigationEdgeRepository
 import com.atlas.platform.repo.NavigationNodeRepository
 import com.atlas.platform.repo.PointOfInterestRepository
 import com.atlas.platform.repo.VenueRepository
+import com.atlas.platform.routing.isStepFree
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -36,6 +38,9 @@ class MapPackageService(
             venue.publishedMapVersionId != null -> mapVersionRepository.findById(venue.publishedMapVersionId!!)
                 .orElseThrow { NotFoundException("Published map version not found") }
             else -> throw BadRequestException("Venue has no published map version")
+        }
+        if (mapVersion.venueId != venueId || mapVersion.status !in setOf(MapVersionStatus.published, MapVersionStatus.retired)) {
+            throw NotFoundException("Map version not found")
         }
 
         val floors = floorRepository.findByMapVersionId(mapVersion.id)
@@ -107,6 +112,9 @@ class MapPackageService(
                         "isOneWay" to it.oneWay,
                         "isRestricted" to it.restricted,
                         "closureState" to it.closureState.name,
+                        "validFrom" to it.validFrom,
+                        "validUntil" to it.validUntil,
+                        "isStepFree" to it.isStepFree(),
                         "geometry" to it.geometry,
                     )
                 },

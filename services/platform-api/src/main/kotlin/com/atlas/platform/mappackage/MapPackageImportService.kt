@@ -124,6 +124,9 @@ class MapPackageImportService(
                         geometry = source.geometry?.let(objectMapper::writeValueAsString),
                         validFrom = source.validFrom,
                         validUntil = source.validUntil,
+                        accessibilityMetadata = source.isAccessible?.let {
+                            objectMapper.writeValueAsString(mapOf("stepFree" to it))
+                        } ?: "{}",
                     )
                 )
                 edgeMappings[source.id] = saved.id

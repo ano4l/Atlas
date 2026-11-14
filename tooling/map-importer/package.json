@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit",
     "validate": "pnpm run build && node dist/cli.js validate",
     "inspect": "pnpm run build && node dist/cli.js inspect",
-    "canonicalize": "pnpm run build && node dist/cli.js canonicalize"
+    "canonicalize": "pnpm run build && node dist/cli.js canonicalize",
+    "operator": "corepack pnpm run build && node dist/cli.js operator"
   },
   "dependencies": {
     "@atlas/spatial-model": "workspace:*",

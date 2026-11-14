@@ -11,7 +11,6 @@ import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.ResponseStatusException
-import java.util.UUID
 
 // Standard error contract (techspec.md §10): code, message, details, requestId.
 data class ApiError(
@@ -57,7 +56,11 @@ class GlobalExceptionHandler {
     fun handleBadRequest(ex: Exception, request: HttpServletRequest): ResponseEntity<ApiError> {
         val body = ApiError(
             code = "BAD_REQUEST",
-            message = ex.message ?: "Malformed request",
+            message = if (ex is MissingServletRequestParameterException) {
+                "Missing request parameter: ${ex.parameterName}"
+            } else {
+                "Malformed request body"
+            },
             requestId = requestId(request),
         )
         return ResponseEntity.badRequest().body(body)
@@ -74,7 +77,4 @@ class GlobalExceptionHandler {
         )
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body)
     }
-
-    private fun requestId(request: HttpServletRequest): String =
-        request.getHeader("X-Request-Id") ?: UUID.randomUUID().toString()
 }

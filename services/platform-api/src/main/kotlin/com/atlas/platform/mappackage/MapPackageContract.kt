@@ -1,6 +1,7 @@
 package com.atlas.platform.mappackage
 
 import com.atlas.platform.domain.PoiStatus
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.JsonNode
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
@@ -65,6 +66,8 @@ data class EdgeSource(
     val isRestricted: Boolean = false,
     val validFrom: OffsetDateTime? = null,
     val validUntil: OffsetDateTime? = null,
+    @get:JsonInclude(JsonInclude.Include.NON_NULL)
+    val isAccessible: Boolean? = null,
 )
 
 data class PoiSource(

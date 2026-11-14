@@ -10,6 +10,7 @@ import { basename } from "node:path";
 import { canonicalPackageJson, checksumPackage, validateMapPackage } from "./index";
 import type { MapPackageV1 } from "@atlas/spatial-model";
 import type { ValidationIssue } from "./validate";
+import { runOperator } from "./operator";
 
 function usage(): never {
   console.error(
@@ -18,6 +19,7 @@ function usage(): never {
       "  map-importer validate <package.json>",
       "  map-importer inspect <package.json>",
       "  map-importer canonicalize <input.json> --output <file>",
+      "  map-importer operator <venues|import|versions|validate|publish|rollback|closure> [arguments]",
     ].join("\n"),
   );
   process.exit(1);
@@ -49,6 +51,13 @@ function printIssues(issues: ValidationIssue[]): void {
 const [, , command, inputPath, ...rest] = process.argv;
 
 switch (command) {
+  case "operator": {
+    runOperator(process.argv.slice(3)).catch((error: unknown) => {
+      console.error(error instanceof Error ? error.message : String(error));
+      process.exitCode = 1;
+    });
+    break;
+  }
   case "validate": {
     if (!inputPath || rest.length > 0) usage();
     const result = validateMapPackage(readPackage(inputPath));

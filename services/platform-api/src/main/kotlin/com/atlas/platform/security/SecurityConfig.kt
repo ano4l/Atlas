@@ -1,5 +1,6 @@
 package com.atlas.platform.security
 
+import com.atlas.platform.errors.requestId
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -90,7 +91,7 @@ class SecurityConfig(
             if (roles == null) {
                 response.status = HttpStatus.UNAUTHORIZED.value()
                 response.contentType = "application/json"
-                response.writer.write("""{"code":"UNAUTHORIZED","message":"Valid X-API-Key header required for admin endpoints"}""")
+                response.writer.write("""{"code":"UNAUTHORIZED","message":"Valid X-API-Key header required for admin endpoints","requestId":"${requestId(request)}"}""")
                 return
             }
 

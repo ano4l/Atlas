@@ -11,6 +11,7 @@ import com.atlas.platform.repo.AuditLogRepository
 import com.atlas.platform.repo.MapVersionRepository
 import com.atlas.platform.repo.VenueRepository
 import com.atlas.platform.mappackage.MapPackageValidationService
+import com.atlas.platform.mappackage.MapValidationReport
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -79,6 +80,28 @@ class AdminVenueController(
         return venue
     }
 
+    @Operation(summary = "List a venue's map versions, newest first")
+    @GetMapping("/{venueId}/map-versions")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','MAPPING_OPERATOR')")
+    fun listMapVersions(@PathVariable venueId: UUID): List<MapVersion> {
+        if (!venueRepository.existsById(venueId)) throw NotFoundException("Venue not found")
+        return mapVersionRepository.findByVenueId(venueId).sortedByDescending { it.version }
+    }
+
+    @Operation(summary = "Inspect validation results for a saved map version")
+    @GetMapping("/{venueId}/map-versions/{mapVersionId}/validation")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','MAPPING_OPERATOR')")
+    @Transactional(readOnly = true)
+    fun validateMapVersion(
+        @PathVariable venueId: UUID,
+        @PathVariable mapVersionId: UUID,
+    ): MapValidationReport {
+        val version = mapVersionRepository.findById(mapVersionId)
+            .orElseThrow { NotFoundException("Map version not found") }
+        if (version.venueId != venueId) throw NotFoundException("Map version not found")
+        return mapPackageValidationService.validatePersisted(mapVersionId)
+    }
+
     @Operation(summary = "Create a new draft map version for a venue")
     @PostMapping("/{venueId}/map-versions")
     @ResponseStatus(HttpStatus.CREATED)
@@ -106,7 +129,7 @@ class AdminVenueController(
         @PathVariable mapVersionId: UUID,
         @AuthenticationPrincipal actor: String?,
     ): MapVersion {
-        val venue = venueRepository.findById(venueId).orElseThrow { NotFoundException("Venue not found") }
+        val venue = venueRepository.lockById(venueId).orElseThrow { NotFoundException("Venue not found") }
         val mapVersion = mapVersionRepository.findById(mapVersionId)
             .orElseThrow { NotFoundException("Map version not found") }
         if (mapVersion.venueId != venueId) {
@@ -150,12 +173,19 @@ class AdminVenueController(
         @PathVariable mapVersionId: UUID,
         @AuthenticationPrincipal actor: String?,
     ): MapVersion {
-        val venue = venueRepository.findById(venueId).orElseThrow { NotFoundException("Venue not found") }
+        val venue = venueRepository.lockById(venueId).orElseThrow { NotFoundException("Venue not found") }
         val target = mapVersionRepository.findById(mapVersionId)
             .orElseThrow { NotFoundException("Map version not found") }
         if (target.venueId != venueId) {
             throw BadRequestException("Map version does not belong to this venue")
         }
+        if (target.status == MapVersionStatus.published && venue.publishedMapVersionId == target.id) {
+            return target
+        }
+        if (target.status != MapVersionStatus.retired || target.publishedAt == null) {
+            throw BadRequestException("Only a previously published map version can be restored")
+        }
+        mapPackageValidationService.requireValid(mapPackageValidationService.validatePersisted(mapVersionId))
 
         mapVersionRepository.findByVenueIdAndStatus(venueId, MapVersionStatus.published)
             .filter { it.id != mapVersionId }
