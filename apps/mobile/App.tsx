@@ -330,7 +330,7 @@ function AtlasApp({
                 cameraMode={cameraMode}
                 onPan={() => setCameraMode("manual")}
                 sheetHeight={sheetHeight}
-                liveSheetHeight={!selectedPOI ? liveHomeSheetHeight : undefined}
+                liveSheetHeight={!isNavigating ? liveHomeSheetHeight : undefined}
                 topInset={topInset}
                 nextPoint={
                   route?.steps[currentStepIndex + 1]?.floorLevel ===
@@ -402,7 +402,7 @@ function AtlasApp({
                 navigating={isNavigating}
                 previewing={!!selectedPOI && !isNavigating}
                 sheetHeight={sheetHeight}
-                liveSheetHeight={!selectedPOI ? liveHomeSheetHeight : undefined}
+                liveSheetHeight={!isNavigating ? liveHomeSheetHeight : undefined}
               />
               {!selectedPOI && (
                 <MapHomeSheet
@@ -432,6 +432,7 @@ function AtlasApp({
                   }}
                   storageIssue={places.storageIssue}
                   onHeightChange={setSheetHeight}
+                  liveSheetHeight={liveHomeSheetHeight}
                   onToggleStepFree={changeStepFree}
                   onStartNavigation={start}
                   onClose={closeDestination}

@@ -1,22 +1,13 @@
-import React, { useContext, useState } from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
-} from "react-native";
-import Animated, {
-  FadeIn,
-  FadeInUp,
-  LinearTransition,
-} from "react-native-reanimated";
+import React, { useRef, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { FadeInUp, SharedValue } from "react-native-reanimated";
 import { atlasSandtonVenue } from "../fixtures";
 import { DemoRoute, floorName } from "../map/demo-routing";
 import { POIItem } from "../map/types";
-import { shadows, Theme } from "../theme";
+import { Theme } from "../theme";
+import { Detent, DetentSheet, DetentSheetHandle } from "./DetentSheet";
 import { Icon } from "./Icon";
-import { FeedbackContext, MotionPressable, useFeedback } from "./Motion";
+import { MotionPressable } from "./Motion";
 import { PlaceBadge } from "./PlaceBadge";
 import { RouteStepsSheet } from "./RouteStepsSheet";
 import { radius, space, textSize } from "../theme";
@@ -31,13 +22,12 @@ type Props = {
   storageIssue: boolean;
   onToggleSaved: () => void;
   onHeightChange: (height: number) => void;
+  liveSheetHeight?: SharedValue<number>;
   onStartNavigation: () => void;
   onClose: () => void;
   onToggleStepFree: (value: boolean) => void;
 };
 
-const panelGap = 8;
-const resize = LinearTransition.springify().damping(34).stiffness(280);
 const reveal = FadeInUp.duration(220).withInitialValues({
   opacity: 0,
   transform: [{ translateY: 14 }],
@@ -53,15 +43,16 @@ export function DestinationSheet({
   storageIssue,
   onToggleSaved,
   onHeightChange,
+  liveSheetHeight,
   onStartNavigation,
   onClose,
   onToggleStepFree,
 }: Props) {
-  const [details, setDetails] = useState(false);
+  const sheet = useRef<DetentSheetHandle>(null);
+  const [detent, setDetent] = useState<Detent>(1);
+  const [summaryHeight, setSummaryHeight] = useState(0);
   const [stepsVisible, setStepsVisible] = useState(false);
-  const { reducedMotion } = useContext(FeedbackContext);
-  const feedback = useFeedback();
-  const { height } = useWindowDimensions();
+  const details = detent === 2;
   const unknownTenant = poi.id.startsWith("unit-");
   const transition = route?.segments.find(
     (segment) => segment.transitionType,
@@ -71,18 +62,17 @@ export function DestinationSheet({
 
   return (
     <>
-      <Animated.View
-        entering={reducedMotion ? undefined : reveal}
-        layout={reducedMotion ? undefined : resize}
-        onLayout={(event) =>
-          onHeightChange(event.nativeEvent.layout.height + panelGap)
-        }
-        style={[
-          styles.sheet,
-          shadows.strong,
-          { backgroundColor: theme.paper, borderColor: theme.line },
-        ]}
-      >
+      <DetentSheet
+        ref={sheet}
+        theme={theme}
+        label="place details"
+        strongShadow
+        entering={reveal}
+        mediumHeight={summaryHeight}
+        onDetentChange={setDetent}
+        onHeightChange={onHeightChange}
+        liveHeight={liveSheetHeight}
+        header={
         <View style={styles.header}>
           {arrived ? (
             <View
@@ -130,12 +120,73 @@ export function DestinationSheet({
               size={21}
             />
           </MotionPressable>
+          <MotionPressable
+            accessibilityRole="button"
+            accessibilityLabel="Close and return to the map"
+            onPress={onClose}
+            style={({ pressed }) => [
+              styles.iconButton,
+              { backgroundColor: pressed ? theme.accentSoft : theme.subtle },
+            ]}
+          >
+            <Icon name="close" color={theme.inkSecondary} size={21} />
+          </MotionPressable>
         </View>
-        <Animated.ScrollView
-          layout={reducedMotion ? undefined : resize}
-          style={{ maxHeight: Math.max(56, height * 0.27) }}
-          contentContainerStyle={styles.content}
-        >
+        }
+        footer={
+        <View style={styles.footer}>
+          <MotionPressable
+            accessibilityRole="button"
+            onPress={finish ? onClose : onStartNavigation}
+            style={({ pressed }) => [
+              styles.primary,
+              {
+                backgroundColor: finish ? theme.subtle : theme.primary,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            <Icon
+              name={finish ? "map" : "walking"}
+              color={finish ? theme.ink : theme.primaryText}
+              size={22}
+            />
+            <Text
+              style={[
+                styles.buttonText,
+                { color: finish ? theme.ink : theme.primaryText },
+              ]}
+            >
+              {finish ? "Back to map" : "Start demo walk"}
+            </Text>
+          </MotionPressable>
+          {!finish && (
+            <MotionPressable
+              accessibilityRole="button"
+              accessibilityLabel="Preview walking steps"
+              onPress={() => setStepsVisible(true)}
+              style={({ pressed }) => [
+                styles.secondary,
+                { backgroundColor: pressed ? theme.accentSoft : theme.subtle },
+              ]}
+            >
+              <Icon name="steps" color={theme.inkSecondary} size={18} />
+              <Text style={[styles.secondaryLabel, { color: theme.ink }]}>
+                Steps
+              </Text>
+            </MotionPressable>
+          )}
+        </View>
+        }
+      >
+        <View style={styles.content}>
+          {/* The middle detent ends exactly below this summary. */}
+          <View
+            style={styles.summary}
+            onLayout={(event) =>
+              setSummaryHeight(event.nativeEvent.layout.height)
+            }
+          >
           {arrived ? (
             <Text style={[styles.body, { color: theme.inkSecondary }]}>
               {unknownTenant
@@ -170,10 +221,7 @@ export function DestinationSheet({
           <MotionPressable
             accessibilityRole="button"
             accessibilityState={{ expanded: details }}
-            onPress={() => {
-              feedback();
-              setDetails((value) => !value);
-            }}
+            onPress={() => sheet.current?.snapTo(details ? 1 : 2)}
             style={styles.detailAction}
           >
             <Icon name="info" color={theme.inkSecondary} size={18} />
@@ -184,10 +232,21 @@ export function DestinationSheet({
               <Icon name="chevron-down" color={theme.muted} size={16} />
             </View>
           </MotionPressable>
-          {details && (
-            <Animated.View
-              entering={
-                reducedMotion ? undefined : FadeIn.duration(180).delay(40)
+          {storageIssue && (
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[styles.meta, { color: theme.muted }]}
+            >
+              Device storage is unavailable. Saves may last only for this
+              session.
+            </Text>
+          )}
+          </View>
+            <View
+              pointerEvents={details ? "auto" : "none"}
+              accessibilityElementsHidden={!details}
+              importantForAccessibility={
+                details ? "auto" : "no-hide-descendants"
               }
               style={styles.details}
             >
@@ -241,65 +300,9 @@ export function DestinationSheet({
                   </View>
                 </MotionPressable>
               )}
-            </Animated.View>
-          )}
-          {storageIssue && (
-            <Text
-              accessibilityLiveRegion="polite"
-              style={[styles.meta, { color: theme.muted }]}
-            >
-              Device storage is unavailable. Saves may last only for this
-              session.
-            </Text>
-          )}
-        </Animated.ScrollView>
-        <Animated.View
-          layout={reducedMotion ? undefined : resize}
-          style={styles.footer}
-        >
-          <MotionPressable
-            accessibilityRole="button"
-            onPress={finish ? onClose : onStartNavigation}
-            style={({ pressed }) => [
-              styles.primary,
-              {
-                backgroundColor: finish ? theme.subtle : theme.primary,
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <Icon
-              name={finish ? "map" : "walking"}
-              color={finish ? theme.ink : theme.primaryText}
-              size={22}
-            />
-            <Text
-              style={[
-                styles.buttonText,
-                { color: finish ? theme.ink : theme.primaryText },
-              ]}
-            >
-              {finish ? "Back to map" : "Start demo walk"}
-            </Text>
-          </MotionPressable>
-          {!finish && (
-            <MotionPressable
-              accessibilityRole="button"
-              accessibilityLabel="Preview walking steps"
-              onPress={() => setStepsVisible(true)}
-              style={({ pressed }) => [
-                styles.secondary,
-                { backgroundColor: pressed ? theme.accentSoft : theme.subtle },
-              ]}
-            >
-              <Icon name="steps" color={theme.inkSecondary} size={18} />
-              <Text style={[styles.secondaryLabel, { color: theme.ink }]}>
-                Steps
-              </Text>
-            </MotionPressable>
-          )}
-        </Animated.View>
-      </Animated.View>
+            </View>
+        </View>
+      </DetentSheet>
       {route && stepsVisible && (
         <RouteStepsSheet
           theme={theme}
@@ -313,20 +316,12 @@ export function DestinationSheet({
 }
 
 const styles = StyleSheet.create({
-  sheet: {
-    position: "absolute",
-    bottom: panelGap,
-    left: 12,
-    right: 12,
-    borderRadius: radius.sheet,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     gap: space.sm,
     paddingHorizontal: space.lg,
-    paddingTop: space.lg,
+    paddingTop: space.xs,
     paddingBottom: space.md,
   },
   iconButton: {
@@ -349,7 +344,8 @@ const styles = StyleSheet.create({
   metric: { fontSize: textSize.subhead, fontWeight: "500" },
   meta: { fontSize: textSize.footnote, lineHeight: 17 },
   body: { fontSize: textSize.subhead, lineHeight: 21 },
-  content: { paddingHorizontal: space.lg, gap: space.sm },
+  content: { paddingHorizontal: space.lg },
+  summary: { gap: space.sm, paddingBottom: space.sm },
   route: {
     minHeight: 64,
     borderRadius: radius.lg,
