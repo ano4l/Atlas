@@ -6,12 +6,17 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "replay": "node replay.cjs",
+    "compare:openhps": "node openhps.cjs",
+    "test": "node test.cjs"
   },
   "dependencies": {
     "@atlas/positioning-core": "workspace:*"
   },
   "devDependencies": {
+    "@openhps/core": "1.0.16",
+    "@openhps/imu": "0.2.2",
     "typescript": "^5.5.0"
   }
 }
