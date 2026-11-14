@@ -8,5 +8,10 @@ config.resolver.blockList = [
   ...(Array.isArray(blockList) ? blockList : blockList ? [blockList] : []),
   /[/\\]node_modules\.codex-[^/\\]+(?:[/\\]|$)/,
   /[/\\]node_modules[/\\]\.cache(?:[/\\]|$)/,
+  // pnpm leaves replaced packages in .ignored_* folders. OneDrive can turn their
+  // files into placeholders that the file map cannot read.
+  /[/\\]node_modules[/\\]\.ignored_[^/\\]+(?:[/\\]|$)/,
 ];
+// One worker per core exhausts memory on a 16 GB laptop and kills the bundler.
+config.maxWorkers = Number(process.env.METRO_MAX_WORKERS) || 2;
 module.exports = config;
