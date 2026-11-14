@@ -8,6 +8,7 @@ import { readAcceleration, readDeviceMotion, readPressure } from "../positioning
 import type { Theme } from "../theme";
 
 import { MotionPressable } from "./Motion";
+import { radius, space, textSize } from "../theme";
 const RECORDING_MS = 180000;
 const SAMPLE_LIMIT = 8000;
 type Carrying = "handheld" | "pocket";
@@ -239,10 +240,10 @@ function Action({ theme, label, onPress, selected, disabled }: {
 }
 
 const styles = StyleSheet.create({
-  section: { gap: 8 },
-  heading: { fontSize: 16, lineHeight: 22, fontWeight: "700", paddingHorizontal: 4 },
-  card: { gap: 12, padding: 12, borderRadius: 16, borderWidth: 1 },
-  copy: { fontSize: 14, lineHeight: 20 },
-  actions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  button: { minHeight: 44, justifyContent: "center", paddingHorizontal: 12, borderRadius: 12 },
+  section: { gap: space.sm },
+  heading: { fontSize: textSize.body, lineHeight: 22, fontWeight: "700", paddingHorizontal: space.xs },
+  card: { gap: space.md, padding: space.md, borderRadius: radius.lg, borderWidth: 1 },
+  copy: { fontSize: textSize.subhead, lineHeight: 20 },
+  actions: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
+  button: { minHeight: 44, justifyContent: "center", paddingHorizontal: space.md, borderRadius: radius.md },
 });

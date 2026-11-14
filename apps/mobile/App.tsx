@@ -40,6 +40,7 @@ import { buildDemoRoute } from "./src/map/demo-routing";
 import { darkTheme, lightTheme, Theme } from "./src/theme";
 import { MapHomeSheet } from "./src/components/MapHomeSheet";
 import { ConnectedVenueScreen, connectedVenueEnabled } from "./src/components/ConnectedVenueScreen";
+import { radius, space, textSize } from "./src/theme";
 
 type TabKey = "map" | "explore" | "settings" | "test-venue";
 const initialFloor = atlasSandtonVenue.startFloorLevel;
@@ -474,7 +475,7 @@ function AtlasApp({
             >
               <Icon name="back" color={theme.ink} size={22} />
               <Text
-                style={{ color: theme.ink, fontSize: 16, fontWeight: "600" }}
+                style={{ color: theme.ink, fontSize: textSize.body, fontWeight: "600" }}
               >
                 Back to map
               </Text>
@@ -546,7 +547,7 @@ function AtlasApp({
                     style={{
                       flex: 1,
                       color: theme.ink,
-                      fontSize: 24,
+                      fontSize: textSize.heading,
                       fontWeight: "600",
                     }}
                   >
@@ -596,7 +597,7 @@ function AtlasApp({
                       style={styles.menuItem}
                     >
                       <Icon name={item.icon} color={theme.accent} />
-                      <Text style={{ color: theme.ink, fontSize: 17 }}>
+                      <Text style={{ color: theme.ink, fontSize: textSize.body }}>
                         {item.title}
                       </Text>
                       <View style={{ flex: 1 }} />
@@ -604,7 +605,7 @@ function AtlasApp({
                     </MotionPressable>
                   ))}
                   <Text
-                    style={{ color: theme.muted, fontSize: 12, padding: 16 }}
+                    style={{ color: theme.muted, fontSize: textSize.caption, padding: space.lg }}
                   >
                     Sandton schematic · Demo position
                   </Text>
@@ -674,81 +675,81 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    gap: 10,
+    gap: space.md,
   },
   venue: {
     flexDirection: "row",
     alignItems: "center",
     flexShrink: 1,
-    gap: 9,
-    paddingVertical: 7,
-    paddingLeft: 7,
-    paddingRight: 15,
-    borderRadius: 20,
+    gap: space.sm,
+    paddingVertical: space.sm,
+    paddingLeft: space.sm,
+    paddingRight: space.lg,
+    borderRadius: radius.xl,
   },
   venueMark: {
     width: 37,
     height: 37,
-    borderRadius: 12,
+    borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
   },
-  venueCopy: { flexShrink: 1, gap: 2 },
-  venueName: { fontSize: 15, fontWeight: "700", letterSpacing: -0.2 },
-  venueMeta: { fontSize: 12, fontWeight: "500" },
-  roundSurface: { borderRadius: 25 },
-  shortLabel: { fontSize: 13, fontWeight: "700" },
+  venueCopy: { flexShrink: 1, gap: space.xxs },
+  venueName: { fontSize: textSize.subhead, fontWeight: "700", letterSpacing: -0.2 },
+  venueMeta: { fontSize: textSize.caption, fontWeight: "500" },
+  roundSurface: { borderRadius: radius.pill },
+  shortLabel: { fontSize: textSize.footnote, fontWeight: "700" },
   previewBadge: {
     minHeight: 40,
-    borderRadius: 20,
+    borderRadius: radius.pill,
     flexShrink: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: space.md,
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: space.sm,
   },
   roundButton: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
   },
   pageHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    gap: 8,
+    paddingHorizontal: space.sm,
+    gap: space.sm,
   },
   backHeader: {
     minHeight: 52,
-    paddingHorizontal: 20,
+    paddingHorizontal: space.xl,
     alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    borderRadius: 16,
+    gap: space.md,
+    borderRadius: radius.lg,
   },
   menuOverlay: {
     flex: 1,
     backgroundColor: "rgba(8,20,30,0.25)",
     justifyContent: "center",
-    padding: 24,
+    padding: space.xxl,
   },
   menuSheet: {
     width: "100%",
     maxWidth: 400,
     maxHeight: "100%",
     alignSelf: "center",
-    borderRadius: 24,
-    padding: 12,
+    borderRadius: radius.sheet,
+    padding: space.md,
   },
   menuItem: {
     minHeight: 60,
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
-    paddingHorizontal: 16,
+    gap: space.lg,
+    paddingHorizontal: space.lg,
   },
   safeArea: { flex: 1 },
   container: { flex: 1 },

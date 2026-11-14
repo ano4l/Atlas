@@ -4,6 +4,7 @@ import { Modal, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { Theme } from "../theme";
 import { useFeedback, MotionPressable } from "./Motion";
+import { radius, space, textSize } from "../theme";
 
 export function CheckpointScanner({ foreground, onClose, onScan, theme }: {
   foreground: boolean;
@@ -74,8 +75,8 @@ export function CheckpointScanner({ foreground, onClose, onScan, theme }: {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, padding: 20, gap: 16 },
-  heading: { fontSize: 24, fontWeight: "700" },
+  screen: { flex: 1, padding: space.xl, gap: space.lg },
+  heading: { fontSize: textSize.heading, fontWeight: "700" },
   camera: { flex: 1, minHeight: 160, backgroundColor: "#000" },
-  button: { minHeight: 48, paddingHorizontal: 16, justifyContent: "center", borderWidth: 1, borderRadius: 12 },
+  button: { minHeight: 48, paddingHorizontal: space.lg, justifyContent: "center", borderWidth: 1, borderRadius: radius.md },
 });

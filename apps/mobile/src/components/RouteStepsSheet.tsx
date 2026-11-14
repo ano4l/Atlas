@@ -11,6 +11,7 @@ import { DemoRoute } from "../map/demo-routing";
 import { Theme } from "../theme";
 import { Icon } from "./Icon";
 import { FeedbackContext, MotionPressable } from "./Motion";
+import { radius, space, textSize } from "../theme";
 
 export function RouteStepsSheet({
   theme,
@@ -164,40 +165,40 @@ export function RouteStepsSheet({
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   header: {
-    padding: 16,
-    paddingHorizontal: 20,
+    padding: space.lg,
+    paddingHorizontal: space.xl,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: space.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  title: { fontSize: 24, fontWeight: "700", letterSpacing: -0.5 },
-  meta: { fontSize: 13, lineHeight: 18 },
-  copy: { flex: 1, gap: 3 },
+  title: { fontSize: textSize.heading, fontWeight: "700", letterSpacing: -0.5 },
+  meta: { fontSize: textSize.footnote, lineHeight: 18 },
+  copy: { flex: 1, gap: space.xs },
   close: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
   },
   scroll: { flex: 1 },
-  list: { padding: 16 },
+  list: { padding: space.lg },
   summary: {
     minHeight: 60,
-    borderRadius: 16,
+    borderRadius: radius.lg,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    padding: 12,
-    marginBottom: 8,
+    gap: space.md,
+    padding: space.md,
+    marginBottom: space.sm,
   },
   step: {
     minHeight: 64,
-    paddingVertical: 10,
+    paddingVertical: space.md,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: space.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   connector: {
@@ -210,17 +211,17 @@ const styles = StyleSheet.create({
   badge: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
   },
-  label: { fontSize: 15, fontWeight: "700" },
-  footer: { padding: 12, borderTopWidth: StyleSheet.hairlineWidth },
+  label: { fontSize: textSize.subhead, fontWeight: "700" },
+  footer: { padding: space.md, borderTopWidth: StyleSheet.hairlineWidth },
   done: {
     minHeight: 48,
-    borderRadius: 24,
+    borderRadius: radius.pill,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: space.lg,
   },
 });

@@ -1,8 +1,6 @@
 export { IndoorMap } from "./components/IndoorMap";
 export { MapCanvas } from "./components/MapCanvas";
-export { FloatingSearchBar } from "./components/FloatingSearchBar";
 export { FloatingMapControls } from "./components/FloatingMapControls";
-export { BottomTabBar } from "./components/BottomTabBar";
 export { DestinationSheet } from "./components/DestinationSheet";
 export { ActiveNavigationPanel } from "./components/ActiveNavigationPanel";
 export { SearchOverlay } from "./components/SearchOverlay";

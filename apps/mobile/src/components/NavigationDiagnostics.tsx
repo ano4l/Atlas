@@ -4,6 +4,7 @@ import { DIAGNOSTIC_LIMIT, navigationDiagnostics } from "../map/navigation-diagn
 import type { Theme } from "../theme";
 
 import { MotionPressable } from "./Motion";
+import { radius, space, textSize } from "../theme";
 export function NavigationDiagnostics({ theme }: { theme: Theme }) {
   const { recording, entries } = useSyncExternalStore(navigationDiagnostics.subscribe, navigationDiagnostics.getSnapshot);
   const [sharing, setSharing] = useState(false);
@@ -64,9 +65,9 @@ export function NavigationDiagnostics({ theme }: { theme: Theme }) {
 }
 
 const styles = StyleSheet.create({
-  section: { gap: 8 },
-  heading: { fontSize: 16, lineHeight: 22, fontWeight: "700", paddingHorizontal: 4 },
-  card: { borderWidth: 1, borderRadius: 16, padding: 16, gap: 8 },
-  button: { minHeight: 48, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, justifyContent: "center" },
+  section: { gap: space.sm },
+  heading: { fontSize: textSize.body, lineHeight: 22, fontWeight: "700", paddingHorizontal: space.xs },
+  card: { borderWidth: 1, borderRadius: radius.lg, padding: space.lg, gap: space.sm },
+  button: { minHeight: 48, paddingHorizontal: space.md, paddingVertical: space.sm, borderRadius: radius.md, justifyContent: "center" },
   label: { fontWeight: "600" },
 });

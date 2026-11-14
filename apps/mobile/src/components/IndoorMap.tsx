@@ -47,6 +47,7 @@ import { hitsStoreLabel, MapCanvas } from "./MapCanvas";
 import { GlassSurface } from "./GlassSurface";
 
 import { MotionPressable } from "./Motion";
+import { radius, space, textSize } from "../theme";
 type Props = {
   theme: Theme;
   venue?: Pick<IndoorMapData, "venueName" | "floors" | "start">;
@@ -600,15 +601,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   scaleCard: {
-    paddingHorizontal: 7,
-    paddingVertical: 4,
-    borderRadius: 7,
-    gap: 2,
+    paddingHorizontal: space.sm,
+    paddingVertical: space.xs,
+    borderRadius: radius.sm,
+    gap: space.xxs,
     alignItems: "center",
   },
-  scaleText: { fontSize: 10, fontWeight: "600", fontVariant: ["tabular-nums"] },
+  scaleText: { fontSize: textSize.caption, fontWeight: "600", fontVariant: ["tabular-nums"] },
   scaleBar: { height: 4, borderWidth: 1, borderTopWidth: 0 },
-  zoom: { borderRadius: 22, marginBottom: 56 },
+  zoom: { borderRadius: radius.pill, marginBottom: 56 },
   zoomDivider: {
     position: "absolute",
     top: 44,
@@ -619,7 +620,7 @@ const styles = StyleSheet.create({
   zoomButton: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
   },

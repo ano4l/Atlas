@@ -16,6 +16,7 @@ import { CameraMode } from "../map/camera";
 import { GlassSurface } from "./GlassSurface";
 import { Icon } from "./Icon";
 import { MotionPressable } from "./Motion";
+import { radius, space, textSize } from "../theme";
 
 type Props = {
   theme: Theme;
@@ -135,28 +136,28 @@ export function FloatingMapControls({
 }
 
 const styles = StyleSheet.create({
-  overlay: { position: "absolute", right: 16, alignItems: "flex-end", gap: 8 },
+  overlay: { position: "absolute", right: 16, alignItems: "flex-end", gap: space.sm },
   floors: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 18,
-    padding: 3,
+    borderRadius: radius.xl,
+    padding: space.xs,
     alignItems: "center",
   },
   floorRow: { flexDirection: "row" },
   control: {
     width: 48,
     minHeight: 48,
-    borderRadius: 16,
+    borderRadius: radius.lg,
     alignItems: "center",
     justifyContent: "center",
   },
-  floorLabel: { fontSize: 15, fontWeight: "700" },
-  recenter: { borderRadius: 24 },
+  floorLabel: { fontSize: textSize.subhead, fontWeight: "700" },
+  recenter: { borderRadius: radius.pill },
   followButton: {
     width: "auto",
     flexDirection: "row",
-    paddingHorizontal: 12,
-    gap: 6,
+    paddingHorizontal: space.md,
+    gap: space.sm,
   },
-  followLabel: { fontSize: 13, fontWeight: "700" },
+  followLabel: { fontSize: textSize.footnote, fontWeight: "700" },
 });

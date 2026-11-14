@@ -7,6 +7,7 @@ import { Theme } from "../theme";
 import { Icon, IconName } from "./Icon";
 import { PlaceBadge } from "./PlaceBadge";
 import { MotionPressable } from "./Motion";
+import { radius, space, textSize } from "../theme";
 export { placeIcon } from "../place-presentation";
 
 export const categories: { id: string; label: string; icon: IconName }[] = [
@@ -237,35 +238,35 @@ export function EmptyPlaces({
   );
 }
 const styles = StyleSheet.create({
-  chips: { gap: 6, paddingHorizontal: 16 },
+  chips: { gap: space.sm, paddingHorizontal: space.lg },
   chip: {
     minHeight: 44,
-    borderRadius: 24,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
     borderWidth: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: space.sm,
   },
-  chipText: { fontSize: 13, fontWeight: "600" },
+  chipText: { fontSize: textSize.footnote, fontWeight: "600" },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    padding: 12,
+    gap: space.md,
+    padding: space.md,
     minHeight: 64,
     borderLeftWidth: StyleSheet.hairlineWidth,
     borderRightWidth: StyleSheet.hairlineWidth,
   },
   rowFirst: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   rowLast: {
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
+    borderBottomLeftRadius: radius.lg,
+    borderBottomRightRadius: radius.lg,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   divider: {
@@ -275,19 +276,19 @@ const styles = StyleSheet.create({
     right: 12,
     height: StyleSheet.hairlineWidth,
   },
-  copy: { flex: 1, gap: 2 },
-  name: { fontSize: 16, lineHeight: 22, fontWeight: "600" },
-  meta: { fontSize: 13, lineHeight: 18 },
-  empty: { padding: 24, alignItems: "center", gap: 12 },
+  copy: { flex: 1, gap: space.xxs },
+  name: { fontSize: textSize.body, lineHeight: 22, fontWeight: "600" },
+  meta: { fontSize: textSize.footnote, lineHeight: 18 },
+  empty: { padding: space.xxl, alignItems: "center", gap: space.md },
   emptyIcon: {
     width: 48,
     height: 48,
-    borderRadius: 16,
+    borderRadius: radius.lg,
     alignItems: "center",
     justifyContent: "center",
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: textSize.title,
     lineHeight: 26,
     fontWeight: "700",
     textAlign: "center",
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
   reset: {
     minHeight: 44,
     justifyContent: "center",
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    borderRadius: radius.md,
+    paddingHorizontal: space.lg,
   },
 });

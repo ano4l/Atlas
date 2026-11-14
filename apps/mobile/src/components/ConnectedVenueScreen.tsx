@@ -22,6 +22,7 @@ import { findSimulatedDetour, requestReroute } from "../map/reroute";
 import { navigationDiagnostics } from "../map/navigation-diagnostics";
 
 import { MotionPressable } from "./Motion";
+import { radius, space, textSize } from "../theme";
 const baseUrl = process.env.EXPO_PUBLIC_ATLAS_API_URL?.trim();
 const venueSlug = "atlas-synthetic-mall";
 const api = baseUrl ? new PlatformApiClient({ baseUrl }) : null;
@@ -661,19 +662,19 @@ function Choice({ theme, label, accessibilityLabel, selected, onPress }: {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  messageScreen: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 12 },
-  title: { fontSize: 22, fontWeight: "700" },
-  venueHeading: { flexDirection: "row", alignItems: "center", padding: 16, gap: 8, borderBottomWidth: 1 },
-  headingText: { flex: 1, gap: 4 },
+  messageScreen: { flex: 1, alignItems: "center", justifyContent: "center", padding: space.xxl, gap: space.md },
+  title: { fontSize: textSize.heading, fontWeight: "700" },
+  venueHeading: { flexDirection: "row", alignItems: "center", padding: space.lg, gap: space.sm, borderBottomWidth: 1 },
+  headingText: { flex: 1, gap: space.xs },
   map: { flex: 1, minHeight: 124 },
   panel: { flex: 1, borderTopWidth: 1 },
-  panelContents: { padding: 16, gap: 8 },
-  choices: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  choice: { minHeight: 44, minWidth: 44, paddingHorizontal: 12, paddingVertical: 8,
-    alignItems: "center", justifyContent: "center", borderWidth: 1, borderRadius: 12 },
-  summary: { padding: 12, gap: 4, borderRadius: 12 },
-  label: { fontSize: 15, fontWeight: "600" },
-  search: { flexDirection: "row", gap: 8, alignItems: "center", borderWidth: 1, borderRadius: 12, paddingHorizontal: 12 },
-  input: { flex: 1, minHeight: 44, fontSize: 16 },
-  place: { flexDirection: "row", minHeight: 52, alignItems: "center", padding: 8, borderBottomWidth: 1 },
+  panelContents: { padding: space.lg, gap: space.sm },
+  choices: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
+  choice: { minHeight: 44, minWidth: 44, paddingHorizontal: space.md, paddingVertical: space.sm,
+    alignItems: "center", justifyContent: "center", borderWidth: 1, borderRadius: radius.md },
+  summary: { padding: space.md, gap: space.xs, borderRadius: radius.md },
+  label: { fontSize: textSize.subhead, fontWeight: "600" },
+  search: { flexDirection: "row", gap: space.sm, alignItems: "center", borderWidth: 1, borderRadius: radius.md, paddingHorizontal: space.md },
+  input: { flex: 1, minHeight: 44, fontSize: textSize.body },
+  place: { flexDirection: "row", minHeight: 52, alignItems: "center", padding: space.sm, borderBottomWidth: 1 },
 });
