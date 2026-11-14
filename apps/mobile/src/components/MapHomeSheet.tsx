@@ -2,23 +2,13 @@ import React, { useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SharedValue } from "react-native-reanimated";
 import { samplePOIs } from "../fixtures";
-import { mapPalette, PlaceKind } from "../map/style";
 import { POIItem } from "../map/types";
 import { fonts, radius, space, textSize, Theme } from "../theme";
 import { Detent, DetentSheet } from "./DetentSheet";
-import { Icon, IconName } from "./Icon";
+import { Icon } from "./Icon";
 import { MotionPressable } from "./Motion";
 import { PlaceBadge } from "./PlaceBadge";
-
-/** Shortcuts into search. Each one runs a real query against the directory. */
-const browse: { label: string; query: string; kind: PlaceKind; icon: IconName }[] =
-  [
-    { label: "Food", query: "Dining", kind: "food", icon: "cutlery" },
-    { label: "Fashion", query: "Fashion", kind: "shop", icon: "shop" },
-    { label: "Health", query: "Health", kind: "health", icon: "plus" },
-    { label: "Tech", query: "Electronics", kind: "tech", icon: "device" },
-    { label: "Home", query: "Home", kind: "home", icon: "home" },
-  ];
+import { BrowseShortcuts } from "./PlaceList";
 
 export function MapHomeSheet({
   theme,
@@ -45,7 +35,6 @@ export function MapHomeSheet({
 }) {
   const [detent, setDetent] = useState<Detent>(1);
   const [shortcutsHeight, setShortcutsHeight] = useState(0);
-  const tones = mapPalette(theme.isDark).tones;
   const stops = useMemo(
     () =>
       [
@@ -115,46 +104,7 @@ export function MapHomeSheet({
         style={styles.browse}
         onLayout={(event) => setShortcutsHeight(event.nativeEvent.layout.height)}
       >
-        {browse.map((item) => (
-          <MotionPressable
-            key={item.label}
-            accessibilityRole="button"
-            accessibilityLabel={`Find ${item.label}`}
-            onPress={() => onBrowse(item.query)}
-            style={styles.browseItem}
-          >
-            <View
-              style={[
-                styles.browseIcon,
-                { backgroundColor: tones[item.kind].badge },
-              ]}
-            >
-              <Icon name={item.icon} color="#FFFFFF" size={24} strokeWidth={2} />
-            </View>
-            <Text
-              numberOfLines={1}
-              style={[styles.browseLabel, { color: theme.inkSecondary }]}
-            >
-              {item.label}
-            </Text>
-          </MotionPressable>
-        ))}
-        <MotionPressable
-          accessibilityRole="button"
-          accessibilityLabel="Open the full directory"
-          onPress={onExplore}
-          style={styles.browseItem}
-        >
-          <View style={[styles.browseIcon, { backgroundColor: theme.chrome }]}>
-            <Icon name="layers" color={theme.lime} size={24} strokeWidth={2} />
-          </View>
-          <Text
-            numberOfLines={1}
-            style={[styles.browseLabel, { color: theme.inkSecondary }]}
-          >
-            All
-          </Text>
-        </MotionPressable>
+        <BrowseShortcuts theme={theme} onBrowse={onBrowse} onAll={onExplore} />
       </View>
       <View
         pointerEvents={listShown ? "auto" : "none"}
@@ -249,21 +199,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  browse: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: space.lg,
-    paddingBottom: space.lg,
-  },
-  browseItem: { alignItems: "center", gap: space.sm, minWidth: 48 },
-  browseIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  browseLabel: { fontSize: textSize.caption, fontWeight: "600" },
+  browse: { paddingHorizontal: space.lg, paddingBottom: space.lg },
   list: { paddingHorizontal: space.lg, paddingBottom: space.lg },
   listHeading: {
     fontFamily: fonts.rounded,

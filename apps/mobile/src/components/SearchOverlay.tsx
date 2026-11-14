@@ -11,12 +11,13 @@ import {
   TextInputInstance,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { atlasSandtonVenue, samplePOIs } from "../fixtures";
 import { POIItem } from "../map/types";
 import { Theme } from "../theme";
 import { Icon } from "./Icon";
 import {
+  BrowseShortcuts,
   categories,
   CategoryPicker,
   EmptyPlaces,
@@ -141,35 +142,39 @@ export function SearchOverlay({
       }}
       onRequestClose={close}
     >
+      {/* A modal is its own native window, so it needs its own inset provider. */}
+      <SafeAreaProvider>
       <SafeAreaView style={[styles.safe, { backgroundColor: theme.paper }]}>
         <KeyboardAvoidingView
           style={styles.safe}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <View style={[styles.toolbar, { borderColor: theme.line }]}>
+          <View style={styles.toolbar}>
             <View style={styles.toolbarRow}>
               <MotionPressable
                 accessibilityRole="button"
                 accessibilityLabel="Close search"
                 onPress={close}
                 style={({ pressed }) => [
-                  styles.roundButton,
-                  pressed && { backgroundColor: theme.subtle },
+                  styles.backButton,
+                  {
+                    backgroundColor: pressed ? theme.accentSoft : theme.fill,
+                  },
                 ]}
               >
-                <Icon name="back" color={theme.ink} size={22} />
+                <Icon name="back" color={theme.ink} size={20} strokeWidth={2} />
               </MotionPressable>
-              <View
-                style={[
-                  styles.field,
-                  { backgroundColor: theme.subtle, borderColor: theme.line },
-                ]}
-              >
-                <Icon name="search" color={theme.accent} size={20} />
+              <View style={[styles.field, { backgroundColor: theme.fill }]}>
+                <Icon
+                  name="search"
+                  color={theme.muted}
+                  size={20}
+                  strokeWidth={2}
+                />
                 <TextInput
                   ref={inputRef}
                   accessibilityLabel={`Search ${atlasSandtonVenue.venueName} by store name or unit code`}
-                  placeholder={`Search ${atlasSandtonVenue.venueName}`}
+                  placeholder="Where to?"
                   placeholderTextColor={theme.muted}
                   value={query}
                   onChangeText={setQuery}
@@ -185,9 +190,18 @@ export function SearchOverlay({
                     accessibilityRole="button"
                     accessibilityLabel="Clear search"
                     onPress={() => setQuery("")}
-                    style={styles.roundButton}
+                    style={styles.clearButton}
                   >
-                    <Icon name="close" color={theme.muted} size={18} />
+                    <View
+                      style={[styles.clearDot, { backgroundColor: theme.muted }]}
+                    >
+                      <Icon
+                        name="close"
+                        color={theme.paper}
+                        size={12}
+                        strokeWidth={3}
+                      />
+                    </View>
                   </MotionPressable>
                 )}
               </View>
@@ -201,7 +215,7 @@ export function SearchOverlay({
               />
             </View>
           </View>
-          <View style={[styles.body, { backgroundColor: theme.bg }]}>
+          <View style={styles.body}>
             <SectionList<POIItem, PlaceSection>
               sections={sections}
               keyExtractor={(poi) => poi.id}
@@ -212,13 +226,19 @@ export function SearchOverlay({
               contentContainerStyle={styles.results}
               ListHeaderComponent={
                 <>
-                  {!searching && (
-                    <View style={styles.context}>
-                      <Icon name="pin" color={theme.accent} size={16} />
-                      <Text style={[styles.meta, { color: theme.muted }]}>
-                        {atlasSandtonVenue.venueName} · Indoor demo
-                      </Text>
+                  {discovering && (
+                    <View style={styles.shortcuts}>
+                      <BrowseShortcuts
+                        theme={theme}
+                        onBrowse={setQuery}
+                        onAll={browse}
+                      />
                     </View>
+                  )}
+                  {!searching && (
+                    <Text style={[styles.context, { color: theme.muted }]}>
+                      {atlasSandtonVenue.venueName} · Indoor demo
+                    </Text>
                   )}
                   {scope === "units" && !searching && (
                     <Text style={[styles.notice, { color: theme.muted }]}>
@@ -319,34 +339,35 @@ export function SearchOverlay({
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      </SafeAreaProvider>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  toolbar: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingTop: space.sm,
-    paddingBottom: space.sm,
-    gap: space.sm,
-  },
+  toolbar: { paddingTop: space.sm, paddingBottom: space.md, gap: space.md },
   toolbarRow: {
     width: "100%",
     maxWidth: 680,
     alignSelf: "center",
-    paddingLeft: space.sm,
-    paddingRight: space.lg,
+    paddingHorizontal: space.lg,
     flexDirection: "row",
     alignItems: "center",
-    gap: space.xs,
+    gap: space.sm,
   },
   scopeRow: { width: "100%", maxWidth: 680, alignSelf: "center" },
+  backButton: {
+    width: 50,
+    height: 50,
+    borderRadius: radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   field: {
     flex: 1,
-    minHeight: 50,
+    height: 50,
     borderRadius: radius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
     alignItems: "center",
     gap: space.sm,
@@ -355,30 +376,33 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     minWidth: 0,
+    height: 50,
     paddingRight: space.sm,
-    paddingVertical: space.md,
-    fontSize: textSize.body,
+    paddingVertical: 0,
+    fontFamily: fonts.rounded,
+    fontSize: 17,
+    fontWeight: "600",
   },
-  roundButton: {
+  clearButton: {
     width: 44,
-    height: 44,
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  clearDot: {
+    width: 20,
+    height: 20,
     borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
   },
   body: { flex: 1 },
   list: { flex: 1, alignSelf: "center", width: "100%", maxWidth: 680 },
-  results: { paddingHorizontal: space.lg, paddingTop: space.sm, paddingBottom: space.xxl },
-  context: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: space.sm,
-    paddingHorizontal: space.xs,
-    paddingTop: space.sm,
-  },
+  results: { paddingHorizontal: space.lg, paddingBottom: space.xxl },
+  shortcuts: { paddingTop: space.sm, paddingBottom: space.lg },
+  context: { fontSize: textSize.footnote, fontWeight: "500" },
   sectionHeading: {
-    minHeight: 46,
-    paddingLeft: space.xs,
+    minHeight: 48,
     marginTop: space.sm,
     flexDirection: "row",
     alignItems: "center",
@@ -390,11 +414,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.rounded,
     fontSize: textSize.title,
     fontWeight: "700",
-    letterSpacing: -0.2,
+    letterSpacing: -0.3,
     flexShrink: 1,
   },
-  meta: { fontSize: textSize.footnote, lineHeight: 18, flexShrink: 1 },
-  action: { fontSize: textSize.footnote, fontWeight: "600" },
+  action: { fontSize: textSize.subhead, fontWeight: "600" },
   sectionAction: {
     minWidth: 48,
     minHeight: 44,
@@ -408,6 +431,5 @@ const styles = StyleSheet.create({
     fontSize: textSize.footnote,
     lineHeight: 18,
     paddingVertical: space.sm,
-    paddingHorizontal: space.xs,
   },
 });

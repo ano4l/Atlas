@@ -110,9 +110,46 @@ const Text = ({ style, numberOfLines, children }) => {
     React.createElement(InText.Provider, { value: true }, children),
   );
 };
+const Fragment = ({ children }) => React.createElement(React.Fragment, null, children);
+const ScrollView = ({ horizontal, style, contentContainerStyle, children }) =>
+  React.createElement(
+    View,
+    { style: [style, contentContainerStyle, horizontal && { flexDirection: "row", overflow: "hidden" }] },
+    children,
+  );
+const TextInput = ({ style, value, placeholder, placeholderTextColor }) =>
+  React.createElement(
+    Text,
+    { numberOfLines: 1, style: [style, { lineHeight: 50 }, !value && { color: placeholderTextColor }] },
+    value || placeholder,
+  );
+const SectionList = ({ sections, style, contentContainerStyle, ListHeaderComponent, ListEmptyComponent, renderSectionHeader, renderItem }) =>
+  React.createElement(
+    View,
+    { style: [style, contentContainerStyle, { overflow: "hidden" }] },
+    ListHeaderComponent,
+    sections.length
+      ? sections.map((section) =>
+          React.createElement(
+            React.Fragment,
+            { key: section.title },
+            renderSectionHeader({ section }),
+            section.data.map((item, index) =>
+              React.createElement(React.Fragment, { key: item.id }, renderItem({ item, index, section })),
+            ),
+          ),
+        )
+      : ListEmptyComponent,
+  );
 const reactNative = {
   View,
   Text,
+  ScrollView,
+  TextInput,
+  SectionList,
+  Modal: Fragment,
+  KeyboardAvoidingView: View,
+  Keyboard: { dismiss() {} },
   Platform: { OS: "ios", select: (options) => options.ios ?? options.default },
   StyleSheet: {
     create: (styles) => styles,
@@ -212,7 +249,14 @@ const chrome = {
 };
 reanimated.useAnimatedReaction = () => {};
 
+const safeArea = {
+  SafeAreaProvider: Fragment,
+  SafeAreaView: ({ style, children }) =>
+    React.createElement(View, { style: [style, { paddingTop: 59, paddingBottom: 34 }] }, children),
+  useSafeAreaInsets: () => ({ top: 59, bottom: 34, left: 0, right: 0 }),
+};
 const stand_ins = {
+  "react-native-safe-area-context": safeArea,
   "react-native": reactNative,
   "react-native-svg": svg,
   "react-native-reanimated": reanimated,
@@ -234,7 +278,7 @@ const { fitCamera } = require(path.join(root, "map/viewport.ts"));
 
 const theme = mode === "dark" ? darkTheme : lightTheme;
 const floor = atlasSandtonVenue.floors[0];
-const destination = scene.startsWith("home") ? null : samplePOIs.find((poi) => poi.id === "edgars");
+const destination = scene.startsWith("home") || scene.startsWith("search") ? null : samplePOIs.find((poi) => poi.id === "edgars");
 const route = destination ? buildDemoRoute(destination, false) : null;
 const segments = route ? route.segments.filter((segment) => segment.floorLevel === floor.level) : [];
 const screen = { width: 393, height: 852 };
@@ -292,14 +336,23 @@ if (scene === "home" || scene === "home-full") {
     following: true, walking: true, legProgress: 0.5, onToggleWalking: noop,
   });
 }
-const safe = { top: 59, bottom: 34 };
+if (scene.startsWith("search")) {
+  const { SearchOverlay } = require(path.join(screenRoot, "SearchOverlay.tsx"));
+  overlay = React.createElement(SearchOverlay, {
+    theme, onClose: noop, onSelectPOI: noop, reducedMotion: true, savedIds: ["clicks"],
+    recentIds: ["woolworths", "unit-s026"], onClearRecent: noop, storageIssue: false,
+    initialQuery: scene === "search-results" ? "Fashion" : "", initialSavedOnly: false, focusSearch: false,
+  });
+}
+const full = scene.startsWith("search");
+const safe = full ? { top: 0, bottom: 0 } : { top: 59, bottom: 34 };
 const html = `<!doctype html><meta charset="utf-8"><title>Atlas map preview</title>
 <body style="margin:0;background:#1b1f24">
 <div style="width:${screen.width}px;height:${screen.height}px;overflow:hidden;position:relative;background:${theme.mapBg}">
 <div style="position:absolute;left:0;top:0;transform-origin:0 0;transform:translate(${camera.x}px,${camera.y}px) scale(${camera.scale})">
 ${renderToStaticMarkup(map)}
 </div>
-<div style="position:absolute;left:0;right:0;top:${safe.top}px;bottom:${safe.bottom}px">${overlay ? renderToStaticMarkup(overlay) : ""}</div>
+<div style="position:absolute;left:0;right:0;top:${safe.top}px;bottom:${safe.bottom}px;display:flex;flex-direction:column">${overlay ? renderToStaticMarkup(overlay) : ""}</div>
 </div></body>`;
 fs.writeFileSync(out, html);
 console.log(`Wrote ${out} (${mode}, ${scene}, scale ${camera.scale.toFixed(2)})`);

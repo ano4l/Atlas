@@ -4,6 +4,7 @@ import { atlasSandtonVenue, samplePOIs } from "../fixtures";
 import { POIItem } from "../map/types";
 import { floorName } from "../map/demo-routing";
 import { Theme } from "../theme";
+import { mapPalette, PlaceKind } from "../map/style";
 import { Icon, IconName } from "./Icon";
 import { PlaceBadge } from "./PlaceBadge";
 import { MotionPressable } from "./Motion";
@@ -65,6 +66,80 @@ export function filterPlaces(query: string, category: string) {
     .map(({ place }) => place);
 }
 
+/** Shortcuts into search. Each one runs a real query against the directory. */
+export const browseShortcuts: {
+  label: string;
+  query: string;
+  kind: PlaceKind;
+  icon: IconName;
+}[] = [
+  { label: "Food", query: "Dining", kind: "food", icon: "cutlery" },
+  { label: "Fashion", query: "Fashion", kind: "shop", icon: "shop" },
+  { label: "Health", query: "Health", kind: "health", icon: "plus" },
+  { label: "Tech", query: "Electronics", kind: "tech", icon: "device" },
+  { label: "Home", query: "Home", kind: "home", icon: "home" },
+];
+
+/** The coloured category circles shared by the home sheet and search. */
+export function BrowseShortcuts({
+  theme,
+  onBrowse,
+  onAll,
+}: {
+  theme: Theme;
+  onBrowse: (query: string) => void;
+  /** Adds an "All" circle that opens the full directory. */
+  onAll?: () => void;
+}) {
+  const tones = mapPalette(theme.isDark).tones;
+  return (
+    <View style={styles.browse}>
+      {browseShortcuts.map((item) => (
+        <MotionPressable
+          key={item.label}
+          accessibilityRole="button"
+          accessibilityLabel={`Find ${item.label}`}
+          onPress={() => onBrowse(item.query)}
+          style={styles.browseItem}
+        >
+          <View
+            style={[
+              styles.browseIcon,
+              { backgroundColor: tones[item.kind].badge },
+            ]}
+          >
+            <Icon name={item.icon} color="#FFFFFF" size={24} strokeWidth={2} />
+          </View>
+          <Text
+            numberOfLines={1}
+            style={[styles.browseLabel, { color: theme.inkSecondary }]}
+          >
+            {item.label}
+          </Text>
+        </MotionPressable>
+      ))}
+      {onAll && (
+        <MotionPressable
+          accessibilityRole="button"
+          accessibilityLabel="Open the full directory"
+          onPress={onAll}
+          style={styles.browseItem}
+        >
+          <View style={[styles.browseIcon, { backgroundColor: theme.chrome }]}>
+            <Icon name="layers" color={theme.lime} size={24} strokeWidth={2} />
+          </View>
+          <Text
+            numberOfLines={1}
+            style={[styles.browseLabel, { color: theme.inkSecondary }]}
+          >
+            All
+          </Text>
+        </MotionPressable>
+      )}
+    </View>
+  );
+}
+
 export function CategoryPicker({
   theme,
   value,
@@ -94,21 +169,21 @@ export function CategoryPicker({
             style={({ pressed }) => [
               styles.chip,
               {
-                backgroundColor: selected ? theme.accentSoft : theme.paper,
-                borderColor: selected ? theme.accentSoft : theme.line,
+                backgroundColor: selected ? theme.ink : theme.fill,
                 opacity: pressed ? 0.72 : 1,
               },
             ]}
           >
             <Icon
               name={category.icon}
-              color={selected ? theme.accent : theme.muted}
+              color={selected ? theme.paper : theme.inkSecondary}
               size={16}
+              strokeWidth={2}
             />
             <Text
               style={[
                 styles.chipText,
-                { color: selected ? theme.accent : theme.ink },
+                { color: selected ? theme.paper : theme.ink },
               ]}
             >
               {category.label}
@@ -160,8 +235,7 @@ export function PlaceRow({
       style={({ pressed }) => [
         styles.row,
         {
-          backgroundColor: pressed ? theme.subtle : theme.paper,
-          borderColor: theme.line,
+          backgroundColor: pressed ? theme.accentSoft : theme.fill,
         },
         first && styles.rowFirst,
         last && styles.rowLast,
@@ -169,8 +243,10 @@ export function PlaceRow({
     >
       <PlaceBadge poi={poi} theme={theme} size={40} />
       <View style={styles.copy}>
-        <Text style={[styles.name, { color: theme.ink }]}>{poi.name}</Text>
-        <Text style={[styles.meta, { color: theme.muted }]}>
+        <Text numberOfLines={1} style={[styles.name, { color: theme.ink }]}>
+          {poi.name}
+        </Text>
+        <Text numberOfLines={2} style={[styles.meta, { color: theme.muted }]}>
           {[
             ...location,
             reference && `Ref. ${reference}`,
@@ -213,8 +289,8 @@ export function EmptyPlaces({
 }) {
   return (
     <View style={styles.empty}>
-      <View style={[styles.emptyIcon, { backgroundColor: theme.accentSoft }]}>
-        <Icon name={icon} color={theme.accent} size={24} />
+      <View style={[styles.emptyIcon, { backgroundColor: theme.fill }]}>
+        <Icon name={icon} color={theme.inkSecondary} size={26} strokeWidth={2} />
       </View>
       <Text
         accessibilityRole="header"
@@ -230,64 +306,70 @@ export function EmptyPlaces({
         accessibilityRole="button"
         style={({ pressed }) => [
           styles.reset,
-          { backgroundColor: pressed ? theme.subtle : theme.accentSoft },
+          { backgroundColor: theme.primary, opacity: pressed ? 0.85 : 1 },
         ]}
       >
-        <Text style={[styles.chipText, { color: theme.accent }]}>{action}</Text>
+        <Text style={[styles.resetText, { color: theme.primaryText }]}>
+          {action}
+        </Text>
       </MotionPressable>
     </View>
   );
 }
 const styles = StyleSheet.create({
+  browse: { flexDirection: "row", justifyContent: "space-between" },
+  browseItem: { alignItems: "center", gap: space.sm, minWidth: 48 },
+  browseIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  browseLabel: { fontSize: textSize.caption, fontWeight: "600" },
   chips: { gap: space.sm, paddingHorizontal: space.lg },
   chip: {
-    minHeight: 44,
+    height: 40,
     borderRadius: radius.pill,
-    paddingHorizontal: space.md,
-    paddingVertical: space.sm,
-    borderWidth: 1,
+    paddingHorizontal: space.lg,
     flexDirection: "row",
     alignItems: "center",
     gap: space.sm,
   },
-  chipText: { fontSize: textSize.footnote, fontWeight: "600" },
+  chipText: { fontSize: textSize.subhead, fontWeight: "600" },
   row: {
     flexDirection: "row",
     alignItems: "center",
     gap: space.md,
-    padding: space.md,
+    paddingHorizontal: space.md,
+    paddingVertical: space.md,
     minHeight: 64,
-    borderLeftWidth: StyleSheet.hairlineWidth,
-    borderRightWidth: StyleSheet.hairlineWidth,
   },
   rowFirst: {
     borderCurve: "continuous",
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
   },
   rowLast: {
     borderCurve: "continuous",
-    borderBottomLeftRadius: radius.lg,
-    borderBottomRightRadius: radius.lg,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomLeftRadius: radius.xl,
+    borderBottomRightRadius: radius.xl,
   },
   divider: {
     position: "absolute",
     bottom: 0,
     left: 64,
-    right: 12,
+    right: 0,
     height: StyleSheet.hairlineWidth,
   },
   copy: { flex: 1, gap: space.xxs },
-  name: { fontSize: textSize.body, lineHeight: 22, fontWeight: "600" },
+  name: { fontSize: textSize.body, fontWeight: "600", letterSpacing: -0.2 },
   meta: { fontSize: textSize.footnote, lineHeight: 18 },
   empty: { padding: space.xxl, alignItems: "center", gap: space.md },
   emptyIcon: {
-    width: 48,
-    height: 48,
-    borderCurve: "continuous",
-    borderRadius: radius.lg,
+    width: 64,
+    height: 64,
+    borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -300,10 +382,10 @@ const styles = StyleSheet.create({
   },
   emptyText: { textAlign: "center" },
   reset: {
-    minHeight: 44,
+    height: 48,
     justifyContent: "center",
-    borderCurve: "continuous",
-    borderRadius: radius.md,
-    paddingHorizontal: space.lg,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.xxl,
   },
+  resetText: { fontFamily: fonts.rounded, fontSize: 16, fontWeight: "700" },
 });
