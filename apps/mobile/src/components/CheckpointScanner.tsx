@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { Theme } from "../theme";
 import { useFeedback, MotionPressable } from "./Motion";
 import { radius, space, textSize } from "../theme";
+import { fonts } from "../theme";
 
 export function CheckpointScanner({ foreground, onClose, onScan, theme }: {
   foreground: boolean;
@@ -76,7 +77,9 @@ export function CheckpointScanner({ foreground, onClose, onScan, theme }: {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, padding: space.xl, gap: space.lg },
-  heading: { fontSize: textSize.heading, fontWeight: "700" },
+  heading: { fontFamily: fonts.rounded,
+    fontSize: textSize.heading, fontWeight: "700" },
   camera: { flex: 1, minHeight: 160, backgroundColor: "#000" },
-  button: { minHeight: 48, paddingHorizontal: space.lg, justifyContent: "center", borderWidth: 1, borderRadius: radius.md },
+  button: { minHeight: 48, paddingHorizontal: space.lg, justifyContent: "center", borderWidth: 1, borderCurve: "continuous",
+    borderRadius: radius.md },
 });

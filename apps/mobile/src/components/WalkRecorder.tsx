@@ -242,8 +242,10 @@ function Action({ theme, label, onPress, selected, disabled }: {
 const styles = StyleSheet.create({
   section: { gap: space.sm },
   heading: { fontSize: textSize.body, lineHeight: 22, fontWeight: "700", paddingHorizontal: space.xs },
-  card: { gap: space.md, padding: space.md, borderRadius: radius.lg, borderWidth: 1 },
+  card: { gap: space.md, padding: space.md, borderCurve: "continuous",
+    borderRadius: radius.lg, borderWidth: 1 },
   copy: { fontSize: textSize.subhead, lineHeight: 20 },
   actions: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
-  button: { minHeight: 44, justifyContent: "center", paddingHorizontal: space.md, borderRadius: radius.md },
+  button: { minHeight: 44, justifyContent: "center", paddingHorizontal: space.md, borderCurve: "continuous",
+    borderRadius: radius.md },
 });

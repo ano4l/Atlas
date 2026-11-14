@@ -7,12 +7,14 @@ import React, {
 } from "react";
 import {
   LayoutChangeEvent,
+  Platform,
   StyleSheet,
   Text,
   View,
   useWindowDimensions,
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import Animated, {
   cancelAnimation,
@@ -87,7 +89,7 @@ export function IndoorMap({
   onPan,
   sheetHeight,
   liveSheetHeight,
-  topInset,
+  topInset: controlsInset,
   nextPoint,
   navigating = false,
   arrived = false,
@@ -114,7 +116,13 @@ export function IndoorMap({
   const rebasePan = useSharedValue(false);
   const positionX = useSharedValue(position.x),
     positionY = useSharedValue(position.y);
-  const bottomInset = sheetHeight + 20;
+  // On iOS the map runs under the status bar and home indicator while the
+  // controls stay inside the safe area, so framing adds the bled edges back.
+  const insets = useSafeAreaInsets();
+  const bleedTop = Platform.OS === "ios" ? insets.top : 0;
+  const bleedBottom = Platform.OS === "ios" ? insets.bottom : 0;
+  const topInset = controlsInset + bleedTop;
+  const bottomInset = sheetHeight + 20 + bleedBottom;
   const viewport = useMemo(
     () => ({ ...size, top: topInset, bottom: bottomInset }),
     [size, topInset, bottomInset],
@@ -146,6 +154,15 @@ export function IndoorMap({
     () => (scale.value >= 1.06 ? 1 : scale.value <= 0.94 ? -1 : 0),
     (band, previous) => {
       if (band && band !== previous) runOnJS(setShowUnitLabels)(band > 0);
+    },
+  );
+  // Anything that has to redraw (route width, label collisions) follows the
+  // zoom in quarter-octave steps instead of on every frame.
+  const [zoomStep, setZoomStep] = useState(0.5);
+  useAnimatedReaction(
+    () => Math.round(Math.log2(scale.value) * 4),
+    (step, previous) => {
+      if (step !== previous) runOnJS(setZoomStep)(Math.pow(2, step / 4));
     },
   );
   const onLayout = useCallback(({ nativeEvent }: LayoutChangeEvent) => {
@@ -455,7 +472,14 @@ export function IndoorMap({
   };
   return (
     <View
-      style={[styles.container, { backgroundColor: theme.mapBg }]}
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.mapBg,
+          marginTop: -bleedTop,
+          marginBottom: -bleedBottom,
+        },
+      ]}
       onLayout={onLayout}
     >
       <GestureDetector gesture={gesture}>
@@ -487,6 +511,7 @@ export function IndoorMap({
               theme={theme}
               destination={destination}
               scale={scale}
+              zoom={zoomStep}
               positionX={positionX}
               positionY={positionY}
               showPosition={!arrived && positionFloor === floorLevel}
@@ -495,7 +520,6 @@ export function IndoorMap({
               navigating={navigating}
               reducedMotion={reducedMotion}
               arrived={arrived}
-              fontScale={fontScale}
               showUnitLabels={showUnitLabels}
             />
           </Animated.View>
@@ -504,7 +528,7 @@ export function IndoorMap({
       {cameraMode === "manual" && (
         <Animated.View
           pointerEvents="box-none"
-          style={[styles.bottomTools, toolsPosition]}
+          style={[styles.bottomTools, { bottom: bleedBottom }, toolsPosition]}
         >
           <MapScale scale={scale} theme={theme} />
           <GlassSurface theme={theme} style={styles.zoom}>

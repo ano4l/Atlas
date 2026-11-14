@@ -26,6 +26,7 @@ import {
 
 import { MotionPressable } from "./Motion";
 import { radius, space, textSize } from "../theme";
+import { fonts } from "../theme";
 type Props = {
   theme: Theme;
   onClose: () => void;
@@ -36,6 +37,8 @@ type Props = {
   onClearRecent: () => void;
   storageIssue: boolean;
   initialCategory?: string;
+  /** Opens with this text already searched, for the home sheet's shortcuts. */
+  initialQuery?: string;
   initialSavedOnly: boolean;
   focusSearch: boolean;
 };
@@ -61,10 +64,11 @@ export function SearchOverlay({
   onClearRecent,
   storageIssue,
   initialCategory = "all",
+  initialQuery = "",
   initialSavedOnly,
   focusSearch,
 }: Props) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [scope, setScope] = useState(
     initialSavedOnly
       ? "saved"
@@ -383,6 +387,7 @@ const styles = StyleSheet.create({
     gap: space.xs,
   },
   title: {
+    fontFamily: fonts.rounded,
     fontSize: textSize.title,
     fontWeight: "700",
     letterSpacing: -0.2,

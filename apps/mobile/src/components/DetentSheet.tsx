@@ -26,7 +26,8 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { radius, shadows, Theme } from "../theme";
+import { radius, Theme } from "../theme";
+import { GlassSurface } from "./GlassSurface";
 import { FeedbackContext, MotionPressable, useFeedback } from "./Motion";
 
 /** 0 shows the header and footer only, 1 adds the summary, 2 shows everything. */
@@ -58,8 +59,21 @@ type Props = {
   onHeightChange: (height: number) => void;
   /** Per-frame height for controls that ride above the sheet. */
   liveHeight?: SharedValue<number>;
-  entering?: React.ComponentProps<typeof Animated.View>["entering"];
-  strongShadow?: boolean;
+  /** Slide up on mount. The sheet never fades, because glass cannot. */
+  animateIn?: boolean;
+};
+
+// Translate only: a fading ancestor stops the system glass from rendering.
+const rise = () => {
+  "worklet";
+  return {
+    initialValues: { transform: [{ translateY: 44 }] },
+    animations: {
+      transform: [
+        { translateY: withSpring(0, { damping: 24, stiffness: 260, mass: 0.9 }) },
+      ],
+    },
+  };
 };
 
 /**
@@ -80,8 +94,7 @@ export const DetentSheet = forwardRef<DetentSheetHandle, Props>(
       onDetentChange,
       onHeightChange,
       liveHeight,
-      entering,
-      strongShadow,
+      animateIn,
     },
     ref,
   ) {
@@ -168,11 +181,10 @@ export const DetentSheet = forwardRef<DetentSheetHandle, Props>(
           dragStart.value = body.value;
         })
         .onUpdate(({ translationY }) => {
-          if (!reducedMotion)
-            body.value = Math.min(
-              large,
-              Math.max(0, dragStart.value - translationY),
-            );
+          if (reducedMotion) return;
+          const raw = Math.max(0, dragStart.value - translationY);
+          // Past the top detent the sheet follows the finger with resistance.
+          body.value = raw > large ? large + (raw - large) * 0.2 : raw;
         })
         .onEnd(({ translationY, velocityY }, success) => {
           // Project the release so a flick carries to the next detent.
@@ -202,13 +214,10 @@ export const DetentSheet = forwardRef<DetentSheetHandle, Props>(
 
     return (
       <Animated.View
-        entering={reducedMotion ? undefined : entering}
-        style={[
-          styles.sheet,
-          strongShadow ? shadows.strong : shadows.medium,
-          { backgroundColor: theme.paper, borderColor: theme.line },
-        ]}
+        entering={animateIn && !reducedMotion ? rise : undefined}
+        style={styles.sheet}
       >
+        <GlassSurface theme={theme} variant="panel" style={styles.surface}>
         <GestureDetector gesture={headerDrag}>
           <View
             onLayout={(event) => {
@@ -272,26 +281,21 @@ export const DetentSheet = forwardRef<DetentSheetHandle, Props>(
             </View>
           </GestureDetector>
         )}
+        </GlassSurface>
       </Animated.View>
     );
   },
 );
 
 const styles = StyleSheet.create({
-  sheet: {
-    position: "absolute",
-    bottom: panelGap,
-    left: 12,
-    right: 12,
-    borderRadius: radius.sheet,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderCurve: "continuous",
-  },
-  handle: { height: 24, alignItems: "center", justifyContent: "center" },
-  grabber: { width: 36, height: 4, borderRadius: radius.bar, opacity: 0.46 },
+  sheet: { position: "absolute", bottom: panelGap, left: 10, right: 10 },
+  surface: { borderRadius: radius.sheet + 4 },
+  handle: { height: 22, alignItems: "center", justifyContent: "center" },
+  grabber: { width: 38, height: 5, borderRadius: 3, opacity: 0.32 },
   clip: { overflow: "hidden" },
   clipEnd: {
-    borderBottomLeftRadius: radius.sheet,
-    borderBottomRightRadius: radius.sheet,
+    borderCurve: "continuous",
+    borderBottomLeftRadius: radius.sheet + 4,
+    borderBottomRightRadius: radius.sheet + 4,
   },
 });

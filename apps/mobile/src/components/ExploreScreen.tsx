@@ -14,6 +14,7 @@ import {
 
 import { MotionPressable } from "./Motion";
 import { radius, space, textSize } from "../theme";
+import { fonts } from "../theme";
 export function ExploreScreen({
   theme,
   onSelectPOI,
@@ -196,6 +197,7 @@ const styles = StyleSheet.create({
   header: { gap: space.lg, paddingBottom: space.md },
   gutter: { paddingHorizontal: space.lg, gap: space.sm },
   title: {
+    fontFamily: fonts.rounded,
     fontSize: textSize.display,
     lineHeight: 40,
     fontWeight: "700",
@@ -207,6 +209,7 @@ const styles = StyleSheet.create({
     marginHorizontal: space.lg,
     minHeight: 52,
     paddingHorizontal: space.lg,
+    borderCurve: "continuous",
     borderRadius: radius.lg,
     borderWidth: 1,
     flexDirection: "row",
@@ -218,6 +221,7 @@ const styles = StyleSheet.create({
     marginHorizontal: space.lg,
     padding: space.xs,
     gap: space.xs,
+    borderCurve: "continuous",
     borderRadius: radius.lg,
     flexDirection: "row",
   },
@@ -226,6 +230,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: space.sm,
     paddingVertical: space.sm,
+    borderCurve: "continuous",
     borderRadius: radius.md,
     flexDirection: "row",
     alignItems: "center",
@@ -243,6 +248,7 @@ const styles = StyleSheet.create({
     gap: space.sm,
   },
   section: {
+    fontFamily: fonts.rounded,
     fontSize: textSize.title,
     lineHeight: 26,
     fontWeight: "700",

@@ -1,16 +1,15 @@
 import React, { useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { FadeInUp, SharedValue } from "react-native-reanimated";
+import { SharedValue } from "react-native-reanimated";
 import { atlasSandtonVenue } from "../fixtures";
 import { DemoRoute, floorName } from "../map/demo-routing";
 import { POIItem } from "../map/types";
-import { Theme } from "../theme";
+import { fonts, radius, space, textSize, Theme } from "../theme";
 import { Detent, DetentSheet, DetentSheetHandle } from "./DetentSheet";
 import { Icon } from "./Icon";
 import { MotionPressable } from "./Motion";
 import { PlaceBadge } from "./PlaceBadge";
 import { RouteStepsSheet } from "./RouteStepsSheet";
-import { radius, space, textSize } from "../theme";
 
 type Props = {
   theme: Theme;
@@ -27,11 +26,6 @@ type Props = {
   onClose: () => void;
   onToggleStepFree: (value: boolean) => void;
 };
-
-const reveal = FadeInUp.duration(220).withInitialValues({
-  opacity: 0,
-  transform: [{ translateY: 14 }],
-});
 
 export function DestinationSheet({
   theme,
@@ -66,117 +60,147 @@ export function DestinationSheet({
         ref={sheet}
         theme={theme}
         label="place details"
-        strongShadow
-        entering={reveal}
+        animateIn
         mediumHeight={summaryHeight}
         onDetentChange={setDetent}
         onHeightChange={onHeightChange}
         liveHeight={liveSheetHeight}
         header={
-        <View style={styles.header}>
-          {arrived ? (
-            <View
-              style={[
-                styles.arrivalBadge,
-                { backgroundColor: theme.facilitySoft },
-              ]}
-            >
-              <Icon name="check" color={theme.facilityInk} size={24} />
+          <View style={styles.header}>
+            {arrived ? (
+              <View style={[styles.arrival, { backgroundColor: theme.lime }]}>
+                <Icon
+                  name="check"
+                  color={theme.limeInk}
+                  size={28}
+                  strokeWidth={2.6}
+                />
+              </View>
+            ) : (
+              <PlaceBadge poi={poi} theme={theme} size={52} />
+            )}
+            <View style={styles.copy}>
+              <Text
+                accessibilityRole="header"
+                numberOfLines={2}
+                style={[styles.title, { color: theme.ink }]}
+              >
+                {title}
+              </Text>
+              <Text
+                numberOfLines={1}
+                style={[styles.meta, { color: theme.muted }]}
+              >
+                {arrived
+                  ? poi.name
+                  : atlasSandtonVenue.floors.length > 1
+                    ? `${poi.category} · ${floorName(poi.floorLevel)}`
+                    : poi.category}
+              </Text>
             </View>
-          ) : (
-            <PlaceBadge poi={poi} theme={theme} size={46} />
-          )}
-          <View style={styles.copy}>
-            <Text
-              accessibilityRole="header"
-              style={[styles.title, { color: theme.ink }]}
-            >
-              {title}
-            </Text>
-            <Text style={[styles.meta, { color: theme.muted }]}>
-              {arrived ? poi.name : poi.category}
-            </Text>
-          </View>
-          <MotionPressable
-            accessibilityRole="button"
-            accessibilityLabel={
-              saved
-                ? `Remove ${poi.name} from saved places`
-                : `Save ${poi.name}`
-            }
-            accessibilityState={{ selected: saved }}
-            onPress={onToggleSaved}
-            style={({ pressed }) => [
-              styles.iconButton,
-              {
-                backgroundColor:
-                  saved || pressed ? theme.accentSoft : theme.subtle,
-              },
-            ]}
-          >
-            <Icon
-              name={saved ? "check" : "bookmark"}
-              color={saved ? theme.accent : theme.inkSecondary}
-              size={21}
-            />
-          </MotionPressable>
-          <MotionPressable
-            accessibilityRole="button"
-            accessibilityLabel="Close and return to the map"
-            onPress={onClose}
-            style={({ pressed }) => [
-              styles.iconButton,
-              { backgroundColor: pressed ? theme.accentSoft : theme.subtle },
-            ]}
-          >
-            <Icon name="close" color={theme.inkSecondary} size={21} />
-          </MotionPressable>
-        </View>
-        }
-        footer={
-        <View style={styles.footer}>
-          <MotionPressable
-            accessibilityRole="button"
-            onPress={finish ? onClose : onStartNavigation}
-            style={({ pressed }) => [
-              styles.primary,
-              {
-                backgroundColor: finish ? theme.subtle : theme.primary,
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <Icon
-              name={finish ? "map" : "walking"}
-              color={finish ? theme.ink : theme.primaryText}
-              size={22}
-            />
-            <Text
-              style={[
-                styles.buttonText,
-                { color: finish ? theme.ink : theme.primaryText },
-              ]}
-            >
-              {finish ? "Back to map" : "Start demo walk"}
-            </Text>
-          </MotionPressable>
-          {!finish && (
             <MotionPressable
               accessibilityRole="button"
-              accessibilityLabel="Preview walking steps"
-              onPress={() => setStepsVisible(true)}
+              accessibilityLabel={
+                saved
+                  ? `Remove ${poi.name} from saved places`
+                  : `Save ${poi.name}`
+              }
+              accessibilityState={{ selected: saved }}
+              onPress={onToggleSaved}
               style={({ pressed }) => [
-                styles.secondary,
-                { backgroundColor: pressed ? theme.accentSoft : theme.subtle },
+                styles.iconButton,
+                {
+                  backgroundColor: saved
+                    ? theme.primary
+                    : pressed
+                      ? theme.accentSoft
+                      : theme.fill,
+                },
               ]}
             >
-              <Icon name="steps" color={theme.inkSecondary} size={18} />
-              <Text style={[styles.secondaryLabel, { color: theme.ink }]}>
-                Steps
+              <Icon
+                name="bookmark"
+                color={saved ? theme.primaryText : theme.inkSecondary}
+                size={19}
+                strokeWidth={2}
+              />
+            </MotionPressable>
+            <MotionPressable
+              accessibilityRole="button"
+              accessibilityLabel="Close and return to the map"
+              onPress={onClose}
+              style={({ pressed }) => [
+                styles.iconButton,
+                { backgroundColor: pressed ? theme.accentSoft : theme.fill },
+              ]}
+            >
+              <Icon
+                name="close"
+                color={theme.inkSecondary}
+                size={18}
+                strokeWidth={2.2}
+              />
+            </MotionPressable>
+          </View>
+        }
+        footer={
+          <View style={styles.footer}>
+            <MotionPressable
+              accessibilityRole="button"
+              onPress={finish ? onClose : onStartNavigation}
+              style={({ pressed }) => [
+                styles.primary,
+                finish
+                  ? { backgroundColor: theme.fill }
+                  : {
+                      backgroundColor: theme.primary,
+                      shadowColor: theme.primary,
+                      shadowOpacity: 0.35,
+                      shadowRadius: 12,
+                      shadowOffset: { width: 0, height: 6 },
+                    },
+                { opacity: pressed ? 0.85 : 1 },
+              ]}
+            >
+              <Icon
+                name={finish ? "map" : "walking"}
+                color={finish ? theme.ink : theme.primaryText}
+                size={22}
+                strokeWidth={2}
+              />
+              <Text
+                style={[
+                  styles.buttonText,
+                  { color: finish ? theme.ink : theme.primaryText },
+                ]}
+              >
+                {finish ? "Back to map" : "Start demo walk"}
               </Text>
             </MotionPressable>
-          )}
-        </View>
+            {!finish && (
+              <MotionPressable
+                accessibilityRole="button"
+                accessibilityLabel="Preview walking steps"
+                onPress={() => setStepsVisible(true)}
+                style={({ pressed }) => [
+                  styles.secondary,
+                  {
+                    backgroundColor: pressed ? theme.accentSoft : theme.fill,
+                  },
+                ]}
+              >
+                <Icon
+                  name="steps"
+                  color={theme.ink}
+                  size={20}
+                  strokeWidth={2}
+                />
+                <Text style={[styles.secondaryLabel, { color: theme.ink }]}>
+                  Steps
+                </Text>
+              </MotionPressable>
+            )}
+          </View>
         }
       >
         <View style={styles.content}>
@@ -187,120 +211,144 @@ export function DestinationSheet({
               setSummaryHeight(event.nativeEvent.layout.height)
             }
           >
-          {arrived ? (
-            <Text style={[styles.body, { color: theme.inkSecondary }]}>
-              {unknownTenant
-                ? "The demo ends at the gallery near this unit."
-                : "The demo has reached this destination."}
-            </Text>
-          ) : route ? (
-            <View style={[styles.route, { backgroundColor: theme.accentSoft }]}>
-              <Icon name="walking" color={theme.accent} size={24} />
-              <View style={styles.copy}>
-                <Text style={[styles.estimate, { color: theme.ink }]}>
-                  {route.walkTimeMin} min walk{" "}
-                  <Text style={[styles.metric, { color: theme.inkSecondary }]}>
-                    · {route.distanceM} m
+            {arrived ? (
+              <Text style={[styles.body, { color: theme.inkSecondary }]}>
+                {unknownTenant
+                  ? "The demo ends at the gallery near this unit."
+                  : "The demo has reached this destination."}
+              </Text>
+            ) : route ? (
+              <View
+                accessible
+                accessibilityLabel={`${route.walkTimeMin} minute walk, ${route.distanceM} metres, estimated from the west demo entrance`}
+                style={[styles.stats, { backgroundColor: theme.fill }]}
+              >
+                <View style={styles.stat}>
+                  <Text style={[styles.statValue, { color: theme.ink }]}>
+                    {route.walkTimeMin}
+                    <Text style={styles.statUnit}> min</Text>
                   </Text>
-                </Text>
-                <Text style={[styles.meta, { color: theme.inkSecondary }]}>
-                  Estimate from the west demo entrance
-                </Text>
+                  <Text style={[styles.statLabel, { color: theme.muted }]}>
+                    Walk
+                  </Text>
+                </View>
+                <View
+                  style={[styles.statDivider, { backgroundColor: theme.line }]}
+                />
+                <View style={styles.stat}>
+                  <Text style={[styles.statValue, { color: theme.ink }]}>
+                    {route.distanceM}
+                    <Text style={styles.statUnit}> m</Text>
+                  </Text>
+                  <Text style={[styles.statLabel, { color: theme.muted }]}>
+                    Distance
+                  </Text>
+                </View>
+                <View
+                  style={[styles.statDivider, { backgroundColor: theme.line }]}
+                />
+                <View style={styles.stat}>
+                  <Text style={[styles.statValue, { color: theme.ink }]}>
+                    {route.steps.length}
+                  </Text>
+                  <Text style={[styles.statLabel, { color: theme.muted }]}>
+                    Steps
+                  </Text>
+                </View>
               </View>
-            </View>
-          ) : (
-            <Text style={[styles.body, { color: theme.muted }]}>
-              No mapped route is available to this place.
-            </Text>
-          )}
-          {!arrived && unknownTenant && (
-            <Text style={[styles.meta, { color: theme.muted }]}>
-              The route ends on the gallery near this unit.
-            </Text>
-          )}
-          <MotionPressable
-            accessibilityRole="button"
-            accessibilityState={{ expanded: details }}
-            onPress={() => sheet.current?.snapTo(details ? 1 : 2)}
-            style={styles.detailAction}
-          >
-            <Icon name="info" color={theme.inkSecondary} size={18} />
-            <Text style={[styles.detailLabel, { color: theme.inkSecondary }]}>
-              Place details
-            </Text>
-            <View style={details && styles.upsideDown}>
-              <Icon name="chevron-down" color={theme.muted} size={16} />
-            </View>
-          </MotionPressable>
-          {storageIssue && (
-            <Text
-              accessibilityLiveRegion="polite"
-              style={[styles.meta, { color: theme.muted }]}
+            ) : (
+              <Text style={[styles.body, { color: theme.muted }]}>
+                No mapped route is available to this place.
+              </Text>
+            )}
+            {!arrived && route && (
+              <Text style={[styles.note, { color: theme.muted }]}>
+                {unknownTenant
+                  ? "Estimate from the west demo entrance. The route ends on the gallery near this unit."
+                  : "Estimate from the west demo entrance."}
+              </Text>
+            )}
+            <MotionPressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: details }}
+              onPress={() => sheet.current?.snapTo(details ? 1 : 2)}
+              style={styles.detailAction}
             >
-              Device storage is unavailable. Saves may last only for this
-              session.
-            </Text>
-          )}
+              <Icon name="info" color={theme.inkSecondary} size={18} />
+              <Text style={[styles.detailLabel, { color: theme.inkSecondary }]}>
+                Place details
+              </Text>
+              <View style={details && styles.upsideDown}>
+                <Icon name="chevron-down" color={theme.muted} size={16} />
+              </View>
+            </MotionPressable>
+            {storageIssue && (
+              <Text
+                accessibilityLiveRegion="polite"
+                style={[styles.note, { color: theme.muted }]}
+              >
+                Device storage is unavailable. Saves may last only for this
+                session.
+              </Text>
+            )}
           </View>
-            <View
-              pointerEvents={details ? "auto" : "none"}
-              accessibilityElementsHidden={!details}
-              importantForAccessibility={
-                details ? "auto" : "no-hide-descendants"
-              }
-              style={styles.details}
-            >
-              <Text style={[styles.detailLabel, { color: theme.ink }]}>
-                {floorName(poi.floorLevel)}
+          <View
+            pointerEvents={details ? "auto" : "none"}
+            accessibilityElementsHidden={!details}
+            importantForAccessibility={details ? "auto" : "no-hide-descendants"}
+            style={styles.details}
+          >
+            <Text style={[styles.detailLabel, { color: theme.ink }]}>
+              {floorName(poi.floorLevel)}
+            </Text>
+            {!!poi.description && (
+              <Text style={[styles.body, { color: theme.ink }]}>
+                {poi.description}
               </Text>
-              {!!poi.description && (
-                <Text style={[styles.body, { color: theme.ink }]}>
-                  {poi.description}
-                </Text>
-              )}
-              <Text style={[styles.meta, { color: theme.muted }]}>
-                {poi.entranceInfo}
+            )}
+            <Text style={[styles.note, { color: theme.muted }]}>
+              {poi.entranceInfo}
+            </Text>
+            {transition && (
+              <Text style={[styles.note, { color: theme.muted }]}>
+                Floor change by {transition === "stairs" ? "stairs" : transition}
+                .
               </Text>
-              {transition && (
-                <Text style={[styles.meta, { color: theme.muted }]}>
-                  Floor change by{" "}
-                  {transition === "stairs" ? "stairs" : transition}.
+            )}
+            {!arrived && atlasSandtonVenue.floors.length > 1 && (
+              <MotionPressable
+                accessibilityRole="checkbox"
+                accessibilityLabel="Prefer lifts on demo routes"
+                accessibilityState={{ checked: stepFree }}
+                onPress={() => onToggleStepFree(!stepFree)}
+                style={[
+                  styles.detailAction,
+                  {
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                    borderColor: theme.line,
+                  },
+                ]}
+              >
+                <Icon name="accessibility" color={theme.accent} size={20} />
+                <Text style={[styles.detailLabel, { color: theme.ink }]}>
+                  Prefer lifts
                 </Text>
-              )}
-              {!arrived && atlasSandtonVenue.floors.length > 1 && (
-                <MotionPressable
-                  accessibilityRole="checkbox"
-                  accessibilityLabel="Prefer lifts on demo routes"
-                  accessibilityState={{ checked: stepFree }}
-                  onPress={() => onToggleStepFree(!stepFree)}
+                <View
                   style={[
-                    styles.detailAction,
+                    styles.checkbox,
                     {
-                      borderTopWidth: StyleSheet.hairlineWidth,
-                      borderColor: theme.line,
+                      borderColor: theme.accent,
+                      backgroundColor: stepFree ? theme.accent : theme.paper,
                     },
                   ]}
                 >
-                  <Icon name="accessibility" color={theme.accent} size={20} />
-                  <Text style={[styles.detailLabel, { color: theme.ink }]}>
-                    Prefer lifts
-                  </Text>
-                  <View
-                    style={[
-                      styles.checkbox,
-                      {
-                        borderColor: theme.accent,
-                        backgroundColor: stepFree ? theme.accent : theme.paper,
-                      },
-                    ]}
-                  >
-                    {stepFree && (
-                      <Icon name="check" color={theme.primaryText} size={16} />
-                    )}
-                  </View>
-                </MotionPressable>
-              )}
-            </View>
+                  {stepFree && (
+                    <Icon name="check" color={theme.primaryText} size={16} />
+                  )}
+                </View>
+              </MotionPressable>
+            )}
+          </View>
         </View>
       </DetentSheet>
       {route && stepsVisible && (
@@ -321,49 +369,63 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: space.sm,
     paddingHorizontal: space.lg,
-    paddingTop: space.xs,
-    paddingBottom: space.md,
+    paddingBottom: space.lg,
+  },
+  copy: { flex: 1, gap: space.xxs, paddingLeft: space.xs },
+  title: {
+    fontFamily: fonts.rounded,
+    fontSize: textSize.heading,
+    lineHeight: 28,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+  },
+  meta: { fontSize: textSize.subhead, fontWeight: "500" },
+  arrival: {
+    width: 52,
+    height: 52,
+    borderCurve: "continuous",
+    borderRadius: radius.lg,
+    alignItems: "center",
+    justifyContent: "center",
   },
   iconButton: {
-    width: 44,
-    height: 44,
+    width: 38,
+    height: 38,
     borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
   },
-  arrivalBadge: {
-    width: 46,
-    height: 46,
-    borderRadius: radius.lg,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  copy: { flex: 1, gap: space.xs },
-  title: { fontSize: textSize.heading, fontWeight: "700", letterSpacing: -0.45 },
-  estimate: { fontSize: textSize.title, fontWeight: "700", fontVariant: ["tabular-nums"] },
-  metric: { fontSize: textSize.subhead, fontWeight: "500" },
-  meta: { fontSize: textSize.footnote, lineHeight: 17 },
-  body: { fontSize: textSize.subhead, lineHeight: 21 },
   content: { paddingHorizontal: space.lg },
   summary: { gap: space.sm, paddingBottom: space.sm },
-  route: {
-    minHeight: 64,
-    borderRadius: radius.lg,
+  stats: {
     flexDirection: "row",
     alignItems: "center",
-    gap: space.md,
-    paddingHorizontal: space.md,
-    paddingVertical: space.sm,
+    borderCurve: "continuous",
+    borderRadius: radius.xl,
+    paddingVertical: space.md,
   },
+  stat: { flex: 1, alignItems: "center", gap: space.xxs },
+  statValue: {
+    fontFamily: fonts.rounded,
+    fontSize: 26,
+    lineHeight: 30,
+    fontWeight: "800",
+    letterSpacing: -0.6,
+    fontVariant: ["tabular-nums"],
+  },
+  statUnit: { fontSize: textSize.subhead, fontWeight: "700", letterSpacing: 0 },
+  statLabel: { fontSize: textSize.caption, fontWeight: "600" },
+  statDivider: { width: StyleSheet.hairlineWidth, height: 32 },
+  body: { fontSize: textSize.subhead, lineHeight: 21 },
+  note: { fontSize: textSize.footnote, lineHeight: 18 },
   detailAction: {
     minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
     gap: space.sm,
-    paddingHorizontal: space.xxs,
   },
   detailLabel: { flex: 1, fontSize: textSize.subhead, fontWeight: "600" },
-  details: { gap: space.sm, paddingBottom: space.sm },
+  details: { gap: space.sm, paddingBottom: space.md },
   upsideDown: { transform: [{ rotate: "180deg" }] },
   checkbox: {
     width: 24,
@@ -378,28 +440,31 @@ const styles = StyleSheet.create({
     gap: space.sm,
     paddingHorizontal: space.lg,
     paddingTop: space.xs,
-    paddingBottom: space.md,
+    paddingBottom: space.lg,
   },
   primary: {
     flex: 1,
-    minHeight: 50,
-    padding: space.md,
+    height: 54,
     borderRadius: radius.pill,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: space.sm,
   },
-  buttonText: { flexShrink: 1, fontSize: textSize.body, fontWeight: "700" },
   secondary: {
-    minHeight: 50,
+    height: 54,
     borderRadius: radius.pill,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: space.sm,
-    paddingHorizontal: space.md,
-    paddingVertical: space.sm,
+    paddingHorizontal: space.xl,
   },
-  secondaryLabel: { fontSize: textSize.subhead, fontWeight: "700" },
+  buttonText: {
+    fontFamily: fonts.rounded,
+    fontSize: 17,
+    fontWeight: "700",
+    letterSpacing: -0.2,
+  },
+  secondaryLabel: { fontFamily: fonts.rounded, fontSize: 17, fontWeight: "700" },
 });

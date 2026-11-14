@@ -23,6 +23,7 @@ import { navigationDiagnostics } from "../map/navigation-diagnostics";
 
 import { MotionPressable } from "./Motion";
 import { radius, space, textSize } from "../theme";
+import { fonts } from "../theme";
 const baseUrl = process.env.EXPO_PUBLIC_ATLAS_API_URL?.trim();
 const venueSlug = "atlas-synthetic-mall";
 const api = baseUrl ? new PlatformApiClient({ baseUrl }) : null;
@@ -663,7 +664,8 @@ function Choice({ theme, label, accessibilityLabel, selected, onPress }: {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   messageScreen: { flex: 1, alignItems: "center", justifyContent: "center", padding: space.xxl, gap: space.md },
-  title: { fontSize: textSize.heading, fontWeight: "700" },
+  title: { fontFamily: fonts.rounded,
+    fontSize: textSize.heading, fontWeight: "700" },
   venueHeading: { flexDirection: "row", alignItems: "center", padding: space.lg, gap: space.sm, borderBottomWidth: 1 },
   headingText: { flex: 1, gap: space.xs },
   map: { flex: 1, minHeight: 124 },
@@ -671,10 +673,13 @@ const styles = StyleSheet.create({
   panelContents: { padding: space.lg, gap: space.sm },
   choices: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   choice: { minHeight: 44, minWidth: 44, paddingHorizontal: space.md, paddingVertical: space.sm,
-    alignItems: "center", justifyContent: "center", borderWidth: 1, borderRadius: radius.md },
-  summary: { padding: space.md, gap: space.xs, borderRadius: radius.md },
+    alignItems: "center", justifyContent: "center", borderWidth: 1, borderCurve: "continuous",
+    borderRadius: radius.md },
+  summary: { padding: space.md, gap: space.xs, borderCurve: "continuous",
+    borderRadius: radius.md },
   label: { fontSize: textSize.subhead, fontWeight: "600" },
-  search: { flexDirection: "row", gap: space.sm, alignItems: "center", borderWidth: 1, borderRadius: radius.md, paddingHorizontal: space.md },
+  search: { flexDirection: "row", gap: space.sm, alignItems: "center", borderWidth: 1, borderCurve: "continuous",
+    borderRadius: radius.md, paddingHorizontal: space.md },
   input: { flex: 1, minHeight: 44, fontSize: textSize.body },
   place: { flexDirection: "row", minHeight: 52, alignItems: "center", padding: space.sm, borderBottomWidth: 1 },
 });

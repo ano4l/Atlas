@@ -41,6 +41,7 @@ import { darkTheme, lightTheme, Theme } from "./src/theme";
 import { MapHomeSheet } from "./src/components/MapHomeSheet";
 import { ConnectedVenueScreen, connectedVenueEnabled } from "./src/components/ConnectedVenueScreen";
 import { radius, space, textSize } from "./src/theme";
+import { fonts } from "./src/theme";
 
 type TabKey = "map" | "explore" | "settings" | "test-venue";
 const initialFloor = atlasSandtonVenue.startFloorLevel;
@@ -96,6 +97,7 @@ function AtlasApp({
   const [floorLevel, setFloorLevel] = useState(initialFloor);
   const [recenterKey, setRecenterKey] = useState(0);
   const [searchScope, setSearchScope] = useState<"all" | "saved" | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const searchVisible = searchScope !== null;
   const [selectedPOI, setSelectedPOI] = useState<POIItem | null>(null);
   const reducedMotion = systemReducedMotion || limitMotion;
@@ -283,7 +285,10 @@ function AtlasApp({
       setCurrentStepIndex(0);
     }
   };
-  const openSearch = () => setSearchScope("all");
+  const openSearch = (query = "") => {
+    setSearchQuery(query);
+    setSearchScope("all");
+  };
   const topInset = isNavigating
     ? instructionHeight + 20
     : selectedPOI
@@ -410,7 +415,8 @@ function AtlasApp({
                   savedIds={places.saved}
                   recentIds={places.recent}
                   onSelect={selectPlace}
-                  onSearch={openSearch}
+                  onSearch={() => openSearch()}
+                  onBrowse={openSearch}
                   onExplore={() => setActiveTab("explore")}
                   onSaved={() => setSearchScope("saved")}
                   onHeightChange={setSheetHeight}
@@ -517,8 +523,9 @@ function AtlasApp({
               recentIds={places.recent}
               onClearRecent={places.clearRecent}
               storageIssue={places.storageIssue}
+              initialQuery={searchScope === "all" ? searchQuery : ""}
               initialSavedOnly={searchScope === "saved"}
-              focusSearch={searchScope === "all"}
+              focusSearch={searchScope === "all" && !searchQuery}
             />
           )}
           <Modal
@@ -635,8 +642,8 @@ function MapHeader({
       style={styles.mapHeader}
     >
       <GlassSurface theme={theme} pointerEvents="none" style={styles.venue}>
-        <View style={[styles.venueMark, { backgroundColor: theme.accentSoft }]}>
-          <Icon name="atlas" color={theme.accent} size={22} />
+        <View style={[styles.venueMark, { backgroundColor: theme.chrome }]}>
+          <Icon name="atlas" color={theme.lime} size={22} strokeWidth={2.4} />
         </View>
         <View style={styles.venueCopy}>
           <Text
@@ -686,17 +693,24 @@ const styles = StyleSheet.create({
     paddingVertical: space.sm,
     paddingLeft: space.sm,
     paddingRight: space.lg,
+    borderCurve: "continuous",
     borderRadius: radius.xl,
   },
   venueMark: {
-    width: 37,
-    height: 37,
+    width: 40,
+    height: 40,
+    borderCurve: "continuous",
     borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
   },
   venueCopy: { flexShrink: 1, gap: space.xxs },
-  venueName: { fontSize: textSize.subhead, fontWeight: "700", letterSpacing: -0.2 },
+  venueName: {
+    fontFamily: fonts.rounded,
+    fontSize: textSize.body,
+    fontWeight: "700",
+    letterSpacing: -0.2,
+  },
   venueMeta: { fontSize: textSize.caption, fontWeight: "500" },
   roundSurface: { borderRadius: radius.pill },
   shortLabel: { fontSize: textSize.footnote, fontWeight: "700" },
@@ -729,6 +743,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: space.md,
+    borderCurve: "continuous",
     borderRadius: radius.lg,
   },
   menuOverlay: {
@@ -742,6 +757,7 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     maxHeight: "100%",
     alignSelf: "center",
+    borderCurve: "continuous",
     borderRadius: radius.sheet,
     padding: space.md,
   },

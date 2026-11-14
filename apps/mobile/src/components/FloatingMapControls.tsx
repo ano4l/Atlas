@@ -139,6 +139,7 @@ const styles = StyleSheet.create({
   overlay: { position: "absolute", right: 16, alignItems: "flex-end", gap: space.sm },
   floors: {
     borderWidth: StyleSheet.hairlineWidth,
+    borderCurve: "continuous",
     borderRadius: radius.xl,
     padding: space.xs,
     alignItems: "center",
@@ -147,6 +148,7 @@ const styles = StyleSheet.create({
   control: {
     width: 48,
     minHeight: 48,
+    borderCurve: "continuous",
     borderRadius: radius.lg,
     alignItems: "center",
     justifyContent: "center",

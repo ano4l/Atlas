@@ -12,6 +12,7 @@ import { Theme } from "../theme";
 import { Icon } from "./Icon";
 import { FeedbackContext, MotionPressable } from "./Motion";
 import { radius, space, textSize } from "../theme";
+import { fonts } from "../theme";
 
 export function RouteStepsSheet({
   theme,
@@ -172,7 +173,8 @@ const styles = StyleSheet.create({
     gap: space.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  title: { fontSize: textSize.heading, fontWeight: "700", letterSpacing: -0.5 },
+  title: { fontFamily: fonts.rounded,
+    fontSize: textSize.heading, fontWeight: "700", letterSpacing: -0.5 },
   meta: { fontSize: textSize.footnote, lineHeight: 18 },
   copy: { flex: 1, gap: space.xs },
   close: {
@@ -186,6 +188,7 @@ const styles = StyleSheet.create({
   list: { padding: space.lg },
   summary: {
     minHeight: 60,
+    borderCurve: "continuous",
     borderRadius: radius.lg,
     flexDirection: "row",
     alignItems: "center",
@@ -211,6 +214,7 @@ const styles = StyleSheet.create({
   badge: {
     width: 36,
     height: 36,
+    borderCurve: "continuous",
     borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",

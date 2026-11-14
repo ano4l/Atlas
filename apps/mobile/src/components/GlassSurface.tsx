@@ -15,7 +15,17 @@ import { Theme, shadows } from "../theme";
 import { FeedbackContext } from "./Motion";
 
 type Material = "standard" | "opaque" | "contrast";
-type Props = ViewProps & { theme: Theme; variant?: "control" | "panel" };
+type Props = ViewProps & {
+  theme: Theme;
+  /**
+   * control: small floating buttons. panel: sheets, lightly tinted so text
+   * stays readable. chrome: the navy guidance banner, as dark tinted glass.
+   */
+  variant?: "control" | "panel" | "chrome";
+};
+
+const alpha = (hex: string, opacity: number) =>
+  `rgba(${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)},${opacity})`;
 
 let material: Material = "opaque";
 let stopWatching: (() => void) | undefined;
@@ -98,7 +108,8 @@ export function GlassSurface({
     () => "opaque",
   );
   const { reducedMotion } = useContext(FeedbackContext);
-  const panel = variant === "panel";
+  const panel = variant !== "control";
+  const chrome = variant === "chrome";
   const glass =
     !reducedMotion && systemMaterial === "standard" && nativeGlassAvailable();
   const solid = reducedMotion || systemMaterial !== "standard" || panel;
@@ -117,15 +128,18 @@ export function GlassSurface({
           borderColor: outline,
           borderTopColor:
             systemMaterial === "standard" && !reducedMotion
-              ? theme.isDark
+              ? theme.isDark || chrome
                 ? "rgba(205,224,255,0.22)"
                 : theme.paper
               : outline,
+          ...(chrome && { borderColor: "rgba(205,224,255,0.14)" }),
           backgroundColor: glass
             ? "transparent"
-            : solid
-              ? theme.paper
-              : theme.paperTranslucent,
+            : chrome
+              ? theme.chrome
+              : solid
+                ? theme.paper
+                : theme.paperTranslucent,
         },
         style,
       ]}
@@ -136,13 +150,13 @@ export function GlassSurface({
           accessible={false}
           accessibilityElementsHidden
           glassEffectStyle="regular"
-          colorScheme={theme.isDark ? "dark" : "light"}
+          colorScheme={theme.isDark || chrome ? "dark" : "light"}
           tintColor={
-            panel
-              ? theme.isDark
-                ? "rgba(27,45,58,0.32)"
-                : "rgba(255,255,255,0.38)"
-              : undefined
+            chrome
+              ? alpha(theme.chrome, 0.62)
+              : panel
+                ? alpha(theme.paper, theme.isDark ? 0.36 : 0.3)
+                : undefined
           }
           style={[
             StyleSheet.absoluteFill,

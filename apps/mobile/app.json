@@ -3,7 +3,10 @@
     "name": "Atlas",
     "slug": "indoor-navigation-mobile",
     "version": "0.1.0",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "scheme": "indoornav",
@@ -14,7 +17,8 @@
         "NSLocationWhenInUseUsageDescription": "Used to detect which venue you are in and to navigate indoors.",
         "NSMotionUsageDescription": "Used to estimate your movement while navigating indoors.",
         "NSBluetoothAlwaysUsageDescription": "Used to detect indoor beacons for accurate positioning.",
-        "NSCameraUsageDescription": "Optional: used to improve indoor positioning accuracy."
+        "NSCameraUsageDescription": "Optional: used to improve indoor positioning accuracy.",
+        "CADisableMinimumFrameDurationOnPhone": true
       }
     },
     "android": {

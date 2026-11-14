@@ -67,7 +67,9 @@ export function NavigationDiagnostics({ theme }: { theme: Theme }) {
 const styles = StyleSheet.create({
   section: { gap: space.sm },
   heading: { fontSize: textSize.body, lineHeight: 22, fontWeight: "700", paddingHorizontal: space.xs },
-  card: { borderWidth: 1, borderRadius: radius.lg, padding: space.lg, gap: space.sm },
-  button: { minHeight: 48, paddingHorizontal: space.md, paddingVertical: space.sm, borderRadius: radius.md, justifyContent: "center" },
+  card: { borderWidth: 1, borderCurve: "continuous",
+    borderRadius: radius.lg, padding: space.lg, gap: space.sm },
+  button: { minHeight: 48, paddingHorizontal: space.md, paddingVertical: space.sm, borderCurve: "continuous",
+    borderRadius: radius.md, justifyContent: "center" },
   label: { fontWeight: "600" },
 });

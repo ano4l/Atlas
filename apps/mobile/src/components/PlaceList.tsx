@@ -8,6 +8,7 @@ import { Icon, IconName } from "./Icon";
 import { PlaceBadge } from "./PlaceBadge";
 import { MotionPressable } from "./Motion";
 import { radius, space, textSize } from "../theme";
+import { fonts } from "../theme";
 export { placeIcon } from "../place-presentation";
 
 export const categories: { id: string; label: string; icon: IconName }[] = [
@@ -260,11 +261,13 @@ const styles = StyleSheet.create({
     borderRightWidth: StyleSheet.hairlineWidth,
   },
   rowFirst: {
+    borderCurve: "continuous",
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   rowLast: {
+    borderCurve: "continuous",
     borderBottomLeftRadius: radius.lg,
     borderBottomRightRadius: radius.lg,
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -283,11 +286,13 @@ const styles = StyleSheet.create({
   emptyIcon: {
     width: 48,
     height: 48,
+    borderCurve: "continuous",
     borderRadius: radius.lg,
     alignItems: "center",
     justifyContent: "center",
   },
   emptyTitle: {
+    fontFamily: fonts.rounded,
     fontSize: textSize.title,
     lineHeight: 26,
     fontWeight: "700",
@@ -297,6 +302,7 @@ const styles = StyleSheet.create({
   reset: {
     minHeight: 44,
     justifyContent: "center",
+    borderCurve: "continuous",
     borderRadius: radius.md,
     paddingHorizontal: space.lg,
   },

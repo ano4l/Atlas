@@ -36,8 +36,26 @@ export type IconName =
   | "turn-left"
   | "turn-right"
   | "escalator"
-  | "route";
+  | "route"
+  | "cart"
+  | "cutlery"
+  | "plus"
+  | "device"
+  | "home"
+  | "sparkle"
+  | "qr"
+  | "clock"
+  | "flag";
 const paths: Record<IconName, string> = {
+  cart: "M3 4h2.2l2.3 10.5h9.8L19.5 7H6.4 M9.5 19.5h.01 M16.5 19.5h.01",
+  cutlery: "M6 3v6a3 3 0 006 0V3 M9 3v18 M17 21V3c2.2 2 3.2 5 3 9h-3",
+  plus: "M12 5v14 M5 12h14",
+  device: "M5 5h14v10H5z M2.5 19h19",
+  home: "M4 11l8-7 8 7 M6 10v10h12V10 M10 20v-6h4v6",
+  sparkle: "M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z M19 16v4 M17 18h4",
+  qr: "M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h2v2h-2z M18 18h2v2h-2z M18 14h2 M14 18v2",
+  clock: "M12 3a9 9 0 100 18 9 9 0 000-18z M12 7.5V12l3 2",
+  flag: "M6 21V4 M6 4h11l-2 4 2 4H6",
   atlas: "M3.5 20L12 3.5L20.5 20M7 14.5H17M12 9V10.5",
   fit: "M8 4H4V8M16 4H20V8M4 16V20H8M20 16V20H16M8 15L11 12L13 13L16 9",
   steps: "M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01",
@@ -79,10 +97,12 @@ export function Icon({
   name,
   color = "#172B4D",
   size = 22,
+  strokeWidth = 1.7,
 }: {
   name: IconName;
   color?: string;
   size?: number;
+  strokeWidth?: number;
 }) {
   return (
     <Svg
@@ -94,20 +114,20 @@ export function Icon({
       importantForAccessibility="no-hide-descendants"
     >
       {["compass", "info"].includes(name) && (
-        <Circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.7" />
+        <Circle cx="12" cy="12" r="9" stroke={color} strokeWidth={strokeWidth} />
       )}
       {name === "search" && (
-        <Circle cx="10" cy="10" r="7" stroke={color} strokeWidth="1.7" />
+        <Circle cx="10" cy="10" r="7" stroke={color} strokeWidth={strokeWidth} />
       )}
       {name === "walking" && <Circle cx="14" cy="3" r="1.6" fill={color} />}
       {name === "locate" && (
         <>
-          <Circle cx="12" cy="12" r="6" stroke={color} strokeWidth="1.7" />
+          <Circle cx="12" cy="12" r="6" stroke={color} strokeWidth={strokeWidth} />
           <Circle cx="12" cy="12" r="2" fill={color} />
         </>
       )}
       {name === "accessibility" && (
-        <Circle cx="12" cy="4" r="2" stroke={color} strokeWidth="1.7" />
+        <Circle cx="12" cy="4" r="2" stroke={color} strokeWidth={strokeWidth} />
       )}
       {name === "restroom" && (
         <>
@@ -118,7 +138,7 @@ export function Icon({
       <Path
         d={paths[name]}
         stroke={color}
-        strokeWidth="1.7"
+        strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
       />

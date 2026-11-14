@@ -6,6 +6,7 @@ import { Icon, IconName } from "./Icon";
 import { WalkRecorder } from "./WalkRecorder";
 import { NavigationDiagnostics } from "./NavigationDiagnostics";
 import { radius, space, textSize } from "../theme";
+import { fonts } from "../theme";
 
 type Props = {
   theme: Theme;
@@ -209,6 +210,7 @@ const styles = StyleSheet.create({
   },
   header: { gap: space.sm },
   title: {
+    fontFamily: fonts.rounded,
     fontSize: textSize.display,
     lineHeight: 40,
     fontWeight: "700",
@@ -222,7 +224,8 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     paddingHorizontal: space.xs,
   },
-  card: { borderRadius: radius.lg, borderWidth: 1 },
+  card: { borderCurve: "continuous",
+    borderRadius: radius.lg, borderWidth: 1 },
   row: {
     minHeight: 72,
     padding: space.md,
@@ -234,6 +237,7 @@ const styles = StyleSheet.create({
   icon: {
     width: 40,
     height: 40,
+    borderCurve: "continuous",
     borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
