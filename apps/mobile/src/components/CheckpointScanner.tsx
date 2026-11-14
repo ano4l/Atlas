@@ -1,8 +1,9 @@
 import React, { useRef, useState } from "react";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { Theme } from "../theme";
+import { useFeedback, MotionPressable } from "./Motion";
 
 export function CheckpointScanner({ foreground, onClose, onScan, theme }: {
   foreground: boolean;
@@ -16,6 +17,7 @@ export function CheckpointScanner({ foreground, onClose, onScan, theme }: {
   const [requesting, setRequesting] = useState(false);
   const scanned = useRef(false);
   const lastCode = useRef<string | null>(null);
+  const feedback = useFeedback();
 
   async function allowCamera() {
     setRequesting(true);
@@ -44,6 +46,7 @@ export function CheckpointScanner({ foreground, onClose, onScan, theme }: {
               lastCode.current = data;
               scanned.current = onScan(data);
               setInvalidCode(!scanned.current);
+              feedback(scanned.current ? "success" : "error");
             }}
           />
         )}
@@ -57,14 +60,14 @@ export function CheckpointScanner({ foreground, onClose, onScan, theme }: {
             Camera access is unavailable. Close the scanner to choose an entrance.
           </Text>
         ) : permission && !permission.granted ? (
-          <Pressable accessibilityRole="button" accessibilityState={{ disabled: requesting }} disabled={requesting}
+          <MotionPressable accessibilityRole="button" accessibilityState={{ disabled: requesting }} disabled={requesting}
             style={[styles.button, { borderColor: theme.line }]} onPress={() => void allowCamera()}>
             <Text style={{ color: theme.ink }}>{requesting ? "Requesting camera access…" : "Allow camera access"}</Text>
-          </Pressable>
+          </MotionPressable>
         ) : null}
-        <Pressable accessibilityRole="button" style={[styles.button, { borderColor: theme.line }]} onPress={onClose}>
+        <MotionPressable accessibilityRole="button" style={[styles.button, { borderColor: theme.line }]} onPress={onClose}>
           <Text style={{ color: theme.ink }}>Close scanner</Text>
-        </Pressable>
+        </MotionPressable>
       </SafeAreaView>
     </Modal>
   );

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Animated, {
   FadeIn,
   useAnimatedStyle,
@@ -101,7 +101,7 @@ export function ActiveNavigationPanel({
           { backgroundColor: theme.chrome },
         ]}
       >
-        <Pressable
+        <MotionPressable
           accessibilityRole="button"
           accessibilityLabel={`${cueLabel}. ${cueInstruction}. Show route steps.`}
           onPress={() => setStepsVisible(true)}
@@ -129,7 +129,7 @@ export function ActiveNavigationPanel({
               {cueInstruction}
             </Text>
           </View>
-        </Pressable>
+        </MotionPressable>
         <View style={styles.then}>
           <Icon
             name={showAhead && step.icon !== "arrive" ? step.icon : "info"}
@@ -176,7 +176,7 @@ export function ActiveNavigationPanel({
               {destination.name} · {walking ? "Demo walk" : "Demo paused"}
             </Text>
           </View>
-          <Pressable
+          <MotionPressable
             accessibilityRole="button"
             accessibilityLabel="End demo walk"
             onPress={onStopNavigation}
@@ -186,7 +186,7 @@ export function ActiveNavigationPanel({
             ]}
           >
             <Text style={[styles.actionText, { color: theme.ink }]}>End</Text>
-          </Pressable>
+          </MotionPressable>
         </View>
         <View
           accessible
@@ -236,7 +236,7 @@ export function ActiveNavigationPanel({
               {walking ? "Pause" : "Continue"}
             </Text>
           </MotionPressable>
-          <Pressable
+          <MotionPressable
             accessibilityRole="button"
             onPress={following ? onOverview : onFollow}
             style={({ pressed }) => [
@@ -252,8 +252,8 @@ export function ActiveNavigationPanel({
             <Text style={[styles.actionText, { color: theme.accent }]}>
               {following ? "Overview" : "Follow"}
             </Text>
-          </Pressable>
-          <Pressable
+          </MotionPressable>
+          <MotionPressable
             accessibilityRole="button"
             onPress={() => setStepsVisible(true)}
             style={({ pressed }) => [
@@ -265,7 +265,7 @@ export function ActiveNavigationPanel({
             <Text style={[styles.actionText, { color: theme.inkSecondary }]}>
               Steps
             </Text>
-          </Pressable>
+          </MotionPressable>
         </View>
       </MotionSurface>
 

@@ -1,9 +1,10 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Theme, shadows } from "../theme";
 import { Icon, IconName } from "./Icon";
 import { atlasSandtonVenue } from "../fixtures";
 
+import { MotionPressable } from "./Motion";
 const shortcuts: { id: string; label: string; icon: IconName }[] = [
   { id: "anchors", label: "Named stores", icon: "shop" },
   { id: "units", label: "All units", icon: "layers" },
@@ -31,7 +32,7 @@ export function FloatingSearchBar({
           shadows.medium,
         ]}
       >
-        <Pressable
+        <MotionPressable
           accessibilityRole="button"
           accessibilityLabel="Search destinations"
           onPress={onPress}
@@ -56,16 +57,16 @@ export function FloatingSearchBar({
             </Text>
           </View>
           <Icon name="search" color={theme.ink} size={22} />
-        </Pressable>
+        </MotionPressable>
         <View style={[styles.divider, { backgroundColor: theme.line }]} />
-        <Pressable
+        <MotionPressable
           accessibilityRole="button"
           accessibilityLabel="Open saved places"
           onPress={onSaved}
           style={styles.saved}
         >
           <Icon name="bookmark" color={theme.accent} size={22} />
-        </Pressable>
+        </MotionPressable>
       </View>
       <ScrollView
         horizontal
@@ -73,7 +74,7 @@ export function FloatingSearchBar({
         contentContainerStyle={styles.shortcuts}
       >
         {shortcuts.map((item) => (
-          <Pressable
+          <MotionPressable
             key={item.id}
             accessibilityRole="button"
             accessibilityLabel={`Find ${item.label.toLowerCase()}`}
@@ -102,7 +103,7 @@ export function FloatingSearchBar({
             <Text style={[styles.chipText, { color: theme.ink }]}>
               {item.label}
             </Text>
-          </Pressable>
+          </MotionPressable>
         ))}
       </ScrollView>
     </View>

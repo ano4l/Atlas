@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -150,7 +149,7 @@ export function MapHomeSheet({
         onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
       >
         <GestureDetector gesture={drag}>
-          <Pressable
+          <MotionPressable
             accessibilityRole="button"
             accessibilityState={{ expanded }}
             accessibilityLabel={
@@ -160,7 +159,7 @@ export function MapHomeSheet({
             style={styles.handle}
           >
             <View style={[styles.grabber, { backgroundColor: theme.muted }]} />
-          </Pressable>
+          </MotionPressable>
         </GestureDetector>
         <MotionPressable
           accessibilityRole="button"
@@ -272,7 +271,7 @@ export function MapHomeSheet({
               Suggested places
             </Text>
             {stops.map((poi, index) => (
-              <Pressable
+              <MotionPressable
                 key={poi.id}
                 accessibilityRole="button"
                 accessibilityLabel={`Preview ${poi.name}`}
@@ -300,7 +299,7 @@ export function MapHomeSheet({
                   </Text>
                 </View>
                 <Icon name="chevron-right" color={theme.muted} size={17} />
-              </Pressable>
+              </MotionPressable>
             ))}
           </ScrollView>
         </Animated.View>

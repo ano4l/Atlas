@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { AppState, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { AppState, Platform, StyleSheet, Text, View } from "react-native";
 import { Accelerometer, Barometer, DeviceMotion } from "expo-sensors";
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
@@ -7,6 +7,7 @@ import { MAX_REPLAY_MARKS, startRecording, type ReplayFixture } from "@atlas/pos
 import { readAcceleration, readDeviceMotion, readPressure } from "../positioning/native-readings";
 import type { Theme } from "../theme";
 
+import { MotionPressable } from "./Motion";
 const RECORDING_MS = 180000;
 const SAMPLE_LIMIT = 8000;
 type Carrying = "handheld" | "pocket";
@@ -227,13 +228,13 @@ function Action({ theme, label, onPress, selected, disabled }: {
   disabled?: boolean;
 }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityState={{ selected, disabled }} disabled={disabled}
+    <MotionPressable accessibilityRole="button" accessibilityState={{ selected, disabled }} disabled={disabled}
       onPress={onPress} style={({ pressed }) => [
         styles.button,
         { backgroundColor: pressed || selected ? theme.accentSoft : theme.subtle, opacity: disabled ? 0.5 : 1 },
       ]}>
       <Text style={{ color: theme.ink, fontWeight: "600" }}>{label}</Text>
-    </Pressable>
+    </MotionPressable>
   );
 }
 

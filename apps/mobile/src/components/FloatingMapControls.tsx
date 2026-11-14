@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Pressable,
   StyleSheet,
   Text,
   View,
@@ -69,7 +68,7 @@ export function FloatingMapControls({
           ]}
         >
           {[...atlasSandtonVenue.floors].reverse().map((floor) => (
-            <Pressable
+            <MotionPressable
               key={floor.id}
               accessibilityRole="button"
               accessibilityLabel={`Show ${floor.name}`}
@@ -94,7 +93,7 @@ export function FloatingMapControls({
               >
                 {floor.shortLabel}
               </Text>
-            </Pressable>
+            </MotionPressable>
           ))}
         </View>
       )}

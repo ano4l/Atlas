@@ -1,8 +1,9 @@
 import React, { useState, useSyncExternalStore } from "react";
-import { Pressable, Share, StyleSheet, Text, View } from "react-native";
+import { Share, StyleSheet, Text, View } from "react-native";
 import { DIAGNOSTIC_LIMIT, navigationDiagnostics } from "../map/navigation-diagnostics";
 import type { Theme } from "../theme";
 
+import { MotionPressable } from "./Motion";
 export function NavigationDiagnostics({ theme }: { theme: Theme }) {
   const { recording, entries } = useSyncExternalStore(navigationDiagnostics.subscribe, navigationDiagnostics.getSnapshot);
   const [sharing, setSharing] = useState(false);
@@ -32,7 +33,7 @@ export function NavigationDiagnostics({ theme }: { theme: Theme }) {
         <Text accessibilityLiveRegion="polite" style={{ color: theme.muted }}>
           {recording ? "Recording" : "Recording off"} · {entries.length} {entries.length === 1 ? "event" : "events"}
         </Text>
-        <Pressable accessibilityRole="button" style={[styles.button, { backgroundColor: theme.accentSoft }]}
+        <MotionPressable accessibilityRole="button" style={[styles.button, { backgroundColor: theme.accentSoft }]}
           onPress={() => {
             setShareFailed(false);
             if (recording) navigationDiagnostics.stop();
@@ -41,20 +42,20 @@ export function NavigationDiagnostics({ theme }: { theme: Theme }) {
           <Text style={[styles.label, { color: theme.accent }]}>
             {recording ? "Stop recording" : entries.length ? "Start new recording" : "Start recording"}
           </Text>
-        </Pressable>
+        </MotionPressable>
         {(entries.length > 0 || recording) && (
-          <Pressable accessibilityRole="button" style={styles.button} onPress={() => {
+          <MotionPressable accessibilityRole="button" style={styles.button} onPress={() => {
             navigationDiagnostics.clear();
             setShareFailed(false);
           }}>
             <Text style={[styles.label, { color: theme.ink }]}>Clear report</Text>
-          </Pressable>
+          </MotionPressable>
         )}
         {entries.length > 0 && (
-          <Pressable accessibilityRole="button" accessibilityState={{ disabled: sharing }} disabled={sharing}
+          <MotionPressable accessibilityRole="button" accessibilityState={{ disabled: sharing }} disabled={sharing}
             style={styles.button} onPress={() => void shareReport()}>
             <Text style={[styles.label, { color: theme.accent }]}>Share report</Text>
-          </Pressable>
+          </MotionPressable>
         )}
         {shareFailed && <Text accessibilityRole="alert" style={{ color: theme.danger }}>The report couldn’t be shared. Try again.</Text>}
       </View>

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-  ActivityIndicator, AppState, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, AppState, Keyboard, ScrollView, StyleSheet, Text, TextInput, View,
 } from "react-native";
 import { getPlatformRequestId, PlatformApiClient, PlatformApiError, PlatformResponseError, type MapPackage, type Route } from "@atlas/api-client";
 import type { ConnectedVenue } from "../map/connected-venue";
@@ -21,6 +21,7 @@ import { createRouteReplay, createWalkSample } from "../map/guidance-replay";
 import { findSimulatedDetour, requestReroute } from "../map/reroute";
 import { navigationDiagnostics } from "../map/navigation-diagnostics";
 
+import { MotionPressable } from "./Motion";
 const baseUrl = process.env.EXPO_PUBLIC_ATLAS_API_URL?.trim();
 const venueSlug = "atlas-synthetic-mall";
 const api = baseUrl ? new PlatformApiClient({ baseUrl }) : null;
@@ -621,7 +622,7 @@ function VenueRoutePreview({
           <Text style={{ color: theme.muted }}>No matching destinations.</Text>
         )}
         {search.status === "ready" && search.value.map((place) => (
-          <Pressable
+          <MotionPressable
             key={place.id} accessibilityRole="button"
             accessibilityState={{ selected: destination?.id === place.id }}
             onPress={() => selectDestination(place)}
@@ -635,7 +636,7 @@ function VenueRoutePreview({
               <Text style={{ color: theme.muted }}>{place.floorName}</Text>
             </View>
             <Icon name="arrow" color={theme.accent} size={18} />
-          </Pressable>
+          </MotionPressable>
         ))}
         </>}
       </ScrollView>
@@ -647,14 +648,14 @@ function Choice({ theme, label, accessibilityLabel, selected, onPress }: {
   theme: Theme; label: string; accessibilityLabel?: string; selected?: boolean; onPress: () => void;
 }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel}
+    <MotionPressable accessibilityRole="button" accessibilityLabel={accessibilityLabel}
       accessibilityState={selected === undefined ? undefined : { selected }}
       onPress={onPress} style={({ pressed }) => [styles.choice, {
         borderColor: selected ? theme.accent : theme.line,
         backgroundColor: pressed || selected ? theme.accentSoft : theme.paper,
       }]}>
       <Text style={{ color: selected ? theme.accent : theme.ink }}>{label}</Text>
-    </Pressable>
+    </MotionPressable>
   );
 }
 

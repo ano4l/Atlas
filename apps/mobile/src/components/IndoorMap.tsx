@@ -6,7 +6,6 @@ import React, {
   useState,
 } from "react";
 import {
-  Pressable,
   LayoutChangeEvent,
   StyleSheet,
   Text,
@@ -47,6 +46,7 @@ import {
 import { hitsStoreLabel, MapCanvas } from "./MapCanvas";
 import { GlassSurface } from "./GlassSurface";
 
+import { MotionPressable } from "./Motion";
 type Props = {
   theme: Theme;
   venue?: Pick<IndoorMapData, "venueName" | "floors" | "start">;
@@ -508,7 +508,7 @@ export function IndoorMap({
           <MapScale scale={scale} theme={theme} />
           <GlassSurface theme={theme} style={styles.zoom}>
             {([true, false] as const).map((zoomIn) => (
-              <Pressable
+              <MotionPressable
                 key={String(zoomIn)}
                 onPress={() => zoom(zoomIn ? 1.4 : 1 / 1.4)}
                 accessibilityRole="button"
@@ -534,7 +534,7 @@ export function IndoorMap({
                     strokeLinecap="round"
                   />
                 </Svg>
-              </Pressable>
+              </MotionPressable>
             ))}
             <View
               pointerEvents="none"

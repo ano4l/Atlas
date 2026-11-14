@@ -26,16 +26,46 @@ const animationOptions = {
   isInteraction: false,
 };
 
+export type FeedbackKind =
+  | "selection"
+  | "success"
+  | "turn"
+  | "warning"
+  | "error";
+
+// Android's impact and notification calls are only simulated with the raw
+// vibrator, so Android uses the system haptic constants instead.
+const androidHaptic: Record<FeedbackKind, Haptics.AndroidHaptics> = {
+  selection: Haptics.AndroidHaptics.Context_Click,
+  success: Haptics.AndroidHaptics.Confirm,
+  turn: Haptics.AndroidHaptics.Long_Press,
+  warning: Haptics.AndroidHaptics.Reject,
+  error: Haptics.AndroidHaptics.Reject,
+};
+
+function playFeedback(kind: FeedbackKind) {
+  if (Platform.OS === "android")
+    return Haptics.performAndroidHapticsAsync(androidHaptic[kind]);
+  switch (kind) {
+    case "success":
+      return Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    case "warning":
+      return Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    case "error":
+      return Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    case "turn":
+      return Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    default:
+      return Haptics.selectionAsync();
+  }
+}
+
 export function useFeedback() {
   const { haptics } = useContext(FeedbackContext);
   return useCallback(
-    (kind: "selection" | "success" = "selection") => {
+    (kind: FeedbackKind = "selection") => {
       if (!haptics) return;
-      const feedback =
-        kind === "success"
-          ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-          : Haptics.selectionAsync();
-      void feedback.catch(() => {});
+      void playFeedback(kind).catch(() => {});
     },
     [haptics],
   );
@@ -108,7 +138,7 @@ export function MotionPressable({
     const animation = next
       ? Animated.timing(scale, {
           ...animationOptions,
-          toValue: 0.98,
+          toValue: 0.97,
           duration: 65,
           easing: Easing.out(Easing.quad),
         })

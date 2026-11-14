@@ -4,7 +4,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
-  Pressable,
   SectionList,
   StyleSheet,
   Text,
@@ -25,6 +24,7 @@ import {
   PlaceRow,
 } from "./PlaceList";
 
+import { MotionPressable } from "./Motion";
 type Props = {
   theme: Theme;
   onClose: () => void;
@@ -143,7 +143,7 @@ export function SearchOverlay({
         >
           <View style={[styles.toolbar, { borderColor: theme.line }]}>
             <View style={styles.toolbarRow}>
-              <Pressable
+              <MotionPressable
                 accessibilityRole="button"
                 accessibilityLabel="Close search"
                 onPress={close}
@@ -153,7 +153,7 @@ export function SearchOverlay({
                 ]}
               >
                 <Icon name="back" color={theme.ink} size={22} />
-              </Pressable>
+              </MotionPressable>
               <View
                 style={[
                   styles.field,
@@ -176,14 +176,14 @@ export function SearchOverlay({
                   onSubmitEditing={Keyboard.dismiss}
                 />
                 {!!query && (
-                  <Pressable
+                  <MotionPressable
                     accessibilityRole="button"
                     accessibilityLabel="Clear search"
                     onPress={() => setQuery("")}
                     style={styles.roundButton}
                   >
                     <Icon name="close" color={theme.muted} size={18} />
-                  </Pressable>
+                  </MotionPressable>
                 )}
               </View>
             </View>
@@ -242,7 +242,7 @@ export function SearchOverlay({
                     {section.title}
                   </Text>
                   {section.kind === "recent" && (
-                    <Pressable
+                    <MotionPressable
                       accessibilityRole="button"
                       accessibilityLabel="Clear recent places"
                       onPress={onClearRecent}
@@ -251,10 +251,10 @@ export function SearchOverlay({
                       <Text style={[styles.action, { color: theme.accent }]}>
                         Clear
                       </Text>
-                    </Pressable>
+                    </MotionPressable>
                   )}
                   {section.kind === "featured" && (
-                    <Pressable
+                    <MotionPressable
                       accessibilityRole="button"
                       accessibilityLabel="Browse the full directory"
                       onPress={browse}
@@ -268,7 +268,7 @@ export function SearchOverlay({
                         color={theme.accent}
                         size={16}
                       />
-                    </Pressable>
+                    </MotionPressable>
                   )}
                 </View>
               )}

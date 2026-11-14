@@ -1,7 +1,6 @@
 import React, { useContext } from "react";
 import {
   Modal,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -49,7 +48,7 @@ export function RouteStepsSheet({
               {destinationName} · Indoor demo
             </Text>
           </View>
-          <Pressable
+          <MotionPressable
             accessibilityRole="button"
             accessibilityLabel="Close route steps"
             onPress={onClose}
@@ -59,7 +58,7 @@ export function RouteStepsSheet({
             ]}
           >
             <Icon name="close" color={theme.ink} size={21} />
-          </Pressable>
+          </MotionPressable>
         </View>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.list}>
           <View style={[styles.summary, { backgroundColor: theme.accentSoft }]}>

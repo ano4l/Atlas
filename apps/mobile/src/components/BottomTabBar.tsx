@@ -1,7 +1,8 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Theme, shadows } from "../theme";
 import { Icon, IconName } from "./Icon";
+import { MotionPressable } from "./Motion";
 export type TabKey = "map" | "explore" | "settings";
 export function BottomTabBar({
   theme,
@@ -25,7 +26,7 @@ export function BottomTabBar({
         const active = tab.key === activeTab;
         const color = active ? theme.highlightInk : theme.chromeText;
         return (
-          <Pressable
+          <MotionPressable
             key={tab.key}
             accessibilityRole="tab"
             accessibilityLabel={tab.label + " tab"}
@@ -41,7 +42,7 @@ export function BottomTabBar({
           >
             <Icon name={tab.icon} color={color} size={22} />
             <Text style={[styles.label, { color }]}>{tab.label}</Text>
-          </Pressable>
+          </MotionPressable>
         );
       })}
     </View>

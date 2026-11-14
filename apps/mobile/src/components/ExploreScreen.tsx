@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 import { atlasSandtonVenue } from "../fixtures";
 import { POIItem } from "../map/types";
 import { Theme } from "../theme";
@@ -12,6 +12,7 @@ import {
   PlaceRow,
 } from "./PlaceList";
 
+import { MotionPressable } from "./Motion";
 export function ExploreScreen({
   theme,
   onSelectPOI,
@@ -67,7 +68,7 @@ export function ExploreScreen({
               </Text>
             </View>
           </View>
-          <Pressable
+          <MotionPressable
             accessibilityRole="button"
             accessibilityLabel="Search stores and units"
             onPress={onSearch}
@@ -84,9 +85,9 @@ export function ExploreScreen({
               Search stores and units
             </Text>
             <Icon name="chevron-right" color={theme.muted} size={18} />
-          </Pressable>
+          </MotionPressable>
           <View style={[styles.segment, { backgroundColor: theme.subtle }]}>
-            <Pressable
+            <MotionPressable
               accessibilityRole="button"
               accessibilityState={{ selected: !savedOnly }}
               onPress={() => setSavedOnly(false)}
@@ -109,8 +110,8 @@ export function ExploreScreen({
               >
                 Browse
               </Text>
-            </Pressable>
-            <Pressable
+            </MotionPressable>
+            <MotionPressable
               accessibilityRole="button"
               accessibilityLabel={`Saved places, ${savedIds.length}`}
               accessibilityState={{ selected: savedOnly }}
@@ -134,7 +135,7 @@ export function ExploreScreen({
               >
                 Saved{savedIds.length > 0 ? ` · ${savedIds.length}` : ""}
               </Text>
-            </Pressable>
+            </MotionPressable>
           </View>
           {!savedOnly && (
             <CategoryPicker

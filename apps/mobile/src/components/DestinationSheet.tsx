@@ -1,6 +1,5 @@
 import React, { useContext, useState } from "react";
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -107,7 +106,7 @@ export function DestinationSheet({
               {arrived ? poi.name : poi.category}
             </Text>
           </View>
-          <Pressable
+          <MotionPressable
             accessibilityRole="button"
             accessibilityLabel={
               saved
@@ -129,7 +128,7 @@ export function DestinationSheet({
               color={saved ? theme.accent : theme.inkSecondary}
               size={21}
             />
-          </Pressable>
+          </MotionPressable>
         </View>
         <Animated.ScrollView
           layout={reducedMotion ? undefined : resize}
@@ -167,7 +166,7 @@ export function DestinationSheet({
               The route ends on the gallery near this unit.
             </Text>
           )}
-          <Pressable
+          <MotionPressable
             accessibilityRole="button"
             accessibilityState={{ expanded: details }}
             onPress={() => {
@@ -183,7 +182,7 @@ export function DestinationSheet({
             <View style={details && styles.upsideDown}>
               <Icon name="chevron-down" color={theme.muted} size={16} />
             </View>
-          </Pressable>
+          </MotionPressable>
           {details && (
             <Animated.View
               entering={
@@ -209,7 +208,7 @@ export function DestinationSheet({
                 </Text>
               )}
               {!arrived && atlasSandtonVenue.floors.length > 1 && (
-                <Pressable
+                <MotionPressable
                   accessibilityRole="checkbox"
                   accessibilityLabel="Prefer lifts on demo routes"
                   accessibilityState={{ checked: stepFree }}
@@ -239,7 +238,7 @@ export function DestinationSheet({
                       <Icon name="check" color={theme.primaryText} size={16} />
                     )}
                   </View>
-                </Pressable>
+                </MotionPressable>
               )}
             </Animated.View>
           )}

@@ -224,11 +224,7 @@ function AtlasApp({
     } else {
       setCurrentStepIndex(next);
       if (cameraMode === "follow") setFloorLevel(route.steps[next].floorLevel);
-      if (
-        route.steps[next].floorLevel !==
-        route.steps[currentStepIndex].floorLevel
-      )
-        feedback();
+      feedback("turn");
       AccessibilityInfo.announceForAccessibility(
         route.steps[next].floorName + ". " + route.steps[next].instruction,
       );
@@ -468,7 +464,7 @@ function AtlasApp({
             </View>
           )}
           {activeTab !== "map" && (
-            <Pressable
+            <MotionPressable
               onPress={() => setActiveTab("map")}
               accessibilityRole="button"
               style={({ pressed }) => [
@@ -482,7 +478,7 @@ function AtlasApp({
               >
                 Back to map
               </Text>
-            </Pressable>
+            </MotionPressable>
           )}
           {activeTab === "explore" && (
             <ExploreScreen
@@ -556,14 +552,14 @@ function AtlasApp({
                   >
                     Map options
                   </Text>
-                  <Pressable
+                  <MotionPressable
                     accessibilityRole="button"
                     accessibilityLabel="Close menu"
                     onPress={() => setMenuVisible(false)}
                     style={styles.roundButton}
                   >
                     <Icon name="close" color={theme.ink} />
-                  </Pressable>
+                  </MotionPressable>
                 </View>
                 <ScrollView>
                   {(
@@ -588,7 +584,7 @@ function AtlasApp({
                       }] : []),
                     ] as const
                   ).map((item) => (
-                    <Pressable
+                    <MotionPressable
                       key={item.title}
                       accessibilityRole="button"
                       onPress={() => {
@@ -605,7 +601,7 @@ function AtlasApp({
                       </Text>
                       <View style={{ flex: 1 }} />
                       <Icon name="arrow" color={theme.muted} size={18} />
-                    </Pressable>
+                    </MotionPressable>
                   ))}
                   <Text
                     style={{ color: theme.muted, fontSize: 12, padding: 16 }}

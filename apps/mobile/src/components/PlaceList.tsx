@@ -1,11 +1,12 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { atlasSandtonVenue, samplePOIs } from "../fixtures";
 import { POIItem } from "../map/types";
 import { floorName } from "../map/demo-routing";
 import { Theme } from "../theme";
 import { Icon, IconName } from "./Icon";
 import { PlaceBadge } from "./PlaceBadge";
+import { MotionPressable } from "./Motion";
 export { placeIcon } from "../place-presentation";
 
 export const categories: { id: string; label: string; icon: IconName }[] = [
@@ -83,7 +84,7 @@ export function CategoryPicker({
       {(includeSaved ? searchScopes : categories).map((category) => {
         const selected = value === category.id;
         return (
-          <Pressable
+          <MotionPressable
             key={category.id}
             accessibilityRole="button"
             accessibilityState={{ selected }}
@@ -110,7 +111,7 @@ export function CategoryPicker({
             >
               {category.label}
             </Text>
-          </Pressable>
+          </MotionPressable>
         );
       })}
     </ScrollView>
@@ -140,7 +141,7 @@ export function PlaceRow({
   if (atlasSandtonVenue.floors.length > 1) location.push(floor);
 
   return (
-    <Pressable
+    <MotionPressable
       accessibilityRole="button"
       accessibilityLabel={[
         `Preview ${poi.name}`,
@@ -190,7 +191,7 @@ export function PlaceRow({
           style={[styles.divider, { backgroundColor: theme.line }]}
         />
       )}
-    </Pressable>
+    </MotionPressable>
   );
 }
 export function EmptyPlaces({
@@ -222,7 +223,7 @@ export function EmptyPlaces({
       <Text style={[styles.meta, styles.emptyText, { color: theme.muted }]}>
         {message}
       </Text>
-      <Pressable
+      <MotionPressable
         onPress={onReset}
         accessibilityRole="button"
         style={({ pressed }) => [
@@ -231,7 +232,7 @@ export function EmptyPlaces({
         ]}
       >
         <Text style={[styles.chipText, { color: theme.accent }]}>{action}</Text>
-      </Pressable>
+      </MotionPressable>
     </View>
   );
 }
